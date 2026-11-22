@@ -7,7 +7,6 @@ import { envelope, outputs, profileFields } from '../../tools/outputs'
 import { actionTools } from '../../actions/catalog'
 import { toolDescription } from '../../tools/descriptions'
 import { registerWhatsApp } from '../../mcp/registerWhatsApp'
-import { registerMarketing } from '../../mcp/registerMarketing'
 import type { Host } from './instructions'
 
 // How a host marks the tools: metadata of reads and writes, and which writes count as destructive.
@@ -38,5 +37,4 @@ export async function registerCommonTools(server: McpServer, principal: PluginPr
   for (const action of actionTools) server.registerTool(action.name, { title: action.title, description: action.description, inputSchema: action.schema, outputSchema: envelope(outputs.draft),
     annotations: { readOnlyHint: false, destructiveHint: style.destructive(action), idempotentHint: true, openWorldHint: false }, _meta: { ...style.writeMeta, ...style.card } }, run(action.name))
   await registerWhatsApp(server, principal, config, dependencies, host)
-  registerMarketing(server, principal, config, dependencies, host, style)
 }

@@ -84,8 +84,7 @@
     "typecheck": "tsc --noEmit -p . --pretty false",
     "lint:produtos": "eslint src scripts --ignore-pattern 'src/assets/landingpages/**'",
     "test:produtos": "npm run chatgptplugin:smoke && npm run claudeplugin:smoke && npm run chatgptplugin:mrtr-smoke && npm run chatgptplugin:tool-documentation-smoke && npm run marketing:smoke",
-    "marketing:smoke": "tsx scripts/marketing-smoke.ts",
-    "marketing:db-smoke": "tsx scripts/marketing-db-smoke.ts"
+    "marketing:smoke": "tsx scripts/marketing-smoke.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.3",
