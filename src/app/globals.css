@@ -209,8 +209,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* The Editor product (.otto-editor) and the access screens (.otto-auth) bring their own type. */
-body *:not(:is(.otto-editor, .otto-editor *, .otto-auth, .otto-auth *)) {
+/* The Editor product (.otto-editor), the access screens (.otto-auth) and the Otto menu (.otto-sidebar) bring their own type. */
+.otto-sidebar { font-family: var(--font-sidebar), Inter, system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+body *:not(:is(.otto-editor, .otto-editor *, .otto-auth, .otto-auth *, .otto-sidebar, .otto-sidebar *)) {
   font-family: var(--ui-font-family) !important;
 }
 
