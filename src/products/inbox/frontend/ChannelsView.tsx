@@ -100,11 +100,18 @@ function ChannelCard({ channel: ch, onChanged, onMessage }: { channel: Channel; 
     onMessage(error ? { text: deniedMessage(error, 'Não foi possível renomear.'), error: true } : { text: 'Nome atualizado.' })
     if (error) setName(ch.name); else onChanged()
   }
+  async function act(acao: 'desconectar' | 'reconectar') {
+    if (acao === 'desconectar' && !window.confirm(`Desconectar "${ch.name}"? Ele para de receber e enviar mensagens, e o token é esquecido. O histórico de conversas fica guardado.`)) return
+    try { await post(`/api/inbox/canais/${ch.id}`, { acao }); onMessage({ text: acao === 'desconectar' ? 'Canal desconectado. O histórico continua na caixa de entrada.' : 'Canal reconectado.' }); onChanged() }
+    catch (error) { onMessage({ text: (error as Error).message, error: true }) }
+  }
   async function remove() {
-    if (!window.confirm(`Remover "${ch.name}"? As conversas e mensagens deste canal serão apagadas do Otto. ${ch.kind === 'teste' ? '' : 'O número continua funcionando na Meta.'}`)) return
-    const { error } = await supabase().from('channels').delete().eq('id', ch.id)
-    onMessage(error ? { text: deniedMessage(error, 'Não foi possível remover.'), error: true } : { text: 'Canal removido.' })
-    if (!error) onChanged()
+    const typed = window.prompt(`Excluir "${ch.name}" DE VEZ? Todas as conversas, mensagens e arquivos recebidos por ele serão apagados do Otto, sem volta. ${ch.kind === 'teste' ? '' : 'O número continua funcionando na Meta. '}Para confirmar, digite EXCLUIR.`)
+    if (typed?.trim().toUpperCase() !== 'EXCLUIR') return
+    const response = await fetch(`/api/inbox/canais/${ch.id}`, { method: 'DELETE' })
+    const data = await response.json().catch(() => ({})) as { erro?: string }
+    onMessage(response.ok ? { text: 'Canal excluído.' } : { text: data.erro ?? 'Não foi possível excluir.', error: true })
+    if (response.ok) onChanged()
   }
   return (
     <Card>
@@ -116,9 +123,12 @@ function ChannelCard({ channel: ch, onChanged, onMessage }: { channel: Channel; 
           {ch.last_error && ch.status !== 'conectado' ? <p className="px-1 text-[13px] text-[#8a2b2b]">{ch.last_error}</p> : null}
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[12px] font-medium ${STATUS[ch.status].cls}`}>{STATUS[ch.status].label}</span>
-        <button type="button" onClick={() => void remove()} className="text-[13px] text-[#a33] underline">Remover</button>
+        {ch.status === 'desconectado'
+          ? (ch.kind === 'teste' ? <button type="button" onClick={() => void act('reconectar')} className="text-[13px] text-[#2563eb] underline">Reconectar</button> : <span className="text-[12px] text-[#777]">Para reconectar, use Conectar número</span>)
+          : <button type="button" onClick={() => void act('desconectar')} className="text-[13px] text-[#555] underline">Desconectar</button>}
+        <button type="button" onClick={() => void remove()} className="text-[13px] text-[#a33] underline">Excluir</button>
       </div>
-      {ch.kind === 'teste' ? (
+      {ch.kind === 'teste' && ch.status !== 'desconectado' ? (
         <form className="mt-3 flex flex-wrap gap-2 border-t border-[#f3f3f3] pt-3" onSubmit={async e => {
           e.preventDefault(); setBusy(true)
           try { await post(`/api/inbox/canais/${ch.id}/simular`, sim); setSim({ ...sim, texto: '' }); onMessage({ text: `Mensagem de ${sim.nome} enviada para a caixa de entrada.` }) }

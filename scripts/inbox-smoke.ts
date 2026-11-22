@@ -7,6 +7,7 @@ import { createHmac, randomBytes } from 'node:crypto'
 import pg from 'pg'
 import { windowLeft, windowOpen, previewOf } from '../src/products/inbox/shared/rules'
 import { parseWebhook, sendText, validSignature, downloadMedia, type InboundMessage } from '../src/products/inbox/server/meta'
+import type { IngestDeps } from '../src/products/inbox/server/ingest'
 
 process.env.INBOX_CREDENTIAL_KEY = randomBytes(32).toString('base64')
 process.env.INBOX_META_GRAPH_URL = 'https://graph.test/v23.0'
@@ -96,7 +97,8 @@ async function pure() {
 async function database(url: string) {
   const { makeDb } = await import('../src/products/inbox/server/db')
   const { ingest } = await import('../src/products/inbox/server/ingest')
-  const { reply, createTestChannel, simulateCustomer, connectWhatsApp, mediaPath } = await import('../src/products/inbox/server/actions')
+  const { reply, createTestChannel, simulateCustomer, connectWhatsApp, mediaPath, setChannelState, deleteChannel, deleteContact } = await import('../src/products/inbox/server/actions')
+  const { storeWebhook, processWebhook, retryPending } = await import('../src/products/inbox/server/webhooks')
   const pool = new pg.Pool({ connectionString: url, max: 4 })
   const db = makeDb(() => pool)
   const sql = async (q: string, p: unknown[] = []) => (await pool.query(q, p)).rows
@@ -207,6 +209,51 @@ async function database(url: string) {
     await ingest(parseWebhook(waBody([{ from: '5511988887777', id: 'wamid.IN3-' + tag, timestamp: String(Math.floor(Date.now() / 1000)), type: 'text', text: { body: 'Voltei' } }])).map(e => ({ ...e, channelId: phoneId })), { service: db.service })
     assert.equal((await sql('SELECT status FROM inbox.conversations WHERE id = $1', [conv.id]))[0].status, 'aberta')
     console.log('PASS navegador: outra empresa não vê, visualizador não altera, mensagens e tokens só pelo servidor; conversa fechada reabre')
+
+    // Webhooks are stored first; a failure stays pending and is processed again later, once.
+    const wh = (id: string) => waBody([{ from: '5511977776666', id, timestamp: String(Math.floor(Date.now() / 1000)), type: 'text', text: { body: 'Oi de novo' } }])
+    const asPhone = (b: ReturnType<typeof waBody>) => JSON.parse(JSON.stringify(b).replaceAll('"PN1"', JSON.stringify(phoneId)))
+    const good = await storeWebhook(db.service, asPhone(wh('wamid.W1-' + tag)))
+    assert.equal(await processWebhook(good, { service: db.service }), true)
+    assert.equal(await processWebhook(good, { service: db.service }), true, 'processar de novo não faz nada')
+    const broken = await storeWebhook(db.service, asPhone(wh('wamid.W2-' + tag)))
+    const failing: IngestDeps = { service: async (q, p) => { if (q.includes('INSERT INTO inbox.messages')) throw new Error('banco fora do ar'); return db.service(q, p) } }
+    assert.equal(await processWebhook(broken, failing), false)
+    let [ev] = await sql('SELECT processed_at, attempts, last_error, claimed_at FROM inbox_private.webhook_events WHERE id = $1', [broken])
+    assert.deepEqual([ev.processed_at, ev.attempts, ev.last_error, ev.claimed_at], [null, 1, 'banco fora do ar', null], 'falha fica pendente, com o motivo')
+    await sql(`UPDATE inbox_private.webhook_events SET received_at = now() - interval '2 minutes' WHERE id = $1`, [broken])
+    const retried = await retryPending({ service: db.service })
+    assert(retried.reprocessados >= 1)
+    ;[ev] = await sql('SELECT processed_at FROM inbox_private.webhook_events WHERE id = $1', [broken])
+    assert(ev.processed_at, 'reprocessado com sucesso')
+    const n = await sql(`SELECT count(*)::int AS n FROM inbox.messages WHERE external_id = ANY($1)`, [['wamid.W1-' + tag, 'wamid.W2-' + tag]])
+    assert.equal(n[0].n, 2, 'cada mensagem uma vez')
+    console.log('PASS aviso da Meta guardado antes de processar; falha fica pendente e é reprocessada uma vez')
+
+    // Disconnect keeps the history; delete removes rows and the company's files only.
+    await assert.rejects(setChannelState(viewer, wa.id, 'desconectar', { db }), /só pode visualizar/)
+    await setChannelState(owner, wa.id, 'desconectar', { db })
+    assert.equal((await sql('SELECT count(*)::int AS n FROM inbox_private.channel_credentials WHERE channel_id = $1', [wa.id]))[0].n, 0, 'token esquecido')
+    assert.equal((await sql('SELECT count(*)::int AS n FROM inbox.conversations WHERE channel_id = $1', [wa.id]))[0].n, 2, 'histórico guardado')
+    await assert.rejects(reply(owner, conv.id, 'oi', { db, send: meta }), /desconectado/)
+    assert.deepEqual(await ingest(parseWebhook(asPhone(wh('wamid.W3-' + tag))), { service: db.service }), { messages: 0, statuses: 0, ignored: 1 }, 'canal desconectado não recebe')
+    await assert.rejects(setChannelState(owner, wa.id, 'reconectar', { db }), /conecte o número de novo/)
+    await setChannelState(owner, test.id, 'desconectar', { db })
+    await assert.rejects(simulateCustomer(owner, test.id, { nome: 'x', texto: 'y' }, { db }), /desconectado/)
+    await setChannelState(owner, test.id, 'reconectar', { db })
+    await sql(`UPDATE inbox.messages SET media_path = $2 WHERE conversation_id = $1 AND kind = 'texto'`, [tconv[1].id, orgB + '/inbox/x/de-outra-empresa.jpg'])
+    const removed: string[][] = []
+    const removeMedia = async (paths: string[]) => { removed.push(paths) }
+    await assert.rejects(deleteContact(stranger, conv.contact_id, { db, removeMedia }), /não encontrado/)
+    await assert.rejects(deleteChannel(viewer, wa.id, { db, removeMedia }), /só pode visualizar/)
+    const delContact = await deleteContact(owner, conv.contact_id, { db, removeMedia })
+    assert.equal(delContact.arquivos_apagados, 1); assert(removed[0][0].startsWith(orgA + '/inbox/') && removed[0][0].endsWith('/foto.jpg'))
+    assert.equal((await sql('SELECT count(*)::int AS n FROM inbox.contacts WHERE id = $1', [conv.contact_id]))[0].n, 0)
+    const delChannel = await deleteChannel(owner, test.id, { db, removeMedia })
+    assert.equal(delChannel.arquivos_apagados, 0, 'arquivo fora da pasta da empresa não é apagado')
+    assert.equal((await sql('SELECT count(*)::int AS n FROM inbox.conversations WHERE channel_id = $1', [test.id]))[0].n, 0)
+    await assert.rejects(asBrowser(owner, q => q('DELETE FROM inbox.contacts WHERE workspace_id = $1', [orgA])), /permission denied/, 'exclusão só pelo servidor')
+    console.log('PASS desconectar guarda o histórico e esquece o token; excluir apaga linhas e só os arquivos da empresa')
   } finally {
     await sql('DELETE FROM inbox.channels WHERE workspace_id = ANY($1)', [[orgA, orgB]])
     await sql('DELETE FROM inbox.contacts WHERE workspace_id = ANY($1)', [[orgA, orgB]])
@@ -224,6 +271,6 @@ async function main() {
   await pure()
   const url = process.env.INBOX_TEST_DB_URL
   if (url) await database(url)
-  console.log(JSON.stringify({ status: 'passed', checks: url ? 8 : 4, database: url ? 'tested' : 'skipped (INBOX_TEST_DB_URL)' }))
+  console.log(JSON.stringify({ status: 'passed', checks: url ? 10 : 4, database: url ? 'tested' : 'skipped (INBOX_TEST_DB_URL)' }))
 }
 main().catch(error => { console.error(error); process.exit(1) })

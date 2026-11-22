@@ -5,7 +5,7 @@
 import { createSign } from 'node:crypto'
 
 type ServiceAccount = { client_email: string; private_key: string; project_id: string }
-export type BigQueryConfig = { account: ServiceAccount; project: string; dataset: string; location: string }
+export type BigQueryConfig = { account: ServiceAccount; project: string; dataset: string; location: string; retentionDays: number }
 export type Fetch = typeof fetch
 
 export class AnalyticsUnavailable extends Error {}
@@ -18,7 +18,10 @@ export function bigQueryConfig(env: Record<string, string | undefined> = process
   if (!account?.client_email || !account?.private_key) return null
   const dataset = env.ANALYTICS_BQ_DATASET || 'analytics'
   if (!/^[A-Za-z0-9_]{1,1024}$/.test(dataset)) return null
-  return { account, project: env.ANALYTICS_BQ_PROJECT || account.project_id, dataset, location: env.ANALYTICS_BQ_LOCATION || 'southamerica-east1' }
+  // Events older than this are deleted by BigQuery itself (one partition per day). Default ~25 months.
+  const days = Number(env.ANALYTICS_RETENTION_DAYS || 760)
+  const retentionDays = Number.isFinite(days) ? Math.min(3650, Math.max(30, Math.round(days))) : 760
+  return { account, project: env.ANALYTICS_BQ_PROJECT || account.project_id, dataset, location: env.ANALYTICS_BQ_LOCATION || 'southamerica-east1', retentionDays }
 }
 
 // ---------- access token ----------
@@ -78,11 +81,19 @@ export function ensureEventsTable(c: BigQueryConfig, send: Fetch = fetch) {
       const made = await call(c, send, 'POST', `/datasets/${c.dataset}/tables`, {
         tableReference: { projectId: c.project, datasetId: c.dataset, tableId: 'events' },
         schema: { fields: EVENT_FIELDS.map(([name, type, mode]) => ({ name, type, mode: mode ?? 'NULLABLE' })) },
-        timePartitioning: { type: 'DAY', field: 'timestamp' }, requirePartitionFilter: true,
+        timePartitioning: { type: 'DAY', field: 'timestamp', expirationMs: String(c.retentionDays * 86400000) }, requirePartitionFilter: true,
         clustering: { fields: ['property_id', 'event'] },
       })
       if (made.status >= 300 && made.status !== 409) throw new AnalyticsUnavailable('Não foi possível criar a tabela de eventos no BigQuery.')
     } else if (table.status >= 300) throw new AnalyticsUnavailable('O BigQuery recusou o acesso à tabela de eventos.')
+    else {
+      // A table made before (or with another retention) gets the current one.
+      const current = (table.data as { timePartitioning?: { expirationMs?: string } }).timePartitioning?.expirationMs
+      if (current !== String(c.retentionDays * 86400000)) {
+        const patched = await call(c, send, 'PATCH', `/datasets/${c.dataset}/tables/events`, { timePartitioning: { type: 'DAY', field: 'timestamp', expirationMs: String(c.retentionDays * 86400000) } })
+        if (patched.status >= 300) console.error(JSON.stringify({ scope: 'analytics', code: 'BQ_RETENTION_NOT_SET', status: patched.status }))
+      }
+    }
   })().catch(error => { ready = null; throw error })
   return ready
 }
