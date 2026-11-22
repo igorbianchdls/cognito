@@ -9,9 +9,15 @@ export type MediaRef = { id?: string; url?: string; mime?: string; name?: string
 export type InboundMessage = {
   type: 'message'; channelKind: ChannelKind; channelId: string; contactId: string; contactName?: string; username?: string
   messageId: string; at: Date; direction: 'entrada' | 'saida'; kind: MessageKind; text: string | null; media?: MediaRef
+  /** Code of the link or ad the person came from (Messenger/Instagram referral). */
+  ref?: string
+  /** Answer to (or mention in) a story. */
+  story?: boolean
 }
+/** A comment on an Instagram post (or Facebook page post): can start an automation with a private reply. */
+export type CommentEvent = { type: 'comment'; channelKind: ChannelKind; channelId: string; commentId: string; postId?: string; contactId: string; username?: string; text: string; at: Date }
 export type StatusUpdate = { type: 'status'; channelKind: ChannelKind; channelId: string; messageId: string; status: 'enviada' | 'entregue' | 'lida' | 'falhou'; error?: string }
-export type MetaEvent = InboundMessage | StatusUpdate
+export type MetaEvent = InboundMessage | StatusUpdate | CommentEvent
 
 /** X-Hub-Signature-256 = "sha256=" + HMAC of the raw body with the app secret. */
 export function validSignature(raw: string, header: string | null, appSecret: string) {
@@ -100,12 +106,27 @@ export function parseWebhook(body: unknown): MetaEvent[] {
           if (!contactId) continue
           const first = arr(message.attachments).map(a => socialAttachment(obj(a)))[0]
           const text = str(message.text) ?? first?.text ?? null
+          const ref = str(obj(e.referral).ref) ?? str(obj(message.referral).ref)
+          const story = !!obj(message.reply_to).story || arr(message.attachments).some(a => str(obj(a).type) === 'story_mention')
           events.push({ type: 'message', channelKind, channelId, contactId, messageId: str(message.mid)!, at: when(undefined, e.timestamp),
-            direction: echo ? 'saida' : 'entrada', kind: str(message.text) ? 'texto' : first?.kind ?? 'texto', text, media: first?.media })
+            direction: echo ? 'saida' : 'entrada', kind: str(message.text) ? 'texto' : first?.kind ?? 'texto', text, media: first?.media,
+            ...(ref ? { ref } : {}), ...(story && !echo ? { story: true } : {}) })
         } else if (str(postback.mid) && sender) {
+          const ref = str(obj(postback.referral).ref)
           events.push({ type: 'message', channelKind, channelId, contactId: sender, messageId: str(postback.mid)!, at: when(undefined, e.timestamp),
-            direction: 'entrada', kind: 'texto', text: str(postback.title) ?? '' })
+            direction: 'entrada', kind: 'texto', text: str(postback.title) ?? '', ...(ref ? { ref } : {}) })
         }
+      }
+      // Comments: Instagram sends field "comments"; a Facebook page sends "feed" with item "comment".
+      for (const raw of arr(entry.changes)) {
+        const change = obj(raw), value = obj(change.value)
+        const isIg = change.field === 'comments', isPage = change.field === 'feed' && value.item === 'comment' && value.verb === 'add'
+        if (!isIg && !isPage) continue
+        const commentId = str(isIg ? value.id : value.comment_id), from = obj(value.from)
+        const contactId = str(from.id), text = str(isIg ? value.text : value.message)
+        if (!commentId || !contactId || !text || contactId === channelId) continue
+        events.push({ type: 'comment', channelKind, channelId, commentId, postId: str(obj(value.media).id) ?? str(value.post_id), contactId,
+          username: str(from.username) ?? str(from.name), text, at: when(value.created_time ?? entry.time) })
       }
     }
   }
@@ -134,17 +155,40 @@ async function graph(send: typeof fetch, path: string, token: string, init: { me
 }
 
 /** Sends a text reply; returns the Meta message id. */
-export async function sendText(send: typeof fetch, channel: { kind: ChannelKind; externalId: string }, token: string, to: string, text: string) {
+export function sendText(send: typeof fetch, channel: { kind: ChannelKind; externalId: string }, token: string, to: string, text: string) {
+  return sendMessage(send, channel, token, { to }, { text })
+}
+
+/**
+ * Text with optional reply buttons. WhatsApp: up to 3 buttons, or a list of up to 10. Instagram/Messenger: quick
+ * replies. `commentId` sends a private reply to a comment (starts the conversation). Returns the Meta message id.
+ */
+export async function sendMessage(send: typeof fetch, channel: { kind: ChannelKind; externalId: string }, token: string,
+  to: { to: string } | { commentId: string }, content: { text: string; buttons?: string[] }) {
+  const buttons = (content.buttons ?? []).slice(0, 10)
   if (channel.kind === 'whatsapp') {
-    const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'text', text: { body: text, preview_url: true } } })
+    if (!('to' in to)) throw new MetaError('O WhatsApp não tem resposta a comentário.')
+    const message = !buttons.length ? { type: 'text', text: { body: content.text, preview_url: true } }
+      : buttons.length <= 3 ? { type: 'interactive', interactive: { type: 'button', body: { text: content.text.slice(0, 1024) },
+        action: { buttons: buttons.map((b, i) => ({ type: 'reply', reply: { id: 'b' + i, title: b.slice(0, 20) } })) } } }
+        : { type: 'interactive', interactive: { type: 'list', body: { text: content.text.slice(0, 1024) },
+          action: { button: 'Ver opções', sections: [{ title: 'Opções', rows: buttons.map((b, i) => ({ id: 'b' + i, title: b.slice(0, 24) })) }] } } }
+    const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { messaging_product: 'whatsapp', recipient_type: 'individual', to: to.to, ...message } })
     const id = str(obj(arr(body.messages)[0]).id)
     if (!id) throw new MetaError('A Meta não devolveu o id da mensagem.')
     return id
   }
-  const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { recipient: { id: to }, messaging_type: 'RESPONSE', message: { text } } })
+  const recipient = 'to' in to ? { id: to.to } : { comment_id: to.commentId }
+  const message = buttons.length ? { text: content.text, quick_replies: buttons.slice(0, 13).map(b => ({ content_type: 'text', title: b.slice(0, 20), payload: b.slice(0, 1000) })) } : { text: content.text }
+  const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { recipient, ...('to' in to ? { messaging_type: 'RESPONSE' } : {}), message } })
   const id = str(body.message_id)
   if (!id) throw new MetaError('A Meta não devolveu o id da mensagem.')
   return id
+}
+
+/** Public answer under a comment (Instagram: /replies; Facebook page: /comments). */
+export async function replyToComment(send: typeof fetch, kind: ChannelKind, token: string, commentId: string, text: string) {
+  await graph(send, `/${commentId}/${kind === 'instagram' ? 'replies' : 'comments'}`, token, { method: 'POST', body: { message: text } })
 }
 
 /** The number behind a WhatsApp phone_number_id, checking the token at the same time. */

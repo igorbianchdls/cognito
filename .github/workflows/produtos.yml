@@ -46,6 +46,6 @@ jobs:
         env:
           INBOX_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/otto_test
           WORKSPACE_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/otto_test
-        run: pnpm inbox:smoke && pnpm workspace:db-smoke
+        run: pnpm inbox:smoke && pnpm inbox:crm-smoke && pnpm workspace:db-smoke
       - name: Build de produção
         run: pnpm build

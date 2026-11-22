@@ -1,60 +1,24 @@
 // What a person does on the Inbox that goes through the server: reply, connect a channel, try the test channel.
 // Each step checks access as the person (same rules as the screens) before using the service connection.
 import { randomBytes, randomUUID } from 'node:crypto'
-import { MAX_TEXT, previewOf, windowOpen, type ChannelKind } from '../shared/rules'
+import { MAX_TEXT, type ChannelKind } from '../shared/rules'
 import { requireWriter, InboxError, type Db, type Person } from './db'
-import { seal, unseal } from './crypto'
+import { seal } from './crypto'
 import { ingest, type IngestDeps } from './ingest'
-import { MetaError, sendText, subscribeWhatsApp, whatsappNumber } from './meta'
+import { subscribeWhatsApp, whatsappNumber } from './meta'
+import { deliver, TARGET_SQL, type SendTarget } from './send'
 
 export type ActionDeps = { db: Db; send?: typeof fetch; storeMedia?: IngestDeps['storeMedia'] }
 
-type Target = { id: string; workspace_id: string; last_inbound_at: string | null; channel_id: string; kind: ChannelKind; external_id: string; channel_status: string; recipient: string | null }
-
 /** Sends a text reply in a conversation the person can write to. */
 export async function reply(person: Person, conversationId: string, rawText: string, deps: ActionDeps) {
-  const text = rawText.trim()
-  if (!text) throw new InboxError('EMPTY', 'Escreva a mensagem.')
-  if (text.length > MAX_TEXT) throw new InboxError('TOO_LONG', `A mensagem passa de ${MAX_TEXT} caracteres.`)
   const target = await deps.db.asPerson(person, async q => {
-    const [row] = await q<Target>(`SELECT c.id, c.workspace_id, c.last_inbound_at, ch.id AS channel_id, ch.kind, ch.external_id, ch.status AS channel_status, i.external_id AS recipient
-      FROM inbox.conversations c JOIN inbox.channels ch ON ch.id = c.channel_id
-      LEFT JOIN inbox.contact_identities i ON i.contact_id = c.contact_id AND i.channel_id = c.channel_id
-      WHERE c.id = $1 AND c.workspace_id = $2`, [conversationId, person.orgId])
+    const [row] = await q<SendTarget>(`${TARGET_SQL} WHERE c.id = $1 AND c.workspace_id = $2`, [conversationId, person.orgId])
     if (!row) throw new InboxError('NOT_FOUND', 'Conversa não encontrada nesta empresa.', 404)
     await requireWriter(q, person.orgId)
     return row
   })
-  if (target.channel_status === 'desconectado') throw new InboxError('CHANNEL_OFF', 'Este canal foi desconectado. Conecte de novo em Canais.', 409)
-  if (!target.recipient) throw new InboxError('NO_RECIPIENT', 'Este contato ainda não escreveu neste canal.', 409)
-  if (!windowOpen(target.kind, target.last_inbound_at)) {
-    throw new InboxError('WINDOW_CLOSED', 'Passaram 24 horas desde a última mensagem do cliente. Pela regra da Meta, agora só dá para enviar um modelo aprovado (chega com os Disparos).', 409)
-  }
-  const { service } = deps.db
-  const [message] = await service<{ id: string }>(`INSERT INTO inbox.messages (workspace_id, conversation_id, direction, kind, body, status, sent_by)
-    VALUES ($1, $2, 'saida', 'texto', $3, 'enviando', $4) RETURNING id`, [target.workspace_id, target.id, text, person.userId])
-  await service(`UPDATE inbox.conversations SET last_message_at = now(), last_preview = $2, unread = 0 WHERE id = $1`, [target.id, previewOf('texto', text)])
-
-  if (target.kind === 'teste') {
-    await service(`UPDATE inbox.messages SET status = 'entregue', external_id = $2 WHERE id = $1`, [message.id, 'teste.' + randomUUID()])
-    return { id: message.id, status: 'entregue' as const }
-  }
-  try {
-    const [cred] = await service<{ token_sealed: string }>('SELECT token_sealed FROM inbox_private.channel_credentials WHERE channel_id = $1', [target.channel_id])
-    if (!cred) throw new InboxError('NO_CREDENTIALS', 'Este canal está sem credencial. Conecte de novo em Canais.', 409)
-    const externalId = await sendText(deps.send ?? fetch, { kind: target.kind, externalId: target.external_id }, unseal(cred.token_sealed), target.recipient, text)
-    // A status webhook can arrive before this update: never move the status backwards.
-    await service(`UPDATE inbox.messages SET external_id = $2, status = CASE WHEN status = 'enviando' THEN 'enviada'::inbox.message_status ELSE status END WHERE id = $1`, [message.id, externalId])
-    return { id: message.id, status: 'enviada' as const }
-  } catch (error) {
-    const reason = error instanceof MetaError || error instanceof InboxError ? error.message : 'Falha inesperada ao enviar.'
-    await service(`UPDATE inbox.messages SET status = 'falhou', error = $2 WHERE id = $1`, [message.id, reason])
-    if (error instanceof MetaError && error.tokenInvalid) {
-      await service(`UPDATE inbox.channels SET status = 'erro', last_error = $2 WHERE id = $1`, [target.channel_id, 'A Meta recusou o token. Conecte o canal de novo.'])
-    }
-    if (!(error instanceof MetaError || error instanceof InboxError)) console.error(JSON.stringify({ scope: 'inbox', code: 'SEND_FAILED', message: (error as Error).message }))
-    return { id: message.id, status: 'falhou' as const, erro: reason }
-  }
+  return deliver(deps.db.service, target, { texto: rawText }, { sentBy: person.userId, send: deps.send })
 }
 
 const cleanName = (name: unknown, fallback: string) => (typeof name === 'string' && name.trim() ? name.trim().slice(0, 80) : fallback)

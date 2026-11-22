@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useAuth } from '@clerk/nextjs'
 import { Card, Notice, Page } from '@/products/analytics/frontend/ui'
 import { deniedMessage, supabase, type QuickReply, type Tag } from './data'
+import { BusinessHoursCard } from './BusinessHoursCard'
 
 const COLORS = ['#ef4444', '#f59e0b', '#16a34a', '#0ea5e9', '#6366f1', '#d946ef', '#6b7280']
 const input = 'h-9 rounded-lg border border-[#e2e2e2] px-3 text-[14px]'
@@ -36,7 +37,7 @@ export function SettingsView() {
 
   if (!tags) return <Page title="Configurações"><Notice>Carregando…</Notice></Page>
   return (
-    <Page title="Configurações" subtitle="Etiquetas e respostas rápidas da equipe.">
+    <Page title="Configurações" subtitle="Etiquetas, respostas rápidas e horário de atendimento.">
       {message ? <div role="status" className="mb-4 rounded-xl border border-[#ececec] bg-white px-4 py-3 text-[14px]">{message}</div> : null}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Etiquetas">
@@ -100,6 +101,7 @@ export function SettingsView() {
             </div>
           </form>
         </Card>
+        <BusinessHoursCard />
       </div>
     </Page>
   )
