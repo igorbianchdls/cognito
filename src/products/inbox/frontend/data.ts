@@ -32,7 +32,7 @@ export type Contact = { id: string; name: string; phone: string | null; email: s
 export type Tag = { id: string; name: string; color: string }
 export type Conversation = {
   id: string; status: 'aberta' | 'pendente' | 'fechada'; assignee: string | null; last_message_at: string; last_inbound_at: string | null
-  last_preview: string | null; unread: number; contact_id: string; channel_id: string
+  last_preview: string | null; unread: number; contact_id: string; channel_id: string; sla_alerted_at?: string | null; team_id?: string | null
   contact: Pick<Contact, 'id' | 'name' | 'phone' | 'email'> | null; channel: Pick<Channel, 'id' | 'kind' | 'name' | 'status'> | null
 }
 export type Message = {

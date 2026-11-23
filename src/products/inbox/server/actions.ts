@@ -6,7 +6,8 @@ import { requireWriter, InboxError, type Db, type Person } from './db'
 import { seal } from './crypto'
 import { ingest, type IngestDeps } from './ingest'
 import { subscribeWhatsApp, whatsappNumber } from './meta'
-import { deliver, TARGET_SQL, type SendTarget } from './send'
+import { deliver, deliverMedia, TARGET_SQL, type MediaPayload, type SendTarget } from './send'
+import { safeName, uploadObject } from '@/products/mcpcore/domains/editor/server/media'
 
 export type ActionDeps = { db: Db; send?: typeof fetch; storeMedia?: IngestDeps['storeMedia'] }
 
@@ -145,4 +146,28 @@ export async function deleteContact(person: Person, contactId: string, deps: Act
     WHERE c.contact_id = $1 AND m.media_path IS NOT NULL`, [contactId])
   await deps.db.service('DELETE FROM inbox.contacts WHERE id = $1 AND workspace_id = $2', [contactId, person.orgId])
   return { arquivos_apagados: await removeFiles(files.map(f => f.media_path), person.orgId, deps.removeMedia) }
+}
+
+const MEDIA_KIND = (mime: string): MediaPayload['kind'] =>
+  /^image\/(jpeg|png)$/.test(mime) ? 'imagem' : /^video\/(mp4|3gpp)$/.test(mime) ? 'video' : /^audio\/(aac|mp4|mpeg|amr|ogg)$/.test(mime) ? 'audio' : 'documento'
+/** Vercel takes request bodies up to about 4.5 MB; Meta's own limits (5 MB images, 16 MB video) are higher. */
+export const MAX_ATTACHMENT = 4 * 1024 * 1024
+
+/** A file sent by a person in the conversation: stored under the company's folder, then sent by link. */
+export async function replyWithFile(person: Person, conversationId: string, file: { bytes: Buffer; name: string; mime: string }, caption: string,
+  deps: ActionDeps & { upload?: (path: string, bytes: Buffer, mime: string) => Promise<void>; sign?: (path: string) => Promise<string> }) {
+  if (!file.bytes.length) throw new InboxError('EMPTY', 'Arquivo vazio.')
+  const mime = (file.mime || 'application/octet-stream').split(';')[0].trim().toLowerCase()
+  const kind = MEDIA_KIND(mime)
+  if (file.bytes.length > MAX_ATTACHMENT) throw new InboxError('TOO_LARGE', 'Arquivos até 4 MB.', 413)
+  const target = await deps.db.asPerson(person, async q => {
+    const [row] = await q<SendTarget>(`${TARGET_SQL} WHERE c.id = $1 AND c.workspace_id = $2`, [conversationId, person.orgId])
+    if (!row) throw new InboxError('NOT_FOUND', 'Conversa não encontrada nesta empresa.', 404)
+    await requireWriter(q, person.orgId)
+    return row
+  })
+  const name = safeName(file.name || 'arquivo')
+  const path = `${person.orgId}/inbox/${randomUUID()}/${name}`
+  await (deps.upload ?? ((p, b, m) => uploadObject(p, b, m)))(path, file.bytes, mime)
+  return deliverMedia(deps.db.service, target, { kind, path, mime, name, caption }, { sentBy: person.userId, send: deps.send, sign: deps.sign })
 }

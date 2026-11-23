@@ -355,9 +355,73 @@ async function database(url: string) {
       assert.deepEqual([c.status, c.sent, c.skipped], ['cancelado', 1, c.total - 1])
       assert.equal((await B.runBroadcasts(deps)).enviados, 0, 'cancelado não envia mais')
     })
+
+    await check('times: rodízio entre disponíveis, prazo de resposta com nota, avaliação 1-5 ao encerrar e envio de arquivo', async () => {
+      const T = await import('../src/products/inbox/server/teams')
+      const { reply, replyWithFile } = await import('../src/products/inbox/server/actions')
+      await assert.rejects(asBrowser(viewer, q => q(`INSERT INTO inbox.teams (workspace_id, name) VALUES ($1, 'x')`, [org])), /row-level security/)
+      const [team] = await asBrowser(owner, q => q(`INSERT INTO inbox.teams (workspace_id, name) VALUES ($1, 'Vendas') RETURNING id`, [org]))
+      for (const u of [owner.userId, viewer.userId]) await asBrowser(owner, q => q(`INSERT INTO inbox.team_members (workspace_id, team_id, user_id) VALUES ($1, $2, $3)`, [org, team.id, u]))
+      await asBrowser(owner, q => q('UPDATE inbox.channels SET team_id = $2 WHERE id = $1', [channel.id, team.id]))
+      const [foreignTeam] = await sql(`INSERT INTO inbox.teams (workspace_id, name) VALUES ($1, 'Outro') RETURNING id`, [other])
+      await assert.rejects(asBrowser(owner, q => q('UPDATE inbox.channels SET team_id = $2 WHERE id = $1', [channel.id, foreignTeam.id])), /outra empresa/)
+      const conv = async (name: string) => (await sql(`SELECT c.* FROM inbox.conversations c JOIN inbox.contacts k ON k.id = c.contact_id WHERE k.workspace_id = $1 AND k.name = $2`, [org, name]))[0]
+      await say('Ivo Alves', 'oi, tudo bem?'); await say('Joana Brito', 'olá')
+      const [ivo, joana] = [await conv('Ivo Alves'), await conv('Joana Brito')]
+      assert.deepEqual([ivo.team_id, joana.team_id], [team.id, team.id])
+      assert.deepEqual(new Set([ivo.assignee, joana.assignee]), new Set([owner.userId, viewer.userId]), 'uma para cada')
+      // The viewer marks themself away (own row only) and gets nothing new.
+      await asBrowser(viewer, q => q('UPDATE inbox.team_members SET available = false WHERE team_id = $1 AND user_id = $2', [team.id, viewer.userId]))
+      assert.equal((await asBrowser(viewer, q => q('UPDATE inbox.team_members SET available = false WHERE team_id = $1 AND user_id = $2 RETURNING 1', [team.id, owner.userId]))).length, 0, 'não muda os outros')
+      await say('Kátia Lima', 'bom dia')
+      assert.equal((await conv('Kátia Lima')).assignee, owner.userId)
+      // Response clock: the customer waits until a person answers (automation does not count).
+      assert(ivo.waiting_since && !ivo.first_response_at)
+      await reply(owner, ivo.id, 'Oi Ivo!', { db })
+      const ivo2 = await conv('Ivo Alves')
+      assert.deepEqual([ivo2.waiting_since, !!ivo2.first_response_at], [null, true])
+      // SLA: past the limit, one note and the mark; not repeated.
+      await sql(`INSERT INTO inbox.settings (workspace_id, sla_minutes) VALUES ($1, 5) ON CONFLICT (workspace_id) DO UPDATE SET sla_minutes = 5`, [org])
+      await sql(`UPDATE inbox.conversations SET waiting_since = now() - interval '10 minutes' WHERE id = $1`, [joana.id])
+      assert((await T.slaAlerts(db.service)).alertas >= 1)
+      assert.match((await sql('SELECT body FROM inbox.notes WHERE conversation_id = $1 ORDER BY created_at DESC LIMIT 1', [joana.id]))[0].body, /Prazo de resposta passou/)
+      assert.equal((await sql('SELECT count(*)::int n FROM inbox.notes WHERE conversation_id = $1', [joana.id]))[0].n, 1)
+      await T.slaAlerts(db.service)
+      assert.equal((await sql('SELECT count(*)::int n FROM inbox.notes WHERE conversation_id = $1', [joana.id]))[0].n, 1, 'uma vez só')
+      // Rating: closing asks (after a minute), "5" is stored with who attended and the conversation stays closed.
+      await sql(`UPDATE inbox.settings SET csat_enabled = true WHERE workspace_id = $1`, [org])
+      await asBrowser(owner, q => q(`UPDATE inbox.conversations SET status = 'fechada' WHERE id = $1`, [ivo.id]))
+      assert((await conv('Ivo Alves')).closed_at)
+      assert.equal((await T.askRatings({ service: db.service })).avaliacoes_pedidas, 0, 'espera um minuto')
+      await sql(`UPDATE inbox.conversations SET closed_at = now() - interval '2 minutes' WHERE id = $1`, [ivo.id])
+      assert.equal((await T.askRatings({ service: db.service })).avaliacoes_pedidas, 1)
+      const asked = (await msgs('Ivo Alves')).at(-1)
+      assert.deepEqual([asked.body, asked.buttons.length], [T.DEFAULT_CSAT, 5])
+      await say('Ivo Alves', '5 - Excelente')
+      const [r] = await sql('SELECT score, assignee, team_id FROM inbox.ratings WHERE conversation_id = $1', [ivo.id])
+      assert.deepEqual([r.score, r.assignee, r.team_id], [5, ivo.assignee, team.id])
+      assert.equal((await conv('Ivo Alves')).status, 'fechada')
+      assert.equal((await msgs('Ivo Alves')).at(-1).body, 'Obrigado pela avaliação! 💙')
+      assert.equal((await T.askRatings({ service: db.service })).avaliacoes_pedidas, 0, 'não pede de novo')
+      await say('Ivo Alves', '3')
+      assert.equal((await sql('SELECT count(*)::int n FROM inbox.ratings WHERE conversation_id = $1', [ivo.id]))[0].n, 1, 'uma avaliação por pedido')
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.ratings (workspace_id, conversation_id, contact_id, score) VALUES ($1, $2, $3, 1)`, [org, ivo.id, ivo.contact_id])), /permission denied/)
+      // File: stored under the company's folder and sent; viewers and big files are refused.
+      const uploaded: string[] = []
+      const fileDeps = { db, upload: async (p: string) => { uploaded.push(p) }, sign: async () => 'https://signed.test/x' }
+      const png = Buffer.from('89504e470d0a1a0a', 'hex')
+      const sent = await replyWithFile(owner, joana.id, { bytes: png, name: 'catálogo final.png', mime: 'image/png' }, 'Segue o catálogo', fileDeps)
+      assert.equal(sent.status, 'entregue')
+      const [m] = await sql('SELECT kind, body, media_path, media_mime, sent_by FROM inbox.messages WHERE id = $1', [sent.id])
+      assert.deepEqual([m.kind, m.body, m.media_mime, m.sent_by], ['imagem', 'Segue o catálogo', 'image/png', owner.userId])
+      assert(m.media_path.startsWith(org + '/inbox/') && m.media_path.endsWith('/catalogo_final.png') && uploaded[0] === m.media_path)
+      await assert.rejects(replyWithFile(viewer, joana.id, { bytes: png, name: 'a.png', mime: 'image/png' }, '', fileDeps), /só pode visualizar/)
+      await assert.rejects(replyWithFile(owner, joana.id, { bytes: Buffer.alloc(4 * 1024 * 1024 + 1), name: 'a.pdf', mime: 'application/pdf' }, '', fileDeps), /até 4 MB/)
+      assert.equal(uploaded.length, 1)
+    })
   } finally {
     for (const o of [org, other]) {
-      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.broadcasts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.segments WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.email_settings WHERE workspace_id = $1', [o])
+      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.broadcasts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.teams WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.segments WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.email_settings WHERE workspace_id = $1', [o])
       await sql('DELETE FROM inbox.contacts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tags WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.settings WHERE workspace_id = $1', [o])
     }
     await sql('DELETE FROM shared.usuarios_empresas WHERE empresa_id = ANY($1) OR usuario_id = ANY($1)', [ids])
