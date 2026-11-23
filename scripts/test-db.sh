@@ -5,7 +5,7 @@ set -euo pipefail
 db="${1:-otto_test}"
 psql -v ON_ERROR_STOP=1 -qc "DROP DATABASE IF EXISTS $db" -c "CREATE DATABASE $db" postgres
 psql -v ON_ERROR_STOP=1 -q -f supabase/tests/stubs.sql "$db"
-for name in editor_schema social_schema editor_social_roles drive_schema analytics_schema analytics_goals videohosting_schema inbox_schema inbox_reliability inbox_automations inbox_tick_cron inbox_sales inbox_deals inbox_segments; do
+for name in editor_schema social_schema editor_social_roles drive_schema analytics_schema analytics_goals videohosting_schema inbox_schema inbox_reliability inbox_automations inbox_tick_cron inbox_sales inbox_deals inbox_segments inbox_broadcasts; do
   file=$(ls supabase/migrations/*_"$name".sql)
   psql -v ON_ERROR_STOP=1 -q -f "$file" "$db" > /dev/null
 done

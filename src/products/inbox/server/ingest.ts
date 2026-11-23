@@ -6,6 +6,7 @@ import { previewOf, type ChannelKind } from '../shared/rules'
 import type { Query } from './db'
 import type { CommentEvent, InboundMessage, MetaEvent, StatusUpdate } from './meta'
 import { onComment, onInbound } from './flows'
+import { handleOptOutWord } from './broadcasts'
 
 type Channel = { id: string; workspace_id: string; kind: ChannelKind }
 export type StoredMedia = { path: string; mime: string; name: string | null }
@@ -100,6 +101,9 @@ async function addMessage(deps: IngestDeps, channel: Channel & { external_id: st
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING RETURNING id`,
   [channel.workspace_id, conversation.id, m.direction, m.kind, m.text, stored?.path ?? null, stored?.mime ?? m.media?.mime ?? null, stored?.name ?? m.media?.name ?? null,
     m.messageId, inbound ? 'recebida' : 'enviada', m.at])
+  // SAIR / VOLTAR: broadcast opt-out, answered here and kept away from the automations.
+  if (rows.length && inbound && m.text && deps.automations !== false && await handleOptOutWord({ service, send: deps.automations?.send },
+    { workspaceId: channel.workspace_id, contactId, conversationId: conversation.id, channelKind: channel.kind, text: m.text }).catch(() => false)) return true
   if (rows.length && inbound && deps.automations !== false) {
     await onInbound({ service, send: deps.automations?.send }, { workspaceId: channel.workspace_id, channelId: channel.id, contactId, conversationId: conversation.id,
       text: m.text ?? '', isNew: conversation.created, ref: m.ref, story: m.story }).catch(error =>
