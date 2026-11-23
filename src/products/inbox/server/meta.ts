@@ -249,3 +249,25 @@ export async function listTemplates(send: typeof fetch, businessAccountId: strin
   const body = await graph(send, `/${businessAccountId}/message_templates?fields=id,name,language,status,rejected_reason&limit=200`, token)
   return arr(body.data).map(x => { const o = obj(x); return { id: str(o.id), name: str(o.name), language: str(o.language), status: str(o.status), reason: str(o.rejected_reason) } })
 }
+
+export type OutgoingMedia = { kind: 'imagem' | 'video' | 'audio' | 'documento'; link: string; name: string; caption?: string }
+/** A file by link (a short-lived signed URL of our storage). Instagram/Messenger send the caption as a separate text. */
+export async function sendMedia(send: typeof fetch, channel: { kind: ChannelKind; externalId: string }, token: string, to: string, m: OutgoingMedia) {
+  if (channel.kind === 'whatsapp') {
+    const type = { imagem: 'image', video: 'video', audio: 'audio', documento: 'document' }[m.kind]
+    const media: Record<string, string> = { link: m.link }
+    if (m.caption && m.kind !== 'audio') media.caption = m.caption.slice(0, 1024)
+    if (m.kind === 'documento') media.filename = m.name
+    const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { messaging_product: 'whatsapp', recipient_type: 'individual', to, type, [type]: media } })
+    const id = str(obj(arr(body.messages)[0]).id)
+    if (!id) throw new MetaError('A Meta não devolveu o id da mensagem.')
+    return id
+  }
+  const type = { imagem: 'image', video: 'video', audio: 'audio', documento: 'file' }[m.kind]
+  const body = await graph(send, `/${channel.externalId}/messages`, token, { method: 'POST', body: { recipient: { id: to }, messaging_type: 'RESPONSE',
+    message: { attachment: { type, payload: { url: m.link, is_reusable: false } } } } })
+  const id = str(body.message_id)
+  if (!id) throw new MetaError('A Meta não devolveu o id da mensagem.')
+  if (m.caption?.trim()) await sendMessage(send, channel, token, { to }, { text: m.caption.trim() })
+  return id
+}

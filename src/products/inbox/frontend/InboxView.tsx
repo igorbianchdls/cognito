@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useOrganization } from '@clerk/nextjs'
 import {
-  IconAddressBook, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
+  IconAddressBook, IconPaperclip, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
   IconHash, IconInbox, IconLayoutSidebarRight, IconMessageCircle, IconNotes, IconPhone, IconPlug, IconSearch, IconSettings, IconTag, IconUserCircle, IconUsers,
 } from '@tabler/icons-react'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '../shared/rules'
@@ -111,7 +111,7 @@ export function InboxView() {
     if (!isLoaded || !orgId) return
     let live = true
     void Promise.all([
-      supabase().from('conversations').select('id, status, assignee, last_message_at, last_inbound_at, last_preview, unread, contact_id, channel_id, contact:contacts(id, name, phone, email), channel:channels(id, kind, name, status)')
+      supabase().from('conversations').select('id, status, assignee, last_message_at, last_inbound_at, last_preview, unread, contact_id, channel_id, sla_alerted_at, team_id, contact:contacts(id, name, phone, email), channel:channels(id, kind, name, status)')
         .eq('workspace_id', orgId).order('last_message_at', { ascending: false }).limit(300),
       supabase().from('channels').select('id, kind, name, external_id, display, status, last_error, created_at').eq('workspace_id', orgId).order('created_at'),
       supabase().from('tags').select('id, name, color').eq('workspace_id', orgId).order('name'),
@@ -222,6 +222,7 @@ export function InboxView() {
                     <ChannelIcon kind={c.channel?.kind} className="size-4 shrink-0" />
                     <span className={`truncate text-[13.5px] ${c.unread ? 'font-semibold' : 'font-medium'}`}>{c.contact?.name ?? 'Contato'}</span>
                     {who ? <span className="shrink-0 truncate text-[12px] text-[#8e8e93]">› {who.name.split(' ')[0]}</span> : null}
+                    {c.sla_alerted_at && c.status !== 'fechada' ? <span title="O prazo de resposta passou" className="shrink-0 rounded bg-[#fdecec] px-1 text-[10.5px] font-semibold text-[#c0392b]">Atrasada</span> : null}
                     <span className="ml-auto shrink-0 text-[11.5px] text-[#8e8e93]">{time(c.last_message_at)}</span>
                   </span>
                   <span className="mt-1 flex items-start gap-2">
@@ -316,6 +317,17 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
       setSending(false)
     }
   }
+  async function sendFile(file: File) {
+    if (file.size > 4 * 1024 * 1024) return setError('Arquivos até 4 MB.')
+    setSending(true); setError(null)
+    const form = new FormData(); form.set('arquivo', file); form.set('legenda', text.trim())
+    const r = await fetch(`/api/inbox/conversas/${c.id}/anexo`, { method: 'POST', body: form }).catch(() => null)
+    const data = await r?.json().catch(() => ({})) as { status?: string; erro?: string } | undefined
+    if (!r?.ok && r?.status !== 502) setError(data?.erro ?? 'Não foi possível enviar o arquivo.')
+    else if (data?.status === 'falhou') setError(`Não foi enviado: ${data.erro ?? 'a Meta recusou.'}`)
+    else setText('')
+    setSending(false); onChange()
+  }
   async function update(fields: Partial<Pick<Conversation, 'status' | 'assignee'>>) {
     const { error: e } = await supabase().from('conversations').update(fields).eq('id', c.id)
     if (e) setError(deniedMessage(e, 'Não foi possível atualizar a conversa.')); else onChange()
@@ -370,7 +382,7 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
           {error ? <p role="alert" className="mb-2 rounded-lg bg-[#fdf2f2] px-3 py-2 text-[13px] text-[#8a2b2b]">{error}</p> : null}
           {!open && !noteMode ? (
             <p className="mb-2 rounded-lg bg-[#fff7e6] px-3 py-2 text-[13px] text-[#8a5a00]">
-              A janela de 24 horas fechou: pela regra da Meta, só dá para responder com um modelo aprovado (chega com os Disparos). Você ainda pode deixar notas internas.
+              A janela de 24 horas fechou: pela regra da Meta, só dá para responder com um modelo aprovado (em Disparos). Você ainda pode deixar notas internas.
             </p>
           ) : null}
           {suggestions.length ? (
@@ -394,7 +406,12 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit() } }}
               placeholder={noteMode ? 'Nota só para a equipe…' : open ? `Responder ${contactName.split(' ')[0]}… ("/" abre as respostas rápidas)` : 'Janela fechada'}
               aria-label={noteMode ? 'Nota interna' : 'Resposta'} className="block w-full resize-none bg-transparent px-3 py-1.5 text-[14px] outline-none disabled:cursor-not-allowed" />
-            <div className="flex justify-end px-2 pb-2">
+            <div className="flex items-center justify-end gap-2 px-2 pb-2">
+              {!noteMode ? <label title="Enviar arquivo (até 4 MB); o texto vai como legenda" className={`mr-auto inline-flex h-8 cursor-pointer items-center gap-1 rounded-lg px-2 text-[12.5px] text-[#636366] hover:bg-[#f2f2f4] ${!open || sending ? 'pointer-events-none opacity-40' : ''}`}>
+                <IconPaperclip className="size-4" />Arquivo
+                <input type="file" className="sr-only" disabled={!open || sending} accept="image/jpeg,image/png,video/mp4,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.zip"
+                  onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void sendFile(f) }} />
+              </label> : null}
               <button type="button" onClick={() => void submit()} disabled={sending || !text.trim() || (!open && !noteMode)}
                 className="h-8 rounded-lg bg-[#111] px-4 text-[13px] font-medium text-white disabled:opacity-35">{sending ? 'Enviando…' : noteMode ? 'Salvar nota' : 'Enviar'}</button>
             </div>
@@ -450,7 +467,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row; tags: Tag[]; onChanged: () => void }) {
   const { orgId } = useAuth()
-  const [stats, setStats] = useState<{ total: number; open: number; since: string | null; channels: ChannelKind[]; spent: number; orders: number; deals: { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[]; purchases: { product: string | null; amount: number | null; status: string; occurred_at: string }[] } | null>(null)
+  const [stats, setStats] = useState<{ total: number; open: number; since: string | null; channels: ChannelKind[]; spent: number; orders: number; rating: { avg: number; count: number } | null; deals: { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[]; purchases: { product: string | null; amount: number | null; status: string; occurred_at: string }[] } | null>(null)
   const [mine, setMine] = useState<string[]>(c.tags)
   const [message, setMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -461,12 +478,14 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
       supabase().from('contact_tags').select('tag_id').eq('contact_id', c.contact_id),
       supabase().from('purchases').select('product, amount, status, occurred_at').eq('contact_id', c.contact_id).order('occurred_at', { ascending: false }).limit(50),
       supabase().from('deals').select('id, title, value, stage:pipeline_stages(name, kind)').eq('contact_id', c.contact_id).order('created_at', { ascending: false }).limit(10),
-    ]).then(([cv, ct, pu, dl]) => {
+      supabase().from('ratings').select('score').eq('contact_id', c.contact_id).limit(200),
+    ]).then(([cv, ct, pu, dl, rt]) => {
+      const scores = ((rt.data ?? []) as { score: number }[]).map(r => r.score)
       const convs = (cv.data ?? []) as unknown as { id: string; status: string; created_at: string; channel: { kind: ChannelKind } | null }[]
       const purchases = (pu.data ?? []) as { product: string | null; amount: number | null; status: string; occurred_at: string }[]
       const paid = purchases.filter(p => p.status === 'aprovada')
       if (!live) return
-      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, purchases, deals: (dl.data ?? []) as unknown as { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[],
+      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, purchases, rating: scores.length ? { avg: scores.reduce((a, b) => a + b, 0) / scores.length, count: scores.length } : null, deals: (dl.data ?? []) as unknown as { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[],
         spent: paid.reduce((t, p) => t + Number(p.amount ?? 0), 0), orders: paid.length,
         since: convs.map(x => x.created_at).sort()[0] ?? null, channels: [...new Set(convs.map(x => x.channel?.kind).filter(Boolean) as ChannelKind[])] })
       setMine((ct.data ?? []).map(r => r.tag_id as string))
@@ -506,6 +525,7 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
         <dt className="text-[#8e8e93]">E-mail</dt><dd className="truncate">{c.contact?.email ?? '—'}</dd>
         <dt className="text-[#8e8e93]">Telefone</dt><dd>{c.contact?.phone ? formatPhone(c.contact.phone) : '—'}</dd>
         <dt className="text-[#8e8e93]">Canais</dt><dd className="flex gap-1.5">{(stats?.channels ?? []).map(k => <ChannelIcon key={k} kind={k} />)}</dd>
+        {stats?.rating ? <><dt className="text-[#8e8e93]">Avaliação</dt><dd>{'★'.repeat(Math.round(stats.rating.avg))}<span className="text-[#c7c7cc]">{'★'.repeat(5 - Math.round(stats.rating.avg))}</span> <span className="text-[12px] text-[#8e8e93]">{stats.rating.avg.toFixed(1)} ({stats.rating.count})</span></dd></> : null}
       </dl>
       <Section title="Etiquetas">
         {!tags.length ? <p className="text-[13px] text-[#8e8e93]">Crie etiquetas em <Link href="/inbox/configuracoes" className="underline">Configurações</Link>.</p> : null}

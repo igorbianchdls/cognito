@@ -7,6 +7,7 @@ import type { Query } from './db'
 import type { CommentEvent, InboundMessage, MetaEvent, StatusUpdate } from './meta'
 import { onComment, onInbound } from './flows'
 import { handleOptOutWord } from './broadcasts'
+import { handleRating, routeConversation } from './teams'
 
 type Channel = { id: string; workspace_id: string; kind: ChannelKind }
 export type StoredMedia = { path: string; mime: string; name: string | null }
@@ -101,6 +102,11 @@ async function addMessage(deps: IngestDeps, channel: Channel & { external_id: st
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ON CONFLICT DO NOTHING RETURNING id`,
   [channel.workspace_id, conversation.id, m.direction, m.kind, m.text, stored?.path ?? null, stored?.mime ?? m.media?.mime ?? null, stored?.name ?? m.media?.name ?? null,
     m.messageId, inbound ? 'recebida' : 'enviada', m.at])
+  if (rows.length && inbound && deps.automations !== false) {
+    // A 1-5 answer to the rating question closes the matter here; otherwise the conversation goes to its team.
+    if (m.text && await handleRating({ service, send: deps.automations?.send }, { conversationId: conversation.id, contactId, text: m.text }).catch(() => false)) return true
+    await routeConversation(service, conversation.id).catch(error => console.error(JSON.stringify({ scope: 'inbox', code: 'ROUTING_FAILED', message: (error as Error).message })))
+  }
   // SAIR / VOLTAR: broadcast opt-out, answered here and kept away from the automations.
   if (rows.length && inbound && m.text && deps.automations !== false && await handleOptOutWord({ service, send: deps.automations?.send },
     { workspaceId: channel.workspace_id, contactId, conversationId: conversation.id, channelKind: channel.kind, text: m.text }).catch(() => false)) return true
