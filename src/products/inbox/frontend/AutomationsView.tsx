@@ -50,7 +50,7 @@ export function AutomationsView() {
     }
     const { data, error } = await supabase().from('flows').insert({ workspace_id: orgId, name: template === 'vazia' ? 'Nova automação' : 'Boas-vindas', draft }).select('id').single()
     if (error) return setMessage(deniedMessage(error, 'Não foi possível criar.'))
-    router.push(`/inbox/automacoes/${data.id}`)
+    router.push(`/automacoes/${data.id}`)
   }
   async function setStatus(f: Flow, status: Flow['status']) {
     if (status === 'ativo' && !f.version) return setMessage('Abra a automação e publique antes de ativar.')
@@ -82,7 +82,7 @@ export function AutomationsView() {
             <tbody>
               {flows.map(f => (
                 <tr key={f.id} className="border-b border-[#f3f3f3] last:border-0">
-                  <td className="px-4 py-3"><Link href={`/inbox/automacoes/${f.id}`} className="font-medium text-[#111] hover:underline">{f.name}</Link>
+                  <td className="px-4 py-3"><Link href={`/automacoes/${f.id}`} className="font-medium text-[#111] hover:underline">{f.name}</Link>
                     <span className="ml-2 text-[12px] text-[#888]">{f.version ? `v${f.version}` : 'não publicada'}</span></td>
                   <td className="px-4 py-3 text-[13px] text-[#555]">{f.triggers.filter(t => t.active).map(t => TRIGGER_LABEL[t.kind]).join(', ') || <span className="text-[#a33]">sem gatilho</span>}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${STATUS[f.status].cls}`}>{STATUS[f.status].label}</span></td>

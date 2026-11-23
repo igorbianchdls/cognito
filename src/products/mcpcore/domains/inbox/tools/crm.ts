@@ -32,7 +32,7 @@ const reportTool = tool({
   description: 'Números do período: conversas novas e encerradas, tempo da 1ª resposta, avaliações, desempenho por responsável, receita e vendas por origem do lead, funil de negócios, automações/IA e disparos.',
   schema: z.object({ ...base(), de: date('Início').optional(), ate: date('Fim').optional() }).strict(),
   run: (input, ctx) => ctx.as(async m => {
-    try { return { ...(await report(q(m), m.ws, period(input.de, input.ate))), link: `${ctx.origin}/inbox/relatorios` } } catch (e) { return plugin(e) }
+    try { return { ...(await report(q(m), m.ws, period(input.de, input.ate))), link: `${ctx.origin}/relatorios` } } catch (e) { return plugin(e) }
   }),
 })
 
@@ -55,7 +55,7 @@ const listDeals = tool({
     const total = rows.reduce((t, r) => t + Number(r.value ?? 0), 0)
     return { negocios: rows.map(r => ({ id: r.id, titulo: r.title, funil: r.pipeline, etapa: r.stage, situacao: r.kind, valor: r.value == null ? undefined : Number(r.value),
       previsao: r.expected_close ?? undefined, contato: r.contact ?? undefined, contato_id: r.contact_id ?? undefined, responsavel_id: r.owner ?? undefined, fechado_em: r.closed_at ?? undefined })),
-    quantidade: rows.length, valor_total: total, link: `${ctx.origin}/inbox/negocios` }
+    quantidade: rows.length, valor_total: total, link: `${ctx.origin}/negocios` }
   }),
 })
 
@@ -76,7 +76,7 @@ const saveDeal = tool({
     }
     if (input.funil || !pipelineId) {
       const [p] = await m.db.query<{ id: string }>(`SELECT id FROM inbox.pipelines WHERE workspace_id = $1 ${input.funil ? 'AND lower(name) = lower($2)' : ''} ORDER BY position, created_at LIMIT 1`, input.funil ? [m.ws, input.funil] : [m.ws])
-      if (!p) throw new PluginError('NOT_FOUND', input.funil ? `Funil "${input.funil}" não existe.` : 'Nenhum funil criado. Crie em /inbox/negocios.', 404)
+      if (!p) throw new PluginError('NOT_FOUND', input.funil ? `Funil "${input.funil}" não existe.` : 'Nenhum funil criado. Crie em /negocios.', 404)
       pipelineId = p.id
     }
     let stageId: string | undefined
@@ -91,7 +91,7 @@ const saveDeal = tool({
       const [d] = await m.db.query<{ id: string }>(`INSERT INTO inbox.deals (workspace_id, pipeline_id, stage_id, title, value, contact_id, expected_close, owner, notes, position)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, extract(epoch FROM now())) RETURNING id`,
       [m.ws, pipelineId, stageId, input.titulo, input.valor ?? null, input.contato_id ?? null, input.previsao ?? null, owner ?? null, input.anotacoes ?? null])
-      return { negocio_id: d.id, criado: true, link: `${ctx.origin}/inbox/negocios` }
+      return { negocio_id: d.id, criado: true, link: `${ctx.origin}/negocios` }
     }
     const sets: string[] = [], params: unknown[] = [input.negocio_id]
     const set = (col: string, v: unknown) => { params.push(v); sets.push(`${col} = $${params.length}`) }
@@ -110,7 +110,7 @@ const saveDeal = tool({
       throw e
     })
     if (!done.length) throw new PluginError('ACCESS_DENIED', 'Seu perfil só pode visualizar.', 403)
-    return { negocio_id: input.negocio_id, alterado: true, link: `${ctx.origin}/inbox/negocios` }
+    return { negocio_id: input.negocio_id, alterado: true, link: `${ctx.origin}/negocios` }
   }),
 })
 
@@ -127,7 +127,7 @@ const listTasks = tool({
        WHERE t.workspace_id = $1 AND ${cond} ${input.minhas ? 'AND t.assignee = $2' : ''} ORDER BY t.done_at NULLS FIRST, t.due_at NULLS LAST LIMIT ${input.limite}`, input.minhas ? [m.ws, m.userId] : [m.ws])
     return { tarefas: rows.map(t => ({ id: t.id, titulo: t.title, vence_em: t.due_at ?? undefined, atrasada: !t.done_at && !!t.due_at && new Date(t.due_at) < new Date() ? true : undefined,
       concluida_em: t.done_at ?? undefined, responsavel_id: t.assignee ?? undefined, contato: t.contact ?? undefined, contato_id: t.contact_id ?? undefined, negocio: t.deal ?? undefined, negocio_id: t.deal_id ?? undefined })),
-    link: `${ctx.origin}/inbox/negocios?aba=tarefas` }
+    link: `${ctx.origin}/negocios?aba=tarefas` }
   }),
 })
 
@@ -150,7 +150,7 @@ const saveTask = tool({
       if (/row-level security/.test(e.message)) throw new PluginError('INVALID_INPUT', 'Contato ou negócio não são desta empresa (ou seu perfil só pode visualizar).', 422)
       throw e
     })
-    return { tarefa_id: t.id, criada: true, link: `${ctx.origin}/inbox/negocios?aba=tarefas` }
+    return { tarefa_id: t.id, criada: true, link: `${ctx.origin}/negocios?aba=tarefas` }
   }),
 })
 
@@ -180,7 +180,7 @@ const listBroadcasts = tool({
       `SELECT b.id, b.name, b.kind, b.status, s.name AS segment, b.scheduled_at, b.started_at, b.total, b.sent, b.failed, b.skipped, b.error
        FROM inbox.broadcasts b LEFT JOIN inbox.segments s ON s.id = b.segment_id WHERE b.workspace_id = $1 ORDER BY b.created_at DESC LIMIT ${input.limite}`, [m.ws])
     return { disparos: rows.map(b => ({ id: b.id, nome: b.name, tipo: b.kind === 'email' ? 'e-mail' : 'WhatsApp', situacao: b.status, segmento: b.segment ?? undefined, agendado_para: b.scheduled_at ?? undefined,
-      iniciado_em: b.started_at ?? undefined, no_segmento: b.total, enviados: b.sent, falhas: b.failed, ignorados: b.skipped, erro: b.error ?? undefined })), link: `${ctx.origin}/inbox/disparos` }
+      iniciado_em: b.started_at ?? undefined, no_segmento: b.total, enviados: b.sent, falhas: b.failed, ignorados: b.skipped, erro: b.error ?? undefined })), link: `${ctx.origin}/disparos` }
   }),
 })
 
@@ -195,7 +195,7 @@ const listFlows = tool({
          (SELECT count(*) FROM inbox.flow_events e WHERE e.flow_id = f.id AND e.kind = 'concluiu' AND e.created_at > now() - interval '30 days')::text AS done
        FROM inbox.flows f WHERE f.workspace_id = $1 ORDER BY f.updated_at DESC`, [m.ws])
     return { automacoes: rows.map(f => ({ id: f.id, nome: f.name, situacao: f.status, publicada_em: f.published_at ?? undefined, gatilhos: f.triggers ?? [], execucoes_30d: Number(f.runs), concluidas_30d: Number(f.done),
-      link: `${ctx.origin}/inbox/automacoes/${f.id}` })) }
+      link: `${ctx.origin}/automacoes/${f.id}` })) }
   }),
 })
 

@@ -227,7 +227,7 @@ function Editor({ flowId }: { flowId: string }) {
   return (
     <div className="flex h-[calc(100dvh-3rem)] min-h-0 flex-col bg-white md:h-[100dvh]">
       <header className="flex flex-wrap items-center gap-2 border-b border-[#ececef] px-3 py-2">
-        <Link href="/inbox/automacoes" className="rounded-md px-2 py-1 text-[13px] text-[#555] hover:bg-[#f2f2f4]">← Automações</Link>
+        <Link href="/automacoes" className="rounded-md px-2 py-1 text-[13px] text-[#555] hover:bg-[#f2f2f4]">← Automações</Link>
         <input value={name} onChange={e => { dirty.current = true; setName(e.target.value) }} aria-label="Nome da automação" className="min-w-0 flex-1 rounded-md px-2 py-1 text-[15px] font-semibold outline-none hover:bg-[#f7f7f8] focus:bg-[#f7f7f8]" />
         <span className="text-[12px] text-[#8e8e93]">{saving === 'salvando' ? 'Salvando…' : saving === 'erro' ? 'Não salvo' : 'Rascunho salvo'}</span>
         <details className="relative">
@@ -334,7 +334,7 @@ function NodeForm({ node, ctx, isStart, onChange, onStart, onRemove }: { node: F
         <label className="text-[#555]">Funil<select value={node.funil} onChange={e => set({ funil: e.target.value, etapa: ctx.pipelines.find(p => p.id === e.target.value)?.stages[0]?.id ?? '' })} className={input}><option value="">Escolha…</option>{ctx.pipelines.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
         <label className="text-[#555]">Etapa<select value={node.etapa} onChange={e => set({ etapa: e.target.value })} className={input}>{(ctx.pipelines.find(p => p.id === node.funil)?.stages ?? []).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
         <label className="text-[#555]">Título<input value={node.titulo ?? ''} onChange={e => set({ titulo: e.target.value })} className={input} /></label>
-        {!ctx.pipelines.length ? <p className="text-[12px] text-[#8e8e93]">Crie um funil em <Link href="/inbox/negocios" className="underline">Negócios</Link>.</p> : null}
+        {!ctx.pipelines.length ? <p className="text-[12px] text-[#8e8e93]">Crie um funil em <Link href="/negocios" className="underline">Negócios</Link>.</p> : null}
       </>) : null}
       <div className="flex flex-wrap gap-2 border-t border-[#f2f2f4] pt-3">
         {!isStart ? <button type="button" onClick={onStart} className="h-8 rounded-lg border border-[#e2e2e2] px-3">Definir como início</button> : <span className="text-[12px] text-[#16a34a]">Este é o bloco inicial</span>}

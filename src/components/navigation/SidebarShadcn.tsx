@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
-  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
+  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
   IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
   IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
@@ -40,7 +40,7 @@ type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "inbox"; title: string; items: NavigationItem[] }
+type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "inbox" | "automacao" | "crm"; title: string; items: NavigationItem[] }
 
 const reports = [
   { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
@@ -138,15 +138,24 @@ const sections: Section[] = [
     ],
   },
   {
-    id: "inbox", title: "Inbox", items: [
+    id: "inbox", title: "Atendimento", items: [
       { title: "Caixa de entrada", url: "/inbox", icon: IconMessageCircleFilled, exactActive: true },
-      { title: "Negócios", url: "/inbox/negocios", icon: IconBriefcaseFilled },
       { title: "Contatos", url: "/inbox/contatos", icon: IconUserFilled },
-      { title: "Automações", url: "/inbox/automacoes", icon: IconBoltFilled },
-      { title: "Disparos", url: "/inbox/disparos", icon: IconSpeakerphone },
-      { title: "Relatórios", url: "/inbox/relatorios", icon: IconChartAreaFilled },
       { title: "Canais", url: "/inbox/canais", icon: IconArrowsExchange },
       { title: "Configurações", url: "/inbox/configuracoes", icon: IconAdjustmentsFilled },
+    ],
+  },
+  {
+    id: "automacao", title: "Automação", items: [
+      { title: "Automações", url: "/automacoes", icon: IconBoltFilled },
+      { title: "Disparos", url: "/disparos", icon: IconSpeakerphone },
+      { title: "Segmentos", url: "/segmentos", icon: IconFilterFilled },
+    ],
+  },
+  {
+    id: "crm", title: "CRM", items: [
+      { title: "Negócios", url: "/negocios", icon: IconBriefcaseFilled },
+      { title: "Relatórios", url: "/relatorios", icon: IconChartAreaFilled },
     ],
   },
 ]
