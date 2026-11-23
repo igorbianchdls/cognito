@@ -28,7 +28,7 @@ export async function post<T = Record<string, unknown>>(path: string, body: obje
 }
 
 export type Channel = { id: string; kind: ChannelKind; name: string; external_id: string; display: string | null; status: 'conectado' | 'erro' | 'desconectado'; last_error: string | null; created_at: string }
-export type Contact = { id: string; name: string; phone: string | null; email: string | null; created_at: string }
+export type Contact = { id: string; name: string; phone: string | null; email: string | null; created_at: string; source?: string | null }
 export type Tag = { id: string; name: string; color: string }
 export type Conversation = {
   id: string; status: 'aberta' | 'pendente' | 'fechada'; assignee: string | null; last_message_at: string; last_inbound_at: string | null
