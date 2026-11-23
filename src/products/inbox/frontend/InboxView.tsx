@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useOrganization } from '@clerk/nextjs'
 import {
-  IconAddressBook, IconArrowsSort, IconBolt, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
+  IconAddressBook, IconArrowsSort, IconBolt, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
   IconHash, IconInbox, IconLayoutSidebarRight, IconMessageCircle, IconNotes, IconPhone, IconPlug, IconSearch, IconSettings, IconTag, IconUserCircle, IconUsers,
 } from '@tabler/icons-react'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '../shared/rules'
@@ -163,6 +163,7 @@ export function InboxView() {
         </div>
         <NavItem active={allActive} onClick={() => { setBox(null); setLabel(null) }} icon={<IconInbox className="size-4" />} label="Todas as conversas" count={(rows ?? []).filter(c => c.status !== 'fechada').length} />
         <Group title="Ferramentas">
+          <NavItem href="/inbox/negocios" icon={<IconBriefcase className="size-4" />} label="Negócios" />
           <NavItem href="/inbox/contatos" icon={<IconAddressBook className="size-4" />} label="Contatos" />
           <NavItem href="/inbox/automacoes" icon={<IconBolt className="size-4" />} label="Automações" />
           <NavItem href="/inbox/canais" icon={<IconPlug className="size-4" />} label="Canais" />
@@ -448,7 +449,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row; tags: Tag[]; onChanged: () => void }) {
   const { orgId } = useAuth()
-  const [stats, setStats] = useState<{ total: number; open: number; since: string | null; channels: ChannelKind[]; spent: number; orders: number; purchases: { product: string | null; amount: number | null; status: string; occurred_at: string }[] } | null>(null)
+  const [stats, setStats] = useState<{ total: number; open: number; since: string | null; channels: ChannelKind[]; spent: number; orders: number; deals: { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[]; purchases: { product: string | null; amount: number | null; status: string; occurred_at: string }[] } | null>(null)
   const [mine, setMine] = useState<string[]>(c.tags)
   const [message, setMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -458,12 +459,13 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
       supabase().from('conversations').select('id, status, created_at, channel:channels(kind)').eq('contact_id', c.contact_id),
       supabase().from('contact_tags').select('tag_id').eq('contact_id', c.contact_id),
       supabase().from('purchases').select('product, amount, status, occurred_at').eq('contact_id', c.contact_id).order('occurred_at', { ascending: false }).limit(50),
-    ]).then(([cv, ct, pu]) => {
+      supabase().from('deals').select('id, title, value, stage:pipeline_stages(name, kind)').eq('contact_id', c.contact_id).order('created_at', { ascending: false }).limit(10),
+    ]).then(([cv, ct, pu, dl]) => {
       const convs = (cv.data ?? []) as unknown as { id: string; status: string; created_at: string; channel: { kind: ChannelKind } | null }[]
       const purchases = (pu.data ?? []) as { product: string | null; amount: number | null; status: string; occurred_at: string }[]
       const paid = purchases.filter(p => p.status === 'aprovada')
       if (!live) return
-      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, purchases,
+      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, purchases, deals: (dl.data ?? []) as unknown as { id: string; title: string; value: number | null; stage: { name: string; kind: string } | null }[],
         spent: paid.reduce((t, p) => t + Number(p.amount ?? 0), 0), orders: paid.length,
         since: convs.map(x => x.created_at).sort()[0] ?? null, channels: [...new Set(convs.map(x => x.channel?.kind).filter(Boolean) as ChannelKind[])] })
       setMine((ct.data ?? []).map(r => r.tag_id as string))
@@ -517,6 +519,14 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
             )
           })}
         </div>
+      </Section>
+      <Section title="Negócios">
+        {(stats?.deals ?? []).map(d => (
+          <Link key={d.id} href="/inbox/negocios" className="flex items-baseline gap-2 py-0.5 text-[12.5px] hover:underline">
+            <span className="min-w-0 flex-1 truncate">{d.title}</span><span className="text-[#8e8e93]">{d.stage?.name}</span>
+          </Link>
+        ))}
+        {!stats?.deals.length ? <p className="text-[12.5px] text-[#8e8e93]">Nenhum negócio. <Link href="/inbox/negocios" className="underline">Abrir funil</Link></p> : null}
       </Section>
       {stats?.purchases.length ? (
         <Section title="Compras">

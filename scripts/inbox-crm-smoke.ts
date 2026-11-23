@@ -212,9 +212,51 @@ async function database(url: string) {
       await assert.rejects(asBrowser(owner, q => q('SELECT * FROM inbox_private.integration_secrets')), /permission denied/)
       assert.equal((await asBrowser(stranger, q => q('SELECT id FROM inbox.purchases WHERE workspace_id = $1', [org]))).length, 0)
     })
+
+    await check('negócios: funil e etapas pelo navegador; mover grava histórico e data de fechamento; automação cria negócio; compra marca ganho', async () => {
+      const { wonFromPurchase } = await import('../src/products/inbox/server/deals')
+      const { pipe, stages } = await asBrowser(owner, async q => {
+        const [p] = await q(`INSERT INTO inbox.pipelines (workspace_id, name) VALUES ($1, 'Vendas') RETURNING id`, [org])
+        const st: Record<string, string> = {}
+        for (const [i, [n, k]] of [['Lead', 'aberto'], ['Proposta', 'aberto'], ['Ganho', 'ganho'], ['Perdido', 'perdido']].entries()) {
+          const [r] = await q(`INSERT INTO inbox.pipeline_stages (workspace_id, pipeline_id, name, kind, position) VALUES ($1, $2, $3, $4, $5) RETURNING id`, [org, p.id, n, k, i]); st[n] = r.id as string
+        }
+        return { pipe: p.id as string, stages: st }
+      })
+      const [ana] = await sql(`SELECT id FROM inbox.contacts WHERE workspace_id = $1 AND name = 'Ana Souza'`, [org])
+      const [deal] = await asBrowser(owner, q => q(`INSERT INTO inbox.deals (workspace_id, pipeline_id, stage_id, contact_id, title, value) VALUES ($1, $2, $3, $4, 'Mentoria Ana', 1500) RETURNING id, closed_at`, [org, pipe, stages.Lead, ana.id]))
+      assert.equal(deal.closed_at, null)
+      await asBrowser(owner, q => q('UPDATE inbox.deals SET stage_id = $2 WHERE id = $1', [deal.id, stages.Perdido]))
+      let [d] = await sql('SELECT closed_at FROM inbox.deals WHERE id = $1', [deal.id]); assert(d.closed_at, 'perdido fecha')
+      await asBrowser(owner, q => q('UPDATE inbox.deals SET stage_id = $2 WHERE id = $1', [deal.id, stages.Proposta]))
+      ;[d] = await sql('SELECT closed_at FROM inbox.deals WHERE id = $1', [deal.id]); assert.equal(d.closed_at, null, 'reaberto')
+      const ev = await sql('SELECT from_stage, to_stage, by FROM inbox.deal_events WHERE deal_id = $1 ORDER BY id', [deal.id])
+      assert.deepEqual(ev.map(e => e.to_stage), [stages.Lead, stages.Perdido, stages.Proposta]); assert.equal(ev[1].by, owner.userId)
+      await assert.rejects(asBrowser(viewer, q => q('UPDATE inbox.deals SET stage_id = $2 WHERE id = $1 RETURNING id', [deal.id, stages.Lead]).then(r => { if (!r.length) throw new Error('row-level security') })), /row-level security/)
+      const [otherPipe] = await sql(`INSERT INTO inbox.pipelines (workspace_id, name) VALUES ($1, 'Outro') RETURNING id`, [org])
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.deals (workspace_id, pipeline_id, stage_id, title) VALUES ($1, $2, $3, 'x')`, [org, otherPipe.id, stages.Lead])), /row-level security/, 'etapa de outro funil')
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.deal_events (workspace_id, deal_id, to_stage) VALUES ($1, $2, $3)`, [org, deal.id, stages.Lead])), /permission denied/, 'histórico só pelo banco')
+      // Automation block "Criar negócio".
+      const g: Graph = { start: 'n', nodes: [{ id: 'n', type: 'negocio', funil: pipe, etapa: stages.Lead, titulo: 'Lead {{primeiro_nome}} – {{produto}}' }] }
+      const [f] = await sql(`INSERT INTO inbox.flows (workspace_id, name, draft, graph, status, version) VALUES ($1, 'cria negócio', $2, $2, 'ativo', 1) RETURNING id`, [org, g])
+      await sql(`INSERT INTO inbox.triggers (workspace_id, flow_id, kind, config) VALUES ($1, $2, 'palavra_chave', '{"palavras":["orcamento"]}')`, [org, f.id])
+      await say('Hugo Melo', 'quero um orcamento')
+      const [hd] = await sql(`SELECT d.title, d.stage_id FROM inbox.deals d JOIN inbox.contacts k ON k.id = d.contact_id WHERE k.name = 'Hugo Melo' AND k.workspace_id = $1`, [org])
+      assert.deepEqual([hd.title, hd.stage_id], ['Lead Hugo – ', stages.Lead])
+      await say('Hugo Melo', 'orcamento de novo')
+      assert.equal((await sql(`SELECT count(*)::int n FROM inbox.deals d JOIN inbox.contacts k ON k.id = d.contact_id WHERE k.name = 'Hugo Melo'`))[0].n, 1, 'não duplica negócio aberto')
+      // Approved purchase wins the open deal (value kept), lost/closed ones stay.
+      await wonFromPurchase(db.service, org, ana.id, 497)
+      ;[d] = await sql('SELECT stage_id, value, closed_at FROM inbox.deals WHERE id = $1', [deal.id])
+      assert.deepEqual([d.stage_id, Number(d.value), !!d.closed_at], [stages.Ganho, 1500, true])
+      await asBrowser(owner, q => q(`INSERT INTO inbox.tasks (workspace_id, title, deal_id, contact_id, assignee) VALUES ($1, 'Ligar', $2, $3, $4)`, [org, deal.id, ana.id, owner.userId]))
+      const [otherContact] = await sql(`INSERT INTO inbox.contacts (workspace_id, name) VALUES ($1, 'de outra') RETURNING id`, [other])
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.tasks (workspace_id, title, contact_id) VALUES ($1, 'x', $2)`, [org, otherContact.id])), /row-level security/)
+      assert.equal((await asBrowser(stranger, q => q('SELECT id FROM inbox.deals WHERE workspace_id = $1', [org]))).length, 0)
+    })
   } finally {
     for (const o of [org, other]) {
-      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o])
+      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o])
       await sql('DELETE FROM inbox.contacts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tags WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.settings WHERE workspace_id = $1', [o])
     }
     await sql('DELETE FROM shared.usuarios_empresas WHERE empresa_id = ANY($1) OR usuario_id = ANY($1)', [ids])

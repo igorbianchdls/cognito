@@ -5,6 +5,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { InboxError, requireWriter, type Db, type Person, type Query } from './db'
 import { seal, unseal } from './crypto'
 import { onEvent } from './flows'
+import { wonFromPurchase } from './deals'
 
 export type Provider = 'hotmart' | 'kiwify' | 'eduzz' | 'stripe'
 export type SaleEvent = {
@@ -143,7 +144,7 @@ export async function ingestSales(service: Query, integration: Integration, even
     if (before?.status === e.kind) { done.push('repetido'); continue }
     if (e.kind === 'aprovada') {
       await service(`UPDATE inbox.abandoned_carts SET recovered_at = now() WHERE contact_id = $1 AND recovered_at IS NULL`, [contactId])
-      await afterPurchase?.(service, integration.workspace_id, contactId, e)
+      await wonFromPurchase(service, integration.workspace_id, contactId, e.amount)
       await onEvent({ service, send }, { workspaceId: integration.workspace_id, kind: 'compra', contactId, product: e.product ?? undefined, vars: { produto: e.product, valor: e.amount } })
     }
     if (e.kind === 'reembolsada' || e.kind === 'chargeback') {
@@ -154,10 +155,6 @@ export async function ingestSales(service: Query, integration: Integration, even
   await service(`UPDATE inbox.integrations SET last_event_at = now(), last_error = NULL, events = events + $2 WHERE id = $1`, [integration.id, events.length])
   return done
 }
-
-/** Set by the deals stage: an approved purchase moves the contact's open deal to "won". */
-export let afterPurchase: ((service: Query, workspaceId: string, contactId: string, e: SaleEvent) => Promise<void>) | undefined
-export function onPurchase(fn: typeof afterPurchase) { afterPurchase = fn }
 
 /** The public webhook: finds the integration by the token in the address, checks and stores. */
 export async function receiveSale(service: Query, token: string, raw: string, headers: Headers, query: URLSearchParams, send?: typeof fetch) {

@@ -7,6 +7,7 @@ import { InboxError, type Query } from './db'
 import { deliver, loadTarget } from './send'
 import { unseal } from './crypto'
 import { replyToComment } from './meta'
+import { dealFromFlow } from './deals'
 
 export type EngineDeps = { service: Query; send?: typeof fetch; now?: () => Date }
 type Run = { id: string; workspace_id: string; flow_id: string; contact_id: string; conversation_id: string | null; node_id: string | null; status: string; vars: Record<string, unknown>; steps: number }
@@ -156,15 +157,14 @@ async function step(d: EngineDeps, run: Run, n: FlowNode): Promise<string | null
     case 'ia':
       return (await aiStep?.(d, run)) ?? n.next
     case 'negocio':
-      await dealStep?.(d, run, n)
+      await dealFromFlow(d.service, run, n)
       return n.next
   }
 }
 
-/** Filled by later stages (AI and deals) without this module importing them. */
+/** Filled by the AI stage without this module importing it. */
 export let aiStep: ((d: EngineDeps, run: Run) => Promise<string | null | undefined>) | undefined
-export let dealStep: ((d: EngineDeps, run: Run, n: Extract<FlowNode, { type: 'negocio' }>) => Promise<void>) | undefined
-export function registerSteps(steps: { ai?: typeof aiStep; deal?: typeof dealStep }) { if (steps.ai) aiStep = steps.ai; if (steps.deal) dealStep = steps.deal }
+export function registerAiStep(fn: typeof aiStep) { aiStep = fn }
 
 const VALID = { email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, telefone: /^\+?[0-9 ()-]{8,20}$/, numero: /^-?[0-9]+([.,][0-9]+)?$/, texto: /\S/ }
 
