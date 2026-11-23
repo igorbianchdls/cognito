@@ -251,6 +251,39 @@ async function main() {
     await fails('inbox_nota', { conversa_id: convId, texto: 'x' }, 'ACCESS_DENIED', viewer)
     await fails('inbox_simular_mensagem', { canal_id: channelId, texto: 'x' }, 'INVALID_STATE', owner, withInbox)
   })
+
+  await check('Inbox CRM: relatório, negócios, tarefas, segmentos, disparos, automações, base de conhecimento e sugestão de IA', async () => {
+    await admin.query("DELETE FROM inbox.pipelines WHERE workspace_id = 'org_A'; DELETE FROM inbox.segments WHERE workspace_id = 'org_A'; DELETE FROM inbox.kb_articles WHERE workspace_id = 'org_A'; DELETE FROM inbox.tasks WHERE workspace_id = 'org_A'")
+    const rel = await ok('inbox_relatorio', {}, owner, withInbox)
+    assert(rel.atendimento.conversas_novas >= 2 && rel.periodo.de < rel.periodo.ate)
+    await fails('inbox_relatorio', { de: '2026-12-01', ate: '2026-01-01' }, 'INVALID_INPUT', owner, withInbox)
+    await fails('inbox_salvar_negocio', { titulo: 'x' }, 'NOT_FOUND')
+    const { rows: [p] } = await admin.query("INSERT INTO inbox.pipelines (workspace_id, name) VALUES ('org_A', 'Vendas') RETURNING id")
+    await admin.query(`INSERT INTO inbox.pipeline_stages (workspace_id, pipeline_id, name, kind, position) VALUES ('org_A', $1, 'Lead', 'aberto', 0), ('org_A', $1, 'Ganho', 'ganho', 1)`, [p.id])
+    const deal = await ok('inbox_salvar_negocio', { titulo: 'Tênis da Maria', valor: 350, contato_id: contactId, responsavel: 'eu' })
+    assert.equal((await ok('inbox_listar_negocios', {})).valor_total, 350)
+    await ok('inbox_salvar_negocio', { negocio_id: deal.negocio_id, etapa: 'ganho' })
+    const won = (await ok('inbox_listar_negocios', { situacao: 'ganho' })).negocios
+    assert.deepEqual([won.length, won[0].responsavel_id, !!won[0].fechado_em], [1, 'u_owner', true])
+    await fails('inbox_salvar_negocio', { negocio_id: deal.negocio_id, etapa: 'Inexistente' }, 'NOT_FOUND')
+    const t = await ok('inbox_salvar_tarefa', { titulo: 'Ligar para a Maria', vence_em: '2020-01-01T10:00:00-03:00', contato_id: contactId, negocio_id: deal.negocio_id })
+    assert.equal((await ok('inbox_listar_tarefas', { situacao: 'atrasadas', minhas: true })).tarefas[0].id, t.tarefa_id)
+    await ok('inbox_salvar_tarefa', { tarefa_id: t.tarefa_id, concluida: true })
+    assert.equal((await ok('inbox_listar_tarefas', {})).tarefas.length, 0)
+    await admin.query(`INSERT INTO inbox.segments (workspace_id, name, rules) VALUES ('org_A', 'Maria e cia', '{"condicoes":[{"campo":"negocio","op":"ganho"}]}')`)
+    const seg = (await ok('inbox_listar_segmentos', {})).segmentos[0]
+    assert.deepEqual([seg.nome, seg.contatos, seg.regras], ['Maria e cia', 1, ['Tem negócio ganho']])
+    assert.deepEqual((await ok('inbox_listar_disparos', {})).disparos, [])
+    assert.deepEqual((await ok('inbox_listar_automacoes', {})).automacoes, [])
+    await fails('inbox_salvar_artigo', { titulo: 'x', texto: 'y' }, 'ACCESS_DENIED', viewer)
+    await ok('inbox_salvar_artigo', { titulo: 'Trocas', texto: 'Trocamos em até 7 dias com a etiqueta.' })
+    assert.equal((await ok('inbox_buscar_conhecimento', { busca: 'posso trocar o tênis?' })).artigos[0].title, 'Trocas')
+    const key = process.env.ANTHROPIC_API_KEY; delete process.env.ANTHROPIC_API_KEY
+    const r = await call('inbox_sugerir_resposta', { conversa_id: convId }, owner, withInbox)
+    assert(!r.ok && /ainda não foi ligada/.test(r.message ?? ''), 'IA desligada sem a chave')
+    if (key) process.env.ANTHROPIC_API_KEY = key
+    await fails('inbox_relatorio', {}, 'ACCESS_DENIED', stranger, withInbox)
+  })
   await inboxPool.end()
 
   // ---------- Video Hosting ----------

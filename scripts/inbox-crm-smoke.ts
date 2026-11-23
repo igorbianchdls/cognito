@@ -478,6 +478,24 @@ async function database(url: string) {
       assert.match((await sql(`SELECT n.body FROM inbox.notes n JOIN inbox.conversations c ON c.id = n.conversation_id JOIN inbox.contacts k ON k.id = c.contact_id WHERE k.name = 'Otto Lima' ORDER BY n.created_at DESC LIMIT 1`))[0].body, /IA desligada/)
       if (key) process.env.ANTHROPIC_API_KEY = key
     })
+
+    await check('relatório: atendimento, avaliações, vendas por origem, funil, automações/IA e disparos do período; outra empresa vê só os seus', async () => {
+      const { reportFor, period } = await import('../src/products/inbox/server/reports')
+      const r = await reportFor(owner, {}, db)
+      assert(r.atendimento.conversas_novas! >= 8 && r.atendimento.em_andamento! >= 8, "Ivo reabriu ao escrever depois da avaliação")
+      assert.deepEqual([r.avaliacoes.total, r.avaliacoes.media], [1, 5])
+      assert.equal(r.por_responsavel.find(p => p.avaliacoes === 1)?.avaliacao_media, 5)
+      assert(r.vendas.vendas! >= 1 && r.vendas.reembolsos! >= 1 && r.vendas.receita! >= 47)
+      assert.equal(r.por_origem.find(o => o.origem === 'sem origem')?.vendas, 1, 'a venda do comprador novo, sem origem')
+      assert(r.negocios.ganhos! >= 1 && r.negocios.abertos! >= 1 && r.negocios.taxa_de_ganho != null)
+      assert(r.automacoes.iniciadas! > 0 && r.automacoes.ia_respostas === 1 && r.automacoes.ia_passou_para_equipe! >= 2)
+      assert(r.disparos.disparos! >= 2 && r.disparos.enviados! >= 2)
+      const s = await reportFor(stranger, {}, db)
+      assert.deepEqual([s.vendas.vendas, s.avaliacoes.total, s.disparos.enviados], [0, 0, 0])
+      assert.deepEqual(period('2026-11-01', '2026-11-10'), { de: '2026-11-01', ate: '2026-11-10', from: '2026-11-01T00:00:00-03:00', to: '2026-11-10T23:59:59.999-03:00' })
+      assert.throws(() => period('2026-11-10', '2026-11-01'), /depois da final/)
+      assert.equal(period(undefined, '2026-11-30').de, '2026-11-01')
+    })
   } finally {
     for (const o of [org, other]) {
       await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.broadcasts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.teams WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.kb_articles WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.segments WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.email_settings WHERE workspace_id = $1', [o])

@@ -8,6 +8,7 @@ import { appDb, InboxError } from '@/products/inbox/server/db'
 import { reply, simulateCustomer } from '@/products/inbox/server/actions'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '@/products/inbox/shared/rules'
 import { company, confirmed, tool, uuid, type ToolContext, type WorkspaceTool } from '../../workspace/context'
+import { crmTools } from './crm'
 
 const base = () => ({ empresa_id: company() })
 const limit = (max: number, def: number) => z.number().int().min(1).max(max).default(def).describe('Quantos itens trazer.')
@@ -328,4 +329,4 @@ const simulate = tool({
 })
 
 export const inboxTools: WorkspaceTool[] = [summary, listConversations, readConversation, searchContacts, getContact, listChannels, listTags, listQuickReplies,
-  answer, note, assign, setStatus, saveContact, labelContact, createTag, saveQuickReply, simulate]
+  answer, note, assign, setStatus, saveContact, labelContact, createTag, saveQuickReply, simulate, ...crmTools]
