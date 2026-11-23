@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useOrganization } from '@clerk/nextjs'
 import {
-  IconAddressBook, IconPaperclip, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
+  IconAddressBook, IconPaperclip, IconSparkles, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
   IconHash, IconInbox, IconLayoutSidebarRight, IconMessageCircle, IconNotes, IconPhone, IconPlug, IconSearch, IconSettings, IconTag, IconUserCircle, IconUsers,
 } from '@tabler/icons-react'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '../shared/rules'
@@ -264,6 +264,7 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
   const [text, setText] = useState('')
   const [noteMode, setNoteMode] = useState(false)
   const [sending, setSending] = useState(false)
+  const [aiBusy, setAiBusy] = useState<'sugerir' | 'resumir' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const end = useRef<HTMLDivElement>(null)
@@ -316,6 +317,15 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
     } finally {
       setSending(false)
     }
+  }
+  async function askAi(acao: 'sugerir' | 'resumir') {
+    setAiBusy(acao); setError(null)
+    const r = await fetch(`/api/inbox/conversas/${c.id}/ia`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ acao }) }).catch(() => null)
+    const data = await r?.json().catch(() => ({})) as { texto?: string; resumo?: string; erro?: string } | undefined
+    setAiBusy(null)
+    if (!r?.ok) return setError(data?.erro ?? 'A IA não respondeu.')
+    if (acao === 'sugerir' && data?.texto) { setNoteMode(false); setText(data.texto) }
+    if (acao === 'resumir' && data?.resumo) { setNoteMode(true); setText('Resumo (IA):\n' + data.resumo) }
   }
   async function sendFile(file: File) {
     if (file.size > 4 * 1024 * 1024) return setError('Arquivos até 4 MB.')
@@ -400,7 +410,13 @@ function Chat({ conversation: c, tick, onChange, onBack, members, memberOf, show
                 <button type="button" aria-pressed={!noteMode} onClick={() => setNoteMode(false)} className={`rounded-md px-2 py-1 ${!noteMode ? 'bg-[#f2f2f4] font-medium' : 'text-[#8e8e93]'}`}>Responder</button>
                 <button type="button" aria-pressed={noteMode} onClick={() => setNoteMode(true)} className={`rounded-md px-2 py-1 ${noteMode ? 'bg-[#fff1b8] font-medium text-[#5c4a00]' : 'text-[#8e8e93]'}`}>Nota interna</button>
               </div>
-              {!noteMode && left ? <span className="ml-auto text-[11.5px] text-[#8e8e93]">Janela da Meta fecha em {left}</span> : null}
+              <span className="ml-auto flex items-center gap-1">
+                {!noteMode && left ? <span className="mr-1 text-[11.5px] text-[#8e8e93]">Janela da Meta fecha em {left}</span> : null}
+                <button type="button" disabled={!!aiBusy || (!open && !noteMode)} onClick={() => void askAi('sugerir')} title="A IA escreve uma resposta para você revisar"
+                  className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[12px] text-[#6d28d9] hover:bg-[#f3efff] disabled:opacity-40"><IconSparkles className="size-3.5" />{aiBusy === 'sugerir' ? 'Pensando…' : 'Sugerir'}</button>
+                <button type="button" disabled={!!aiBusy} onClick={() => void askAi('resumir')} title="Resumo da conversa como nota interna"
+                  className="rounded-md px-1.5 py-1 text-[12px] text-[#6d28d9] hover:bg-[#f3efff] disabled:opacity-40">{aiBusy === 'resumir' ? 'Resumindo…' : 'Resumir'}</button>
+              </span>
             </div>
             <textarea value={text} onChange={e => setText(e.target.value)} rows={2} disabled={!open && !noteMode}
               onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit() } }}

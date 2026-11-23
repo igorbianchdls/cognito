@@ -6,6 +6,7 @@ import { Card, Notice, Page } from '@/products/analytics/frontend/ui'
 import { deniedMessage, supabase, type QuickReply, type Tag } from './data'
 import { BusinessHoursCard } from './BusinessHoursCard'
 import { TeamsCard } from './TeamsCard'
+import { AiCard } from './AiCard'
 
 const COLORS = ['#ef4444', '#f59e0b', '#16a34a', '#0ea5e9', '#6366f1', '#d946ef', '#6b7280']
 const input = 'h-9 rounded-lg border border-[#e2e2e2] px-3 text-[14px]'
@@ -104,6 +105,7 @@ export function SettingsView() {
         </Card>
         <BusinessHoursCard />
         <TeamsCard />
+        <AiCard />
       </div>
     </Page>
   )

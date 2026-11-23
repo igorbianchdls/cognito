@@ -8,6 +8,7 @@ import { deliver, loadTarget } from './send'
 import { unseal } from './crypto'
 import { replyToComment } from './meta'
 import { dealFromFlow } from './deals'
+import { aiAgentTurn } from './ai'
 
 export type EngineDeps = { service: Query; send?: typeof fetch; now?: () => Date }
 type Run = { id: string; workspace_id: string; flow_id: string; contact_id: string; conversation_id: string | null; node_id: string | null; status: string; vars: Record<string, unknown>; steps: number }
@@ -132,12 +133,7 @@ async function step(d: EngineDeps, run: Run, n: FlowNode): Promise<string | null
     }
     case 'humano':
       if (n.texto?.trim()) await say(d, run, n.texto)
-      if (run.conversation_id) {
-        await d.service(`UPDATE inbox.conversations SET status = 'aberta', unread = greatest(unread, 1) WHERE id = $1`, [run.conversation_id])
-        const [f] = await d.service<{ name: string }>('SELECT name FROM inbox.flows WHERE id = $1', [run.flow_id])
-        await d.service('INSERT INTO inbox.notes (workspace_id, conversation_id, body, author) VALUES ($1, $2, $3, NULL)',
-          [run.workspace_id, run.conversation_id, `A automação "${f?.name ?? ''}" passou a conversa para a equipe.`])
-      }
+      await handOff(d, run)
       return null
     case 'webhook': {
       const v = await values(d, run.contact_id)
@@ -154,17 +150,32 @@ async function step(d: EngineDeps, run: Run, n: FlowNode): Promise<string | null
       await event(d, run, null, 'iniciou')
       return JUMP
     }
-    case 'ia':
-      return (await aiStep?.(d, run)) ?? n.next
+    case 'ia': {
+      // Answers, then waits for the customer on this same block; a handover ends the AI part.
+      const r = await (aiStep ?? aiAgentTurn)(d.service, run, text => say(d, run, text))
+      if (r.next === 'respondeu') { await event(d, run, n.id, 'ia_respondeu'); await save(d, run, { status: 'esperando_resposta' }); return WAIT }
+      await event(d, run, n.id, 'ia_passou', r.motivo)
+      await handOff(d, run, `A IA passou a conversa para a equipe (${r.motivo}).`)
+      return n.next ?? null
+    }
     case 'negocio':
       await dealFromFlow(d.service, run, n)
       return n.next
   }
 }
 
-/** Filled by the AI stage without this module importing it. */
-export let aiStep: ((d: EngineDeps, run: Run) => Promise<string | null | undefined>) | undefined
-export function registerAiStep(fn: typeof aiStep) { aiStep = fn }
+/** Tests replace the AI turn; by default it is Claude (ai.ts). */
+let aiStep: typeof aiAgentTurn | undefined
+export function registerAiStep(fn: typeof aiAgentTurn | undefined) { aiStep = fn }
+
+/** The conversation goes back to the team's queue, with a note saying why. */
+async function handOff(d: EngineDeps, run: Run, note?: string) {
+  if (!run.conversation_id) return
+  await d.service(`UPDATE inbox.conversations SET status = 'aberta', unread = greatest(unread, 1) WHERE id = $1`, [run.conversation_id])
+  const [f] = await d.service<{ name: string }>('SELECT name FROM inbox.flows WHERE id = $1', [run.flow_id])
+  await d.service('INSERT INTO inbox.notes (workspace_id, conversation_id, body, author) VALUES ($1, $2, $3, NULL)',
+    [run.workspace_id, run.conversation_id, note ?? `A automação "${f?.name ?? ''}" passou a conversa para a equipe.`])
+}
 
 const VALID = { email: /^[^@\s]+@[^@\s]+\.[^@\s]+$/, telefone: /^\+?[0-9 ()-]{8,20}$/, numero: /^-?[0-9]+([.,][0-9]+)?$/, texto: /\S/ }
 
@@ -189,6 +200,8 @@ async function resume(d: EngineDeps, run: Run, text: string) {
     if (node.campo === 'email' && VALID.email.test(value)) await d.service('UPDATE inbox.contacts SET email = coalesce(email, lower($2)) WHERE id = $1', [run.contact_id, value])
     await event(d, run, node.id, 'respondeu')
     run.node_id = node.next ?? null
+  } else if (node.type === 'ia') {
+    // A new customer message: the AI block runs again on it.
   } else { await save(d, run, { status: 'cancelado' }); return false }
   await save(d, run, { status: 'ativo' })
   await advance(d, run, graph)
