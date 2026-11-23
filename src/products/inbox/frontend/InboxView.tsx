@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useOrganization } from '@clerk/nextjs'
 import {
-  IconAddressBook, IconArrowsSort, IconBolt, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
+  IconAddressBook, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
   IconHash, IconInbox, IconLayoutSidebarRight, IconMessageCircle, IconNotes, IconPhone, IconPlug, IconSearch, IconSettings, IconTag, IconUserCircle, IconUsers,
 } from '@tabler/icons-react'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '../shared/rules'
@@ -166,6 +166,7 @@ export function InboxView() {
           <NavItem href="/inbox/negocios" icon={<IconBriefcase className="size-4" />} label="Negócios" />
           <NavItem href="/inbox/contatos" icon={<IconAddressBook className="size-4" />} label="Contatos" />
           <NavItem href="/inbox/automacoes" icon={<IconBolt className="size-4" />} label="Automações" />
+          <NavItem href="/inbox/disparos" icon={<IconSpeakerphone className="size-4" />} label="Disparos" />
           <NavItem href="/inbox/canais" icon={<IconPlug className="size-4" />} label="Canais" />
           <NavItem href="/inbox/configuracoes" icon={<IconSettings className="size-4" />} label="Etiquetas e respostas" />
         </Group>

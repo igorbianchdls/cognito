@@ -70,7 +70,7 @@ async function database(url: string) {
     await sql(`INSERT INTO shared.usuarios_empresas (usuario_id, empresa_id, role, status) VALUES ($1, $2, $3, 'active')`, [u, empresa, role])
   }
   await seed(owner.userId, org, 'owner'); await seed(viewer.userId, org, 'viewer'); await seed(stranger.userId, other, 'owner')
-  const asBrowser = <T>(who: typeof owner, fn: (q: (s: string, p?: unknown[]) => Promise<Record<string, unknown>[]>) => Promise<T>) => db.asPerson(who, fn as never) as Promise<T>
+  const asBrowser = <T>(who: typeof owner, fn: (q: (s: string, p?: unknown[]) => Promise<any[]>) => Promise<T>) => db.asPerson(who, fn as never) as Promise<T> // eslint-disable-line @typescript-eslint/no-explicit-any
   const msgs = async (contactName: string) => (await sql(`SELECT m.direction, m.body, m.buttons FROM inbox.messages m JOIN inbox.conversations c ON c.id = m.conversation_id
     JOIN inbox.contacts k ON k.id = c.contact_id WHERE k.workspace_id = $1 AND k.name = $2 ORDER BY m.created_at, m.id`, [org, contactName]))
   const run = async (contactName: string) => (await sql(`SELECT r.* FROM inbox.flow_runs r JOIN inbox.contacts k ON k.id = r.contact_id WHERE k.workspace_id = $1 AND k.name = $2 ORDER BY r.started_at DESC LIMIT 1`, [org, contactName]))[0]
@@ -283,9 +283,81 @@ async function database(url: string) {
       assert.equal((await previewSegment(stranger, { regras: {} }, db)).total, 1, 'outra empresa só vê os seus')
       assert.deepEqual((await listSources(owner, db)).find(s => s.origem === 'anuncio-bf')?.contatos, 1)
     })
+
+    await check('disparos: modelo aprovado, SAIR/VOLTAR, segmento enviado aos poucos sem quem saiu; e-mail assinado com descadastro; agendar e cancelar', async () => {
+      const B = await import('../src/products/inbox/server/broadcasts')
+      const deps = { service: db.service }
+      assert.deepEqual(B.templateProblems({ body: '{{1}} oi', variables: ['nome'], buttons: [], header: null, footer: null }).length, 1, 'variável no começo')
+      assert.match(B.templateProblems({ body: 'Oi {{2}} tudo', variables: ['nome'], buttons: [], header: null, footer: null }).join(' '), /Falta a variável \{\{1\}\}/)
+      const [tpl] = await asBrowser(owner, q => q(`INSERT INTO inbox.wa_templates (workspace_id, channel_id, name, body, variables, buttons) VALUES ($1, $2, 'promo', 'Oi {{1}}, a oferta acaba hoje!', '["primeiro_nome"]', '["Quero", "SAIR"]') RETURNING id`, [org, channel.id]))
+      await assert.rejects(asBrowser(owner, q => q(`UPDATE inbox.wa_templates SET status = 'aprovado' WHERE id = $1`, [tpl.id])), /permission denied/, 'aprovação só pelo servidor')
+      await assert.rejects(B.submitTemplateFor(viewer, tpl.id, db, deps), /só pode visualizar/)
+      assert.deepEqual(await B.submitTemplateFor(owner, tpl.id, db, deps), { status: 'aprovado' }, 'canal de teste aprova na hora')
+      // Ana answers SAIR: out of broadcasts, confirmation sent, automations not triggered.
+      await say('Ana Souza', 'Sair!')
+      assert.match((await msgs('Ana Souza')).at(-1).body, /não vai mais receber/)
+      assert.equal((await sql(`SELECT count(*)::int n FROM inbox.optouts o JOIN inbox.contacts k ON k.id = o.contact_id WHERE k.name = 'Ana Souza' AND o.kind = 'whatsapp'`))[0].n, 1)
+      const [seg] = await sql(`INSERT INTO inbox.segments (workspace_id, name, rules) VALUES ($1, 'Teste', '{"modo":"todas","condicoes":[{"campo":"canal","op":"tem","valor":"teste"}]}') RETURNING id`, [org])
+      const reach = (await sql(`SELECT count(DISTINCT i.contact_id)::int n FROM inbox.contact_identities i WHERE i.channel_id = $1`, [channel.id]))[0].n
+      const [bc] = await asBrowser(owner, q => q(`INSERT INTO inbox.broadcasts (workspace_id, name, kind, channel_id, template_id, segment_id) VALUES ($1, 'Promo', 'whatsapp', $2, $3, $4) RETURNING id`, [org, channel.id, tpl.id, seg.id]))
+      const [foreign] = await sql(`INSERT INTO inbox.segments (workspace_id, name) VALUES ($1, 'x') RETURNING id`, [other])
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.broadcasts (workspace_id, name, kind, segment_id) VALUES ($1, 'x', 'email', $2)`, [org, foreign.id])), /row-level security/, 'segmento de outra empresa')
+      await assert.rejects(B.startBroadcast(viewer, bc.id, db, deps), /só pode visualizar/)
+      const started = await B.startBroadcast(owner, bc.id, db, deps)
+      assert.deepEqual([started.status, started.total, started.ignorados], ['enviando', reach, 1], 'Ana fica de fora')
+      await assert.rejects(B.startBroadcast(owner, bc.id, db, deps), /já foi iniciado/)
+      assert.equal((await asBrowser(owner, q => q(`UPDATE inbox.broadcasts SET name = 'mudou' WHERE id = $1 RETURNING id`, [bc.id]))).length, 0, 'depois de iniciado, só o servidor')
+      let r = await B.runBroadcasts(deps, { batch: 2 })
+      assert.equal(r.enviados, 2, 'aos poucos')
+      r = await B.runBroadcasts(deps, { batch: 100 })
+      const [done] = await sql('SELECT status, sent, failed, skipped, total FROM inbox.broadcasts WHERE id = $1', [bc.id])
+      assert.deepEqual([done.status, done.sent, done.failed, done.skipped], ['concluido', reach - 1, 0, 1])
+      assert.equal((await msgs('Hugo Melo')).at(-1).body, 'Oi Hugo, a oferta acaba hoje!')
+      assert.notEqual((await msgs('Ana Souza')).at(-1).body, 'Oi Ana, a oferta acaba hoje!')
+      assert.equal((await B.runBroadcasts(deps)).enviados, 0, 'nada repetido')
+      await say('Ana Souza', 'voltar')
+      assert.equal((await sql(`SELECT count(*)::int n FROM inbox.optouts o JOIN inbox.contacts k ON k.id = o.contact_id WHERE k.name = 'Ana Souza'`))[0].n, 0)
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.broadcast_recipients (broadcast_id, workspace_id, contact_id) SELECT $1, $2, id FROM inbox.contacts WHERE workspace_id = $2 LIMIT 1`, [bc.id, org])), /permission denied/)
+      // E-mail: off without SES; with SES, signed request, filled subject, legal footer and unsubscribe that works.
+      const [eseg] = await sql(`INSERT INTO inbox.segments (workspace_id, name, rules) VALUES ($1, 'Com e-mail', '{"condicoes":[{"campo":"email","op":"preenchido"}]}') RETURNING id`, [org])
+      const [em] = await asBrowser(owner, q => q(`INSERT INTO inbox.broadcasts (workspace_id, name, kind, segment_id, subject, body) VALUES ($1, 'News', 'email', $2, '{{primeiro_nome}}, novidade', 'Oi {{primeiro_nome}}!\n\nVeja https://x.com') RETURNING id`, [org, eseg.id]))
+      await assert.rejects(B.startBroadcast(owner, em.id, db, { ...deps, ses: null }), /Amazon SES/)
+      const ses = { region: 'sa-east-1', accessKeyId: 'AKIATEST', secretAccessKey: 'segredo', endpoint: 'https://ses.test' }
+      await assert.rejects(B.startBroadcast(owner, em.id, db, { ...deps, ses }), /remetente/)
+      await asBrowser(owner, q => q(`INSERT INTO inbox.email_settings (workspace_id, from_name, from_email, address) VALUES ($1, 'Loja "X"', 'oi@loja.com', 'Rua Y, 1') ON CONFLICT (workspace_id) DO UPDATE SET workspace_id = excluded.workspace_id, from_name = excluded.from_name, from_email = excluded.from_email, address = excluded.address`, [org]))
+      const sent: { url: string; headers: Record<string, string>; body: Record<string, any> }[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
+      const fakeSes = (async (url: URL, init: RequestInit) => { sent.push({ url: String(url), headers: init.headers as Record<string, string>, body: JSON.parse(String(init.body)) }); return Response.json({ MessageId: 'ses-' + sent.length }) }) as unknown as typeof fetch
+      const emailCount = (await sql(`SELECT count(*)::int n FROM inbox.contacts WHERE workspace_id = $1 AND email IS NOT NULL`, [org]))[0].n
+      assert((await B.startBroadcast(owner, em.id, db, { ...deps, ses })).total === emailCount)
+      await B.runBroadcasts({ ...deps, ses, send: fakeSes, baseUrl: 'https://app.test' })
+      assert.equal(sent.length, emailCount)
+      const ana = sent.find(s => s.body.Destination.ToAddresses[0].startsWith('ana'))!
+      assert.equal(ana.url, 'https://ses.test/v2/email/outbound-emails')
+      assert.match(ana.headers.authorization, /^AWS4-HMAC-SHA256 Credential=AKIATEST\/\d{8}\/sa-east-1\/ses\/aws4_request, SignedHeaders=content-type;host;x-amz-date, Signature=[0-9a-f]{64}$/)
+      assert.equal(ana.body.FromEmailAddress, '"Loja X" <oi@loja.com>')
+      assert.equal(ana.body.Content.Simple.Subject.Data, 'Ana, novidade')
+      const html: string = ana.body.Content.Simple.Body.Html.Data
+      assert(html.includes('<a href="https://x.com">') && html.includes('Rua Y, 1'))
+      const unsub = ana.body.Content.Simple.Headers[0].Value.slice(1, -1) as string
+      assert(unsub.startsWith('https://app.test/api/inbox/sair?t='))
+      const token = new URL(unsub).searchParams.get('t')!
+      assert.equal(B.verifyOptoutToken(token.slice(0, -1) + (token.endsWith('A') ? 'B' : 'A')), null, 'link adulterado')
+      assert(await B.optOutByToken(db.service, token))
+      assert.equal((await sql(`SELECT kind FROM inbox.optouts o JOIN inbox.contacts k ON k.id = o.contact_id WHERE k.name = 'Ana Souza'`))[0].kind, 'email')
+      // Scheduling and cancelling.
+      const [later] = await asBrowser(owner, q => q(`INSERT INTO inbox.broadcasts (workspace_id, name, kind, channel_id, template_id, segment_id, scheduled_at) VALUES ($1, 'Depois', 'whatsapp', $2, $3, $4, now() + interval '1 day') RETURNING id`, [org, channel.id, tpl.id, seg.id]))
+      assert.equal((await B.startBroadcast(owner, later.id, db, deps)).status, 'agendado')
+      assert.equal((await B.runBroadcasts(deps)).iniciados, 0)
+      await sql(`UPDATE inbox.broadcasts SET scheduled_at = now() - interval '1 minute' WHERE id = $1`, [later.id])
+      assert.equal((await B.runBroadcasts(deps, { batch: 1 })).iniciados, 1)
+      assert.equal((await B.cancelBroadcast(owner, later.id, db, deps)).status, 'cancelado')
+      const [c] = await sql('SELECT status, sent, skipped, total FROM inbox.broadcasts WHERE id = $1', [later.id])
+      assert.deepEqual([c.status, c.sent, c.skipped], ['cancelado', 1, c.total - 1])
+      assert.equal((await B.runBroadcasts(deps)).enviados, 0, 'cancelado não envia mais')
+    })
   } finally {
     for (const o of [org, other]) {
-      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.segments WHERE workspace_id = $1', [o])
+      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.deals WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tasks WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.pipelines WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.broadcasts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.segments WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.email_settings WHERE workspace_id = $1', [o])
       await sql('DELETE FROM inbox.contacts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tags WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.settings WHERE workspace_id = $1', [o])
     }
     await sql('DELETE FROM shared.usuarios_empresas WHERE empresa_id = ANY($1) OR usuario_id = ANY($1)', [ids])

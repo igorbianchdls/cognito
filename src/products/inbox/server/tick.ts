@@ -4,11 +4,13 @@ import { appDb } from './db'
 import { mediaStore } from './media'
 import { retryPending } from './webhooks'
 import { wakeRuns } from './flows'
+import { runBroadcasts } from './broadcasts'
 
 type Part = { name: string; run: () => Promise<unknown> }
 const parts: Part[] = [
   { name: 'automacoes', run: () => wakeRuns({ service: appDb.service }) },
   { name: 'avisos_meta', run: () => retryPending({ service: appDb.service, storeMedia: mediaStore(appDb.service) }, 20) },
+  { name: 'disparos', run: () => runBroadcasts({ service: appDb.service }, { budgetMs: 30000 }) },
 ]
 /** Later stages add their own minute work here (broadcasts, response times…). */
 export function addTickPart(part: Part) { if (!parts.some(p => p.name === part.name)) parts.push(part) }

@@ -221,3 +221,31 @@ export async function downloadMedia(send: typeof fetch, media: MediaRef, token: 
   if (bytes.length > MAX_MEDIA_BYTES) throw new MetaError('Arquivo grande demais.')
   return { bytes, mime: mime ?? response.headers.get('content-type') ?? 'application/octet-stream' }
 }
+
+/** WhatsApp template message ({{1}}, {{2}}… filled in order). Returns the Meta message id. */
+export async function sendTemplate(send: typeof fetch, phoneNumberId: string, token: string, to: string, t: { name: string; language: string; params: string[] }) {
+  const components = t.params.length ? [{ type: 'body', parameters: t.params.map(text => ({ type: 'text', text: text || '-' })) }] : []
+  const body = await graph(send, `/${phoneNumberId}/messages`, token, { method: 'POST', body: {
+    messaging_product: 'whatsapp', recipient_type: 'individual', to, type: 'template', template: { name: t.name, language: { code: t.language }, components } } })
+  const id = str(obj(arr(body.messages)[0]).id)
+  if (!id) throw new MetaError('A Meta não devolveu o id da mensagem.')
+  return id
+}
+
+export type TemplateDraft = { name: string; language: string; category: string; header: string | null; body: string; footer: string | null; buttons: string[]; examples: string[] }
+/** Sends a template for Meta's review. Returns its id and first status. */
+export async function submitTemplate(send: typeof fetch, businessAccountId: string, token: string, t: TemplateDraft) {
+  const components: object[] = []
+  if (t.header) components.push({ type: 'HEADER', format: 'TEXT', text: t.header })
+  components.push({ type: 'BODY', text: t.body, ...(t.examples.length ? { example: { body_text: [t.examples] } } : {}) })
+  if (t.footer) components.push({ type: 'FOOTER', text: t.footer })
+  if (t.buttons.length) components.push({ type: 'BUTTONS', buttons: t.buttons.map(text => ({ type: 'QUICK_REPLY', text: text.slice(0, 25) })) })
+  const body = await graph(send, `/${businessAccountId}/message_templates`, token, { method: 'POST', body: { name: t.name, language: t.language, category: t.category, components } })
+  return { id: str(body.id) ?? null, status: str(body.status) ?? 'PENDING' }
+}
+
+/** Templates of the WhatsApp Business Account with their review status. */
+export async function listTemplates(send: typeof fetch, businessAccountId: string, token: string) {
+  const body = await graph(send, `/${businessAccountId}/message_templates?fields=id,name,language,status,rejected_reason&limit=200`, token)
+  return arr(body.data).map(x => { const o = obj(x); return { id: str(o.id), name: str(o.name), language: str(o.language), status: str(o.status), reason: str(o.rejected_reason) } })
+}
