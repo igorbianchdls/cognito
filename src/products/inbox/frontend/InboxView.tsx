@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useOrganization } from '@clerk/nextjs'
 import {
-  IconAddressBook, IconChartBar, IconPaperclip, IconSparkles, IconArrowsSort, IconBolt, IconSpeakerphone, IconBriefcase, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
+  IconAddressBook, IconPaperclip, IconSparkles, IconArrowsSort, IconBrandInstagram, IconBrandMessenger, IconBrandWhatsapp, IconCheck, IconChevronDown, IconCopy, IconFlask,
   IconHash, IconInbox, IconLayoutSidebarRight, IconMessageCircle, IconNotes, IconPhone, IconPlug, IconSearch, IconSettings, IconTag, IconUserCircle, IconUsers,
 } from '@tabler/icons-react'
 import { CHANNEL_LABEL, windowLeft, windowOpen, type ChannelKind } from '../shared/rules'
@@ -163,11 +163,7 @@ export function InboxView() {
         </div>
         <NavItem active={allActive} onClick={() => { setBox(null); setLabel(null) }} icon={<IconInbox className="size-4" />} label="Todas as conversas" count={(rows ?? []).filter(c => c.status !== 'fechada').length} />
         <Group title="Ferramentas">
-          <NavItem href="/inbox/negocios" icon={<IconBriefcase className="size-4" />} label="Negócios" />
           <NavItem href="/inbox/contatos" icon={<IconAddressBook className="size-4" />} label="Contatos" />
-          <NavItem href="/inbox/automacoes" icon={<IconBolt className="size-4" />} label="Automações" />
-          <NavItem href="/inbox/disparos" icon={<IconSpeakerphone className="size-4" />} label="Disparos" />
-          <NavItem href="/inbox/relatorios" icon={<IconChartBar className="size-4" />} label="Relatórios" />
           <NavItem href="/inbox/canais" icon={<IconPlug className="size-4" />} label="Canais" />
           <NavItem href="/inbox/configuracoes" icon={<IconSettings className="size-4" />} label="Etiquetas e respostas" />
         </Group>
@@ -560,11 +556,11 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
       </Section>
       <Section title="Negócios">
         {(stats?.deals ?? []).map(d => (
-          <Link key={d.id} href="/inbox/negocios" className="flex items-baseline gap-2 py-0.5 text-[12.5px] hover:underline">
+          <Link key={d.id} href="/negocios" className="flex items-baseline gap-2 py-0.5 text-[12.5px] hover:underline">
             <span className="min-w-0 flex-1 truncate">{d.title}</span><span className="text-[#8e8e93]">{d.stage?.name}</span>
           </Link>
         ))}
-        {!stats?.deals.length ? <p className="text-[12.5px] text-[#8e8e93]">Nenhum negócio. <Link href="/inbox/negocios" className="underline">Abrir funil</Link></p> : null}
+        {!stats?.deals.length ? <p className="text-[12.5px] text-[#8e8e93]">Nenhum negócio. <Link href="/negocios" className="underline">Abrir funil</Link></p> : null}
       </Section>
       {stats?.purchases.length ? (
         <Section title="Compras">
