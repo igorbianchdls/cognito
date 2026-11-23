@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/analytics/eventos',
   '/api/videohosting/v/(.*)',
   '/api/inbox/webhook/(.*)',
+  '/api/inbox/vendas/(.*)',
   '/otto.js',
   '/sign-up(.*)',
   '/sso-callback(.*)',

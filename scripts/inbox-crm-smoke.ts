@@ -4,7 +4,9 @@
 import assert from 'node:assert/strict'
 import { randomBytes } from 'node:crypto'
 import pg from 'pg'
+import { createHmac } from 'node:crypto'
 import { isOpen, validate, fill, type Graph } from '../src/products/inbox/shared/flows'
+import { parseSale, SignatureError } from '../src/products/inbox/server/sales'
 
 process.env.INBOX_CREDENTIAL_KEY = randomBytes(32).toString('base64')
 const checks: string[] = []
@@ -23,6 +25,27 @@ async function pure() {
     assert.equal(isOpen(hours, 'America/Sao_Paulo', new Date('2026-11-24T13:00:00Z')), false, 'terça fechado')
     assert.equal(isOpen(null), true)
     assert.equal(fill('Oi {{primeiro_nome}}, tamanho {{ tamanho }}{{nada}}!', { primeiro_nome: 'Ana', tamanho: 38 }), 'Oi Ana, tamanho 38!')
+  })
+
+  await check('vendas: assinatura de Hotmart, Kiwify, Eduzz e Stripe conferida e formato de cada uma lido', () => {
+    const H = (h: Record<string, string>) => new Headers(h), Q = (q = '') => new URLSearchParams(q)
+    const hot = JSON.stringify({ event: 'PURCHASE_APPROVED', data: { product: { name: 'Curso X' }, buyer: { name: 'Ana', email: 'ANA@x.com', checkout_phone: '11988887777' }, purchase: { transaction: 'HP1', price: { value: 497, currency_value: 'BRL' } } } })
+    assert.deepEqual(parseSale('hotmart', hot, H({ 'x-hotmart-hottok': 'segredo123' }), Q(), 'segredo123').map(e => [e.kind, e.externalId, e.product, e.amount, e.customer.email]), [['aprovada', 'HP1', 'Curso X', 497, 'ANA@x.com']])
+    assert.throws(() => parseSale('hotmart', hot, H({ 'x-hotmart-hottok': 'errado' }), Q(), 'segredo123'), SignatureError)
+    assert.deepEqual(parseSale('hotmart', JSON.stringify({ event: 'CLUB_FIRST_ACCESS' }), H({ 'x-hotmart-hottok': 'segredo123' }), Q(), 'segredo123'), [], 'evento que não usamos')
+    const kiwi = JSON.stringify({ order_id: 'K1', order_status: 'refunded', Product: { product_name: 'Ebook' }, Customer: { full_name: 'Bia', email: 'bia@x.com', mobile: '+5511977776666' }, Commissions: { charge_amount: 4790 } })
+    const kSig = createHmac('sha1', 'tokkiwi99').update(kiwi).digest('hex')
+    assert.deepEqual(parseSale('kiwify', kiwi, H({}), Q('signature=' + kSig), 'tokkiwi99').map(e => [e.kind, e.amount]), [['reembolsada', 47.9]])
+    assert.throws(() => parseSale('kiwify', kiwi, H({}), Q('signature=abc'), 'tokkiwi99'), SignatureError)
+    const cart = JSON.stringify({ id: 'C1', name: 'Caio', email: 'caio@x.com', product_name: 'Curso X', checkout_link: 'https://pay.kiwify.com.br/abc' })
+    assert.equal(parseSale('kiwify', cart, H({}), Q('signature=' + createHmac('sha1', 'tokkiwi99').update(cart).digest('hex')), 'tokkiwi99')[0].kind, 'carrinho')
+    const edz = JSON.stringify({ event: 'myeduzz.invoice_paid', data: { id: 'E1', buyer: { name: 'Davi', email: 'davi@x.com' }, items: [{ name: 'Mentoria' }], price: { value: 1997, currency: 'BRL' } } })
+    assert.equal(parseSale('eduzz', edz, H({ 'x-signature': createHmac('sha256', 'chave-eduzz').update(edz).digest('hex') }), Q(), 'chave-eduzz')[0].product, 'Mentoria')
+    const now = Date.now(), t = Math.floor(now / 1000)
+    const st = JSON.stringify({ type: 'checkout.session.completed', data: { object: { id: 'cs_1', payment_intent: 'pi_1', payment_status: 'paid', amount_total: 9900, currency: 'brl', customer_details: { name: 'Eva', email: 'eva@x.com' }, metadata: { produto: 'Plano Pro' } } } })
+    const sSig = createHmac('sha256', 'whsec_teste').update(`${t}.${st}`).digest('hex')
+    assert.deepEqual(parseSale('stripe', st, H({ 'stripe-signature': `t=${t},v1=${sSig}` }), Q(), 'whsec_teste', now).map(e => [e.kind, e.externalId, e.amount, e.currency, e.product]), [['aprovada', 'pi_1', 99, 'BRL', 'Plano Pro']])
+    assert.throws(() => parseSale('stripe', st, H({ 'stripe-signature': `t=${t - 600},v1=${sSig}` }), Q(), 'whsec_teste', now), SignatureError, 'entrega antiga recusada')
   })
 }
 
@@ -152,9 +175,46 @@ async function database(url: string) {
       await say('Gil Prado', 'menu')
       assert.notEqual((await run('Gil Prado'))?.flow_id, flow.id, 'automação pausada não roda')
     })
+
+    await check('vendas: integração com segredo cifrado; compra liga ao contato pelo e-mail e inicia automação; repetida não duplica', async () => {
+      const { createIntegration, receiveSale } = await import('../src/products/inbox/server/sales')
+      await assert.rejects(createIntegration(viewer, { provider: 'hotmart', segredo: 'hottok-123456' }, db), /só pode visualizar/)
+      await assert.rejects(createIntegration(owner, { provider: 'stripe', segredo: 'sk_live_123456' }, db), /whsec_/)
+      const integ = await createIntegration(owner, { provider: 'hotmart', nome: 'Hotmart curso', segredo: 'hottok-123456' }, db)
+      const token = integ.caminho.split('/').pop()!
+      const [sealed] = await sql('SELECT secret_sealed FROM inbox_private.integration_secrets s JOIN inbox.integrations i ON i.id = s.integration_id WHERE i.token = $1', [token])
+      assert(!sealed.secret_sealed.includes('hottok'), 'segredo cifrado')
+      const one = (g: string): Graph => ({ start: 'x', nodes: [{ id: 'x', type: 'mensagem', texto: g }] })
+      for (const [kind, text] of [['compra', 'Obrigado pela compra do {{produto}}, {{primeiro_nome}}!'], ['reembolso', 'Seu reembolso foi registrado.'], ['carrinho_abandonado', 'Esqueceu algo? {{link_checkout}}']] as const) {
+        const [f] = await sql(`INSERT INTO inbox.flows (workspace_id, name, draft, graph, status, version) VALUES ($1, $2, $3, $3, 'ativo', 1) RETURNING id`, [org, kind, one(text)])
+        await sql(`INSERT INTO inbox.triggers (workspace_id, flow_id, kind) VALUES ($1, $2, $3)`, [org, f.id, kind])
+      }
+      const H = new Headers({ 'x-hotmart-hottok': 'hottok-123456' }), Q = new URLSearchParams()
+      const hot = (event: string, tx: string) => JSON.stringify({ event, data: { product: { name: 'Curso X' }, buyer: { name: 'Ana Souza', email: 'ANA@exemplo.com' }, purchase: { transaction: tx, price: { value: 497 } }, checkout: { url: 'https://pay.hotmart.com/x' } } })
+      assert.equal((await receiveSale(db.service, token, hot('PURCHASE_APPROVED', 'T1'), new Headers({ 'x-hotmart-hottok': 'errado' }), Q)).status, 401)
+      assert.deepEqual((await receiveSale(db.service, token, hot('PURCHASE_OUT_OF_SHOPPING_CART', 'CART1'), H, Q)).done, ['carrinho'])
+      assert.equal((await msgs('Ana Souza')).at(-1).body, 'Esqueceu algo? https://pay.hotmart.com/x')
+      assert.deepEqual((await receiveSale(db.service, token, hot('PURCHASE_APPROVED', 'T1'), H, Q)).done, ['aprovada'])
+      assert.equal((await msgs('Ana Souza')).at(-1).body, 'Obrigado pela compra do Curso X, Ana!')
+      assert.deepEqual((await receiveSale(db.service, token, hot('PURCHASE_APPROVED', 'T1'), H, Q)).done, ['repetido'], 'entrega repetida')
+      const [p] = await sql(`SELECT p.status, p.amount, k.name FROM inbox.purchases p JOIN inbox.contacts k ON k.id = p.contact_id WHERE p.workspace_id = $1 AND p.external_id = 'T1'`, [org])
+      assert.deepEqual([p.status, Number(p.amount), p.name], ['aprovada', 497, 'Ana Souza'], 'ligada à Ana pelo e-mail (maiúsculas não importam)')
+      assert((await sql(`SELECT recovered_at FROM inbox.abandoned_carts WHERE workspace_id = $1 AND external_id = 'CART1'`, [org]))[0].recovered_at, 'carrinho recuperado')
+      assert.deepEqual((await receiveSale(db.service, token, hot('PURCHASE_REFUNDED', 'T1'), H, Q)).done, ['reembolsada'])
+      assert.equal((await msgs('Ana Souza')).at(-1).body, 'Seu reembolso foi registrado.')
+      const novo = JSON.stringify({ event: 'PURCHASE_APPROVED', data: { product: { name: 'Ebook' }, buyer: { name: 'Novo Cliente', email: 'novo@x.com', checkout_phone: '11966665555' }, purchase: { transaction: 'T2', price: { value: 47 } } } })
+      await receiveSale(db.service, token, novo, H, Q)
+      const [k] = await sql(`SELECT name, phone FROM inbox.contacts WHERE workspace_id = $1 AND email = 'novo@x.com'`, [org])
+      assert.deepEqual([k.name, k.phone], ['Novo Cliente', '+5511966665555'], 'comprador novo vira contato')
+      await sql(`UPDATE inbox.integrations SET status = 'pausada' WHERE token = $1`, [token])
+      assert.deepEqual((await receiveSale(db.service, token, hot('PURCHASE_APPROVED', 'T3'), H, Q)).done, ['pausada'])
+      await assert.rejects(asBrowser(owner, q => q(`INSERT INTO inbox.purchases (workspace_id, contact_id, provider, external_id, status) SELECT $1, id, 'hotmart', 'x', 'aprovada' FROM inbox.contacts WHERE workspace_id = $1 LIMIT 1`, [org])), /permission denied/, 'compra só pelo servidor')
+      await assert.rejects(asBrowser(owner, q => q('SELECT * FROM inbox_private.integration_secrets')), /permission denied/)
+      assert.equal((await asBrowser(stranger, q => q('SELECT id FROM inbox.purchases WHERE workspace_id = $1', [org]))).length, 0)
+    })
   } finally {
     for (const o of [org, other]) {
-      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o])
+      await sql('DELETE FROM inbox.flows WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.channels WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.integrations WHERE workspace_id = $1', [o])
       await sql('DELETE FROM inbox.contacts WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.tags WHERE workspace_id = $1', [o]); await sql('DELETE FROM inbox.settings WHERE workspace_id = $1', [o])
     }
     await sql('DELETE FROM shared.usuarios_empresas WHERE empresa_id = ANY($1) OR usuario_id = ANY($1)', [ids])

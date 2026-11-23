@@ -448,7 +448,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row; tags: Tag[]; onChanged: () => void }) {
   const { orgId } = useAuth()
-  const [stats, setStats] = useState<{ total: number; open: number; messages: number; since: string | null; channels: ChannelKind[] } | null>(null)
+  const [stats, setStats] = useState<{ total: number; open: number; since: string | null; channels: ChannelKind[]; spent: number; orders: number; purchases: { product: string | null; amount: number | null; status: string; occurred_at: string }[] } | null>(null)
   const [mine, setMine] = useState<string[]>(c.tags)
   const [message, setMessage] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
@@ -457,11 +457,14 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
     void Promise.all([
       supabase().from('conversations').select('id, status, created_at, channel:channels(kind)').eq('contact_id', c.contact_id),
       supabase().from('contact_tags').select('tag_id').eq('contact_id', c.contact_id),
-    ]).then(async ([cv, ct]) => {
+      supabase().from('purchases').select('product, amount, status, occurred_at').eq('contact_id', c.contact_id).order('occurred_at', { ascending: false }).limit(50),
+    ]).then(([cv, ct, pu]) => {
       const convs = (cv.data ?? []) as unknown as { id: string; status: string; created_at: string; channel: { kind: ChannelKind } | null }[]
-      const msgs = convs.length ? await supabase().from('messages').select('id', { count: 'exact', head: true }).in('conversation_id', convs.map(x => x.id)) : { count: 0 }
+      const purchases = (pu.data ?? []) as { product: string | null; amount: number | null; status: string; occurred_at: string }[]
+      const paid = purchases.filter(p => p.status === 'aprovada')
       if (!live) return
-      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, messages: msgs.count ?? 0,
+      setStats({ total: convs.length, open: convs.filter(x => x.status !== 'fechada').length, purchases,
+        spent: paid.reduce((t, p) => t + Number(p.amount ?? 0), 0), orders: paid.length,
         since: convs.map(x => x.created_at).sort()[0] ?? null, channels: [...new Set(convs.map(x => x.channel?.kind).filter(Boolean) as ChannelKind[])] })
       setMine((ct.data ?? []).map(r => r.tag_id as string))
     })
@@ -490,10 +493,10 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
         </div>
       </div>
       <div className="grid grid-cols-2 gap-2 px-4 pb-3">
+        <Stat label="Total gasto" value={stats ? stats.spent.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) : '—'} tone="green" />
         <Stat label="Conversas" value={stats?.total ?? '—'} tone="blue" />
-        <Stat label="Em aberto" value={stats?.open ?? '—'} tone="orange" />
-        <Stat label="Mensagens" value={stats?.messages ?? '—'} tone="green" />
-        <Stat label="Cliente desde" value={stats?.since ? new Date(stats.since).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }) : '—'} tone="red" />
+        <Stat label="Pedidos" value={stats?.orders ?? '—'} tone="orange" />
+        <Stat label="Em aberto" value={stats?.open ?? '—'} tone="red" />
       </div>
       {message ? <p role="alert" className="mx-4 mb-2 rounded-lg bg-[#fdf2f2] px-3 py-2 text-[12px] text-[#8a2b2b]">{message}</p> : null}
       <dl className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1.5 px-4 pb-3 text-[13px]">
@@ -515,6 +518,18 @@ function ContactPanel({ conversation: c, tags, onChanged }: { conversation: Row;
           })}
         </div>
       </Section>
+      {stats?.purchases.length ? (
+        <Section title="Compras">
+          <ul className="grid gap-1.5">
+            {stats.purchases.slice(0, 6).map((p, i) => (
+              <li key={i} className="flex items-baseline gap-2 text-[12.5px]">
+                <span className="min-w-0 flex-1 truncate">{p.product ?? 'Compra'}</span>
+                <span className={p.status === 'aprovada' ? 'text-[#166534]' : 'text-[#8e8e93]'}>{p.amount !== null ? Number(p.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : ''} {p.status !== 'aprovada' ? `· ${p.status}` : ''}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      ) : null}
       <Section title="Atendimento">
         <p className="flex items-center gap-2 text-[13px]"><IconUsers className="size-4 text-[#8e8e93]" />{SITUACAO[c.status].label}<span className={`ml-auto rounded-md px-1.5 py-0.5 text-[11px] font-medium ${SITUACAO[c.status].cls}`}>{CHANNEL_LABEL[c.channel?.kind ?? 'teste']}</span></p>
       </Section>

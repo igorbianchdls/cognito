@@ -48,7 +48,7 @@ async function say(d: EngineDeps, run: Run, text: string, buttons?: string[]) {
   if (!run.conversation_id) throw new InboxError('NO_CONVERSATION', 'O contato ainda não tem conversa em nenhum canal.', 409)
   const target = await loadTarget(d.service, run.conversation_id)
   const commentId = typeof run.vars.comment_id === 'string' && !run.vars.comment_used ? run.vars.comment_id : undefined
-  const result = await deliver(d.service, target, { texto: fill(text, await values(d, run.contact_id)), botoes: buttons, commentId }, { send: d.send })
+  const result = await deliver(d.service, target, { texto: fill(text, { ...run.vars, ...await values(d, run.contact_id) }), botoes: buttons, commentId }, { send: d.send })
   if (commentId) { run.vars.comment_used = true; await d.service('UPDATE inbox.flow_runs SET vars = $2 WHERE id = $1', [run.id, run.vars]) }
   if (result.status === 'falhou') throw new InboxError('SEND_FAILED', result.erro ?? 'A mensagem não foi enviada.', 502)
 }
