@@ -1,4 +1,4 @@
-// What every Drive, Analytics, Inbox and Video Hosting tool shares: how it is described, the company field, and what it gets to run.
+// What every Drive, Analytics and Inbox tool shares: how it is described, the company field, and what it gets to run.
 import { z } from 'zod'
 import type { Member } from '../editor/server/database'
 import type { StoreDeps } from '../editor/server/media'

@@ -1,7 +1,7 @@
 // Drive and Analytics tools against a real Postgres with the drive/analytics schemas and their policies.
 //   WORKSPACE_TEST_DB_URL=postgres://postgres:pg@localhost/mkt pnpm workspace:db-smoke
 // The database needs the Supabase stubs and the migrations editor_schema, editor_social_roles, drive_schema,
-// analytics_schema, analytics_goals, videohosting_schema and inbox_schema. Storage, downloads and BigQuery are fakes; nothing external is called.
+// analytics_schema, analytics_goals and inbox_schema. Storage, downloads and BigQuery are fakes; nothing external is called.
 import assert from 'node:assert/strict'
 import { generateKeyPairSync } from 'node:crypto'
 import pg from 'pg'
@@ -286,38 +286,6 @@ async function main() {
   })
   await inboxPool.end()
 
-  // ---------- Video Hosting ----------
-  await admin.query("DELETE FROM videohosting.videos WHERE workspace_id = 'org_A'; DELETE FROM videohosting.presets WHERE workspace_id = 'org_A'; DELETE FROM videohosting.domains WHERE workspace_id = 'org_A'")
-  let videoId = '', buttonId = ''
-
-  await check('Video Hosting: publicar do Drive, código, botões, aparência, domínios e tirar do ar', async () => {
-    const vslFile = (await ok('drive_trazer_de_link', { url: 'https://cdn.example.com/vsl.mp4', drive_id: driveId, nome: 'VSL' })).arquivo.id
-    const pub = await ok('videohosting_publicar', { arquivo_id: vslFile, titulo: 'VSL Natal' })
-    videoId = pub.video_id; assert.match(pub.codigo_para_colar, /^<script async src="https:\/\/app\.example\.com\/videohosting\.js" data-video="[0-9a-f]{16}"><\/script>$/)
-    await fails('videohosting_publicar', { arquivo_id: vslFile }, 'ACCESS_DENIED', viewer)
-    buttonId = (await ok('videohosting_botoes', { video_id: videoId, acao: 'adicionar', texto: 'Comprar agora', link: 'https://loja.com/checkout', aparece_em_s: 754 })).botao_id
-    await fails('videohosting_botoes', { video_id: videoId, acao: 'adicionar', texto: 'x' }, 'INVALID_INPUT')
-    await ok('videohosting_botoes', { video_id: videoId, acao: 'alterar', botao_id: buttonId, some_em_s: 900, posicao: 'sobre' })
-    await ok('videohosting_editar', { video_id: videoId, aparencia: { barra: 'normal', controles: { avancar: true } } })
-    await ok('videohosting_padrao_empresa', { aparencia: { cor: '#ff0000', controles: { velocidade: true } } })
-    await ok('videohosting_dominios', { adicionar: ['https://www.Loja.com.br/vendas', 'outra.com'], remover: [] })
-    await fails('videohosting_dominios', { adicionar: ['lixo'] }, 'INVALID_INPUT')
-    await ok('videohosting_dominios', { video_id: videoId, adicionar: ['lp.loja.com.br'] })
-    const v = await ok('videohosting_obter', { video_id: videoId })
-    assert.deepEqual([v.aparencia.cor, v.aparencia.barra, v.aparencia.controles.avancar, v.aparencia.controles.velocidade], ['#ff0000', 'normal', true, true])
-    assert.deepEqual(v.botoes.map((b: { aparece_em_s: number; some_em_s: number; posicao: string }) => [b.aparece_em_s, b.some_em_s, b.posicao]), [[754, 900, 'sobre']])
-    assert.deepEqual(v.toca_em, ['lp.loja.com.br'])
-    assert.deepEqual((await ok('videohosting_configuracoes', {})).dominios, ['outra.com', 'www.loja.com.br'])
-    assert.equal((await ok('videohosting_listar', {})).videos[0].botoes, 1)
-    await ok('videohosting_editar', { video_id: videoId, usar_padrao_da_empresa: true })
-    assert.equal((await ok('videohosting_obter', { video_id: videoId })).aparencia.barra, 'acelerada')
-    await ok('videohosting_botoes', { video_id: videoId, acao: 'remover', botao_id: buttonId })
-    await fails('videohosting_tirar_do_ar', { video_id: videoId }, 'INVALID_INPUT')
-    assert.equal((await ok('videohosting_tirar_do_ar', { video_id: videoId, confirmado: true })).fora_do_ar, true)
-    assert.equal((await ok('videohosting_listar', {})).videos.length, 0)
-    await fails('videohosting_editar', { video_id: videoId, titulo: 'x' }, 'INVALID_STATE')
-    await fails('videohosting_listar', {}, 'ACCESS_DENIED', stranger)
-  })
 
   await admin.end()
   console.log(JSON.stringify({ status: 'passed', checks: checks.length }))

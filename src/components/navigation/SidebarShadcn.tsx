@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBookFilled, IconBriefcaseFilled,
-  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
+  IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconLockFilled,
   IconReceiptFilled, IconScaleFilled, IconSearch, IconSendFilled, IconShoppingCartFilled,
   IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
@@ -48,13 +48,6 @@ const sections: Section[] = [
       { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
       { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
-      {
-        title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
-        children: [
-          { title: "Vídeos", url: "/videohosting", excludePaths: ["/videohosting/configuracoes"] },
-          { title: "Configurações", url: "/videohosting/configuracoes" },
-        ],
-      },
     ],
   },
   {

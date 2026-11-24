@@ -1,4 +1,4 @@
-// Runs a drive_, analytics_, inbox_ or videohosting_ tool: checks the connection's scopes and the company, records the call (metadata only)
+// Runs a drive_, analytics_ or inbox_ tool: checks the connection's scopes and the company, records the call (metadata only)
 // and runs it as the person (editor/server/database.ts). Errors come back with a code the assistant can act on.
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import { z } from 'zod'
@@ -10,11 +10,10 @@ import { asMember, type Connect } from '../editor/server/database'
 import { driveTools } from '../drive/tools/catalog'
 import { analyticsTools } from '../analytics/tools/catalog'
 import { inboxTools } from '../inbox/tools/catalog'
-import { videohostingTools } from '../videohosting/tools/catalog'
 import type { ToolContext, WorkspaceTool } from './context'
 
-export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools, ...inboxTools, ...videohostingTools]
-export const WORKSPACE_PREFIXES = ['drive_', 'analytics_', 'inbox_', 'videohosting_']
+export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools, ...inboxTools]
+export const WORKSPACE_PREFIXES = ['drive_', 'analytics_', 'inbox_']
 export const isWorkspaceTool = (name: string) => WORKSPACE_PREFIXES.some(p => name.startsWith(p))
 export const workspaceWrites = (name: unknown) => workspaceTools.some(t => t.write && t.name === name)
 

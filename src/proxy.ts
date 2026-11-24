@@ -4,7 +4,6 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/api/analytics/eventos',
-  '/api/videohosting/v/(.*)',
   '/api/inbox/webhook/(.*)',
   '/api/inbox/vendas/(.*)',
   '/api/inbox/sair',

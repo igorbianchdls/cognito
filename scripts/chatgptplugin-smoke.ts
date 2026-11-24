@@ -113,7 +113,7 @@ async function main() {
     const destructive=['excluir_cadastro','excluir_venda','cancelar_venda','excluir_compra','cancelar_compra','excluir_titulo','estornar_pagamento','registrar_devolucao','cancelar_nota_servico','excluir_nota_servico']
     for(const removed of ['preparar_rascunho','preparar_formulario_nativo','renderizar_card','abrir_formulario','obter_rascunho','listar_rascunhos','obter_cliente','listar_orcamentos','listar_contas_financeiras','verificar_fiscal_venda'])
       assert(!listed.some(t=>t.name===removed),removed)
-    for (const tool of listed.filter(t=>!/^(whatsapp|drive|analytics|inbox|videohosting)_/.test(t.name))) {
+    for (const tool of listed.filter(t=>!/^(whatsapp|drive|analytics|inbox)_/.test(t.name))) {
       const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert.equal(tool.annotations.readOnlyHint,!write&&tool.name!=='atualizar_configuracoes',tool.name)
       assert.equal(tool.annotations.destructiveHint,Boolean(erpActions.find(a=>a.name===tool.name)?.destructive),tool.name)
