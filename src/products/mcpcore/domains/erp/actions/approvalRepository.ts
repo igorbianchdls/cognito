@@ -14,6 +14,9 @@ import { createManualFinancialTitle } from '@/products/erp/server/erpCrudReposit
 import {createServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
 import {createServiceOrder} from '@/products/erp/server/erpProfessionalRepository'
 import {serviceOrderCreateSchema} from '@/products/erp/shared/professionalContracts'
+import {createManagementOperation} from '@/products/erp/server/erpManagementRepository'
+import {createStockOperation} from '@/products/erp/server/erpStockRepository'
+import {createSalesContract} from '@/products/erp/server/erpSalesContracts'
 
 export async function loadApproval(id:string,session:ErpAccessContext,config:Pick<PluginConfig,'resource'|'integration'>) {
   const rows = await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE domain='erp' AND id=$1 AND user_id=$2 AND empresa_id=$3 AND integration=$4",[id,session.sharedUserId,session.tenantId,config.integration])
@@ -79,6 +82,25 @@ export async function decideDraft(id:string,actor:DecisionActor,decision:'save'|
         recordId=String((await runWithErpTransactionClient(client,()=>createServiceOrder({tenantId:session.tenantId,actorId:session.sharedUserId,values:serviceOrderCreateSchema.parse(proposal.dados),idempotencyKey:key(row.id)}))).id)
       } else if(proposal.tipo==='nota_servico'){
         recordId=(await runWithErpTransactionClient(client,()=>createServiceInvoice(session.tenantId,session.sharedUserId,proposal.dados,key(row.id)))).record.id
+      } else if(proposal.tipo==='transferencia_financeira'){
+        const d=proposal.dados
+        const created=await runWithErpTransactionClient(client,()=>createManagementOperation({tenantId:session.tenantId,actorId:session.sharedUserId,resource:'transferencias-financeiras',
+          values:{conta_origem_id:d.conta_origem_id,conta_destino_id:d.conta_destino_id,valor:d.valor,data:d.data,descricao:d.descricao},idempotencyKey:key(row.id)}))
+        recordId=String((created as {id:string}).id)
+      } else if(proposal.tipo==='movimento_estoque'){
+        const d=proposal.dados
+        // Without a location, the company's default stock location is used.
+        const local=d.local_estoque_id??Number((await client.query("SELECT id FROM erp.locais_estoque WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, id LIMIT 1",[session.tenantId])).rows[0]?.id||0)
+        if(!local)throw new PluginError('INVALID_REFERENCE','Cadastre um local de estoque no ERP antes de movimentar.')
+        const created=await runWithErpTransactionClient(client,()=>createStockOperation({tenantId:session.tenantId,actorId:session.sharedUserId,resource:'movimentacoes',
+          values:{produto_id:d.produto_id,local_estoque_id:local,quantidade:d.quantidade,tipo:d.movimento,custo_unitario:d.custo_unitario,data:d.data,motivo:d.motivo},idempotencyKey:key(row.id)}))
+        recordId=String((created as {id:unknown}).id)
+      } else if(proposal.tipo==='contrato'){
+        const d=proposal.dados
+        const created=await runWithErpTransactionClient(client,()=>createSalesContract(client,{tenantId:session.tenantId,actorId:session.sharedUserId,idempotencyKey:key(row.id),
+          values:{cliente_id:d.cliente_id,numero:d.numero??'',descricao:d.descricao,produto_id:d.produto_id??null,servico_id:d.servico_id??null,quantidade:d.quantidade,
+            valor_unitario:d.valor_unitario,data_inicio:d.data_inicio,data_fim:d.data_fim??null,periodicidade:d.periodicidade,dia_vencimento:d.dia_vencimento}}))
+        recordId=String(created.id)
       } else if(proposal.tipo==='conta_pagar'||proposal.tipo==='conta_receber'){
         recordId=await createManualFinancialTitle(client,session.tenantId,session.sharedUserId,proposal.tipo==='conta_pagar'?'pagar':'receber',proposal.dados,key(row.id))
       } else {

@@ -16,6 +16,33 @@ export async function proposalReferences(tenantId:number,proposal:Proposal,clien
     if(!sale[0])throw new PluginError('INVALID_REFERENCE','Venda não encontrada nesta empresa.')
     return {cliente:sale[0],fornecedor:null,itens:[]}
   }
+  // Novas operações: confere que os registros citados existem e estão ativos nesta empresa.
+  if(proposal.tipo==='transferencia_financeira'){
+    const ids=[proposal.dados.conta_origem_id,proposal.dados.conta_destino_id]
+    const rows=await query('SELECT id::text,nome FROM erp.contas_financeiras WHERE empresa_id=$1 AND id=ANY($2::bigint[]) AND ativo AND excluido_em IS NULL',[tenantId,ids])
+    if(rows.length!==2)throw new PluginError('INVALID_REFERENCE','Escolha duas contas financeiras ativas desta empresa (buscar_cadastros tipo contas-financeiras).')
+    return {cliente:null,fornecedor:null,itens:[]}
+  }
+  if(proposal.tipo==='movimento_estoque'){
+    const product=await query('SELECT id::text,nome FROM erp.produtos WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL AND controla_estoque',[tenantId,proposal.dados.produto_id])
+    if(!product[0])throw new PluginError('INVALID_REFERENCE','Escolha um produto ativo que controla estoque.')
+    if(proposal.dados.local_estoque_id&&!(await query('SELECT id::text,nome FROM erp.locais_estoque WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL',[tenantId,proposal.dados.local_estoque_id]))[0])
+      throw new PluginError('INVALID_REFERENCE','Local de estoque não encontrado (buscar_apoio tipo locais-estoque).')
+    return {cliente:null,fornecedor:null,itens:[{tipo:'produto',...product[0]}]}
+  }
+  if(proposal.tipo==='receber_compra'){
+    const supplier=await query('SELECT f.id::text,f.nome FROM erp.compras c JOIN erp.entidades f ON f.empresa_id=c.empresa_id AND f.id=c.fornecedor_id WHERE c.empresa_id=$1 AND c.id=$2 AND c.excluido_em IS NULL',[tenantId,proposal.dados.registro_id])
+    if(!supplier[0])throw new PluginError('INVALID_REFERENCE','Compra não encontrada nesta empresa.')
+    return {cliente:null,fornecedor:supplier[0],itens:[]}
+  }
+  if(proposal.tipo==='contrato'){
+    const customer=await query('SELECT id::text,nome FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND eh_cliente AND ativo AND excluido_em IS NULL',[tenantId,proposal.dados.cliente_id])
+    if(!customer[0])throw new PluginError('INVALID_REFERENCE','Escolha um cliente ativo desta empresa.')
+    const product=proposal.dados.produto_id!==undefined
+    const item=await query(`SELECT id::text,nome FROM erp.${product?'produtos':'servicos'} WHERE empresa_id=$1 AND id=$2 AND ativo AND excluido_em IS NULL`,[tenantId,product?proposal.dados.produto_id:proposal.dados.servico_id])
+    if(!item[0])throw new PluginError('INVALID_REFERENCE','Escolha um produto ou serviço ativo desta empresa.')
+    return {cliente:customer[0],fornecedor:null,itens:[{tipo:product?'produto':'servico',...item[0]}]}
+  }
   if(!Array.isArray(data.itens))return {cliente:null,fornecedor:null,itens:[]}
   const purchase=proposal.tipo==='compra'||proposal.tipo==='editar_compra',role=purchase?'eh_fornecedor':'eh_cliente'
   const customer=await query(`SELECT id::text,nome FROM erp.entidades WHERE empresa_id=$1 AND id=$2 AND ${role} AND ativo AND excluido_em IS NULL`,[tenantId,purchase?data.fornecedor_id:data.cliente_id])

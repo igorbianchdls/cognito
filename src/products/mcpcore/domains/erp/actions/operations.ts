@@ -5,6 +5,7 @@ import { updateErpEntityRecord,getErpEntityRecord,confirmErpSale,confirmErpPurch
 import { getErpTransactionClient } from '@/lib/postgres'
 import { archiveRegistration,archiveCommercialDraft,changeManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
 import { attendStockForSale } from '@/products/erp/server/erpStockRepository'
+import { receivePurchaseItems } from '@/products/erp/server/erpProfessionalRepository'
 import { convertQuoteToSale,runQuoteAction,runServiceOrderAction,createServiceOrder,lockCommercialConversion } from '@/products/erp/server/erpProfessionalRepository'
 import {serviceOrderCreateSchema} from '@/products/erp/shared/professionalContracts'
 import {archiveCommercialDocument} from '@/products/erp/server/documents/commercialDocumentRepository'
@@ -17,7 +18,7 @@ import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceCon
 import {changeSalesContractState} from '@/products/erp/server/erpSalesContracts'
 import {editSnapshot,type EditSnapshot} from './editSnapshot'
 
-const tables = {suspender_contrato:'contratos_vendas',retomar_contrato:'contratos_vendas',encerrar_contrato:'contratos_vendas',devolver_compra:'compras',editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
+const tables = {receber_compra:'compras',suspender_contrato:'contratos_vendas',retomar_contrato:'contratos_vendas',encerrar_contrato:'contratos_vendas',devolver_compra:'compras',editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
   editar_ordem_servico:'ordens_servico',aprovar_ordem_servico:'ordens_servico',iniciar_ordem_servico:'ordens_servico',concluir_ordem_servico:'ordens_servico',cancelar_ordem_servico:'ordens_servico',gerar_orcamento_os:'ordens_servico',gerar_venda_os:'ordens_servico',arquivar_pdf_ordem_servico:'ordens_servico',
   enviar_orcamento:'vendas',aprovar_orcamento:'vendas',recusar_orcamento:'vendas',cancelar_orcamento:'vendas',arquivar_pdf_orcamento:'vendas',
   editar_nota_servico:'notas_fiscais',simular_nota_servico:'notas_fiscais',consultar_resultado_nota_servico:'notas_fiscais',cancelar_nota_servico:'notas_fiscais',excluir_nota_servico:'notas_fiscais',
@@ -231,6 +232,11 @@ export async function executeOperation(tenantId:number,actorId:number,proposal:P
     case 'confirmar_venda': await confirmErpSale({tenantId,actorId,saleId:id,creditOverrideReason:proposal.dados.liberar_credito_motivo});break
     case 'cancelar_venda': await cancelErpSale({...input,reason:proposal.dados.motivo});break
     case 'confirmar_compra': await confirmErpPurchase(input);break
+    case 'receber_compra': {
+      const {itens,data:date,observacoes}=proposal.dados
+      await receivePurchaseItems({tenantId,actorId,purchaseId:id,idempotencyKey:key,values:{items:itens.map(item=>({...item,local_estoque_id:item.local_estoque_id??null})),data:date,observacoes}})
+      break
+    }
     case 'cancelar_compra': await cancelErpPurchase(input);break
     case 'atender_venda': await attendStockForSale({tenantId,actorId,saleId:id});break
     case 'converter_orcamento': {

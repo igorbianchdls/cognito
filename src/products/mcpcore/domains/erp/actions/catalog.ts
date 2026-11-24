@@ -22,6 +22,10 @@ const byRegistration = (prefix:string) => Object.fromEntries(registrations.map(t
 const specs: Spec[] = [
   {name:'alterar_contrato',title:'Suspender, retomar ou encerrar contrato',destructive:true,types:{suspender:'suspender_contrato',retomar:'retomar_contrato',encerrar:'encerrar_contrato'}},
   {name:'devolver_compra',title:'Devolver compra integral ao fornecedor',destructive:true,kind:'devolver_compra'},
+  {name:'criar_contrato',title:'Criar contrato de venda recorrente',destructive:false,kind:'contrato'},
+  {name:'transferir_entre_contas',title:'Transferir entre contas',destructive:false,kind:'transferencia_financeira'},
+  {name:'movimentar_estoque',title:'Movimentar ou ajustar estoque',destructive:false,kind:'movimento_estoque'},
+  {name:'receber_compra',title:'Receber itens da compra',destructive:false,kind:'receber_compra'},
   {name:'criar_ordem_servico',title:'Criar ordem de serviço',destructive:false,kind:'ordem_servico'},
   {name:'editar_ordem_servico',title:'Editar ordem de serviço',destructive:false,kind:'editar_ordem_servico'},
   {name:'alterar_ordem_servico',title:'Alterar situação da ordem de serviço',destructive:true,types:{aprovar:'aprovar_ordem_servico',iniciar:'iniciar_ordem_servico',concluir:'concluir_ordem_servico',cancelar:'cancelar_ordem_servico'}},
@@ -113,7 +117,7 @@ function definition(spec:Spec):ActionDefinition {
   }).strict(),spec.name)
   return {name:spec.name,title:spec.title,write:true,destructive:spec.destructive,kinds,schema,
     kindFor:input=>spec.kind || spec.types?.[String(input.tipo)],
-    description:`${toolDescription(spec.name)} Funciona em duas etapas: 1) envie empresa_id, chave_operacao UUID, dados e tipo quando aplicável, sem rascunho_id, para gerar a prévia com os valores calculados pelo ERP e mostre-a ao usuário; 2) somente após confirmação explícita do usuário, use confirmar.argumentos (empresa_id e rascunho_id) na mesma tool para executar. Somente status saved com registro_id confirma a execução; verifique a situação do registro de negócio na consulta correspondente.`,
+    description:`${toolDescription(spec.name)} Duas etapas: prévia com chave_operacao e dados (sem rascunho_id), mostrada ao usuário; após confirmação explícita, execute com empresa_id e rascunho_id. Só status saved com registro_id confirma.`,
     requiredCapabilities:input=>{
       // A execução revalida as permissões da proposta salva dentro da transação.
       if(!previewOnly(input))return []

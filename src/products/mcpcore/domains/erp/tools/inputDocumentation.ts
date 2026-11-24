@@ -42,7 +42,6 @@ const fields:Record<string,string>={
  nome:'Nome informado pelo usuário ou consultado no ERP.',descricao:'Descrição do registro/item, informada pelo usuário; na nota de serviço discrimine o serviço prestado.',
  quantidade:'Quantidade na unidade do cadastro, positiva, até 4 casas decimais. Na devolução não pode exceder a quantidade disponível para devolver.',
  valor_unitario:'Preço por unidade em reais, até 2 casas decimais. Em venda/orçamento pode ser omitido para o ERP consultar tabela de preço/cadastro; preserve o preço atual ao editar sem reprificar.',
- valor:'Valor em reais. Parcela: valor integral do vencimento; baixa: positivo, até o saldo pendente da parcela.',
  valor_total:'Valor total em reais; deve corresponder à soma das parcelas.',preco:'Preço de venda em reais, até 2 casas decimais.',custo:'Custo em reais, até 2 casas decimais.',
  desconto:'No item: desconto total desse item em reais, não percentual nem por unidade. No cabeçalho: reais ou percentual conforme tipo_desconto; na OS é valor em reais.',
  tipo_desconto:'Desconto do cabeçalho: valor em reais ou percentual (5 significa 5%). Não muda a unidade de desconto dos itens.',
@@ -100,6 +99,15 @@ const fields:Record<string,string>={
  situacao:'Situação comercial do orçamento, distinta de status do documento. Use com tipo_documento orcamento.',
  tipo_documento:'venda (padrão) ou orcamento para propostas. O ID retornado é usado por obter_venda.',
  numero:'Número comercial/fiscal exato, não o ID interno; use nota_id quando já disponível.',
+ conta_origem_id:'ID da conta financeira de onde sai o valor (buscar_cadastros tipo contas-financeiras).',conta_destino_id:'ID da conta financeira que recebe o valor; diferente da origem.',
+ produto_id:'ID de produto ativo de buscar_cadastros tipo produtos.',servico_id:'ID de serviço ativo de buscar_cadastros tipo servicos.',
+ movimento:'entrada ou saida para movimento comum; ajuste_entrada/ajuste_saida para correção de saldo, com motivo.',
+ local_estoque_id:'ID de buscar_apoio tipo locais-estoque; omita para usar o local padrão.',custo_unitario:'Custo por unidade em reais, opcional, para entradas.',
+ periodicidade:'Frequência de geração das vendas do contrato.',dia_vencimento:'Dia do mês (1 a 31) de vencimento de cada ciclo.',data_fim:'Fim do contrato em YYYY-MM-DD; omita para prazo indeterminado.',
+ valor:'Valor em reais. Parcela: valor integral do vencimento; baixa: positivo, até o saldo pendente da parcela; transferência: valor transferido.',
+ data:'Data da operação em YYYY-MM-DD. Na transferência é obrigatória; no estoque e no recebimento, omita para hoje.',
+ cep:'CEP do endereço principal.',logradouro:'Rua/avenida do endereço principal.',numero_endereco:'Número do endereço principal (não é número comercial).',
+ complemento:'Complemento do endereço.',bairro:'Bairro do endereço.',uf:'Sigla do estado com 2 letras.',
 }
 
 export function documentInputSchema<T extends z.ZodTypeAny>(schema:T,tool:string):T {
@@ -123,7 +131,8 @@ export function documentInputSchema<T extends z.ZodTypeAny>(schema:T,tool:string
   if(field==='documento'&&tool==='listar_anexos')description='Domínio do documento anexado conforme enum. Proposta usa venda; contas a pagar/receber usam ID do título, não da parcela.'
   if(field==='tipo'&&tool==='consultar_financeiro')description='pagar para contas a pagar; receber para contas a receber. A consulta retorna parcelas.'
   if(field==='tipo'&&tool==='buscar_cadastros')description='Domínio plural do cadastro: categorias são financeiras; categorias-cadastro classificam pessoas/produtos/serviços.'
-  if(description)result=result.describe(node.description?node.description+' '+description:description)
+  // The central text replaces the field's own: joining both repeated the same guidance in most tools.
+  if(description)result=result.describe(description)
   return result
  }
  return visit(schema,'') as T

@@ -13,6 +13,7 @@ import { chatDashboardFields, chatDashboardSchema } from '@/products/erp/shared/
 import { createServiceInvoiceLinkToken, SERVICE_INVOICE_LINK_TTL_SECONDS, SERVICE_INVOICE_PUBLIC_PATH } from '@/products/erp/server/fiscal/serviceInvoiceLinks'
 import { createCommercialLink,COMMERCIAL_LINK_PATH } from '@/products/erp/server/documents/commercialDocumentLinks'
 import { QUOTE_SITUATIONS } from '@/products/erp/shared/quoteLifecycle'
+import { runQuery } from '@/lib/postgres'
 
 export const companySchema = z.number().int().positive().optional().describe('ID autorizado da empresa já escolhida. Se desconhecido, omita: a única empresa autorizada é selecionada pelo servidor. Em COMPANY_REQUIRED, consulte meu_acesso e peça a escolha; com várias empresas, envie o ID escolhido. Nunca invente o ID.')
 const company = companySchema
@@ -38,6 +39,29 @@ function page(input: Record<string, unknown>, cardPagination=false) {
 }
 function commercialFilters(input:Record<string,unknown>) {
   return Object.fromEntries(['status','situacao','inicio','fim'].filter(k=>input[k]).map(k=>[k,String(input[k])]))
+}
+/** Lookups the other tools need IDs from (payment methods, price tables, carriers, cost centers, stock locations). */
+const supportTypes = z.enum(['formas-pagamento','tabelas-preco','transportadoras','centros-custo','locais-estoque'])
+type SupportType = z.infer<typeof supportTypes>
+const supportCapability: Record<SupportType, ErpCapability> = {
+  'formas-pagamento':'erp.financeiro.visualizar','centros-custo':'erp.financeiro.visualizar',
+  'tabelas-preco':'erp.vendas.visualizar','transportadoras':'erp.vendas.visualizar','locais-estoque':'erp.estoque.visualizar',
+}
+const supportSql: Record<SupportType, { from: string; fields: string; search: string; order: string }> = {
+  'formas-pagamento': { from:'erp.metodos_pagamento', fields:"id::text, nome, tipo, taxa_percentual, taxa_fixa, prazo_repasse_dias, conta_destino_id::text", search:'nome', order:'nome' },
+  'tabelas-preco': { from:'erp.tabelas_preco', fields:"id::text, nome, descricao, padrao, vigencia_inicio::text, vigencia_fim::text", search:"concat_ws(' ', nome, descricao)", order:'padrao DESC, nome' },
+  'transportadoras': { from:'erp.entidades', fields:"id::text, nome, documento, cidade", search:"concat_ws(' ', nome, documento)", order:'nome' },
+  'centros-custo': { from:'erp.centros_custo', fields:"id::text, nome, codigo", search:"concat_ws(' ', nome, codigo)", order:'nome' },
+  'locais-estoque': { from:'erp.locais_estoque', fields:"id::text, nome, codigo, padrao, permite_venda, permite_compra", search:"concat_ws(' ', nome, codigo)", order:'padrao DESC, nome' },
+}
+async function supportPage(tenantId:number, type:SupportType, input:{query?:string;page:number;pageSize:number}) {
+  const sql = supportSql[type]
+  const extra = type === 'transportadoras' ? ' AND eh_transportadora' : ''
+  const where = `empresa_id = $1 AND ativo AND excluido_em IS NULL${extra} AND ($2::text IS NULL OR ${sql.search} ILIKE '%' || $2 || '%')`
+  const search = input.query?.trim() ? input.query.trim().replace(/[\\%_]/g, m => '\\' + m) : null
+  const [count] = await runQuery<{ n: number }>(`SELECT count(*)::int AS n FROM ${sql.from} WHERE ${where}`, [tenantId, search])
+  const records = await runQuery(`SELECT ${sql.fields} FROM ${sql.from} WHERE ${where} ORDER BY ${sql.order}, id LIMIT $3 OFFSET $4`, [tenantId, search, input.pageSize, (input.page - 1) * input.pageSize])
+  return { records, total: count?.n ?? 0, page: input.page, pageSize: input.pageSize, hasMore: input.page * input.pageSize < (count?.n ?? 0) }
 }
 const registrationTypes = z.enum(['clientes','fornecedores','vendedores','produtos','servicos','categorias','categorias-cadastro','contas-financeiras'])
 const registrationCapabilities = (input:Record<string,unknown>):ErpCapability[] =>
@@ -79,6 +103,10 @@ const readTools: ToolDefinition[] = [
     schema: z.object({ ...paging, tipo: registrationTypes, status: z.enum(['ativo','inativo']).optional() }).strict(),
     capabilities: ['erp.cadastros.visualizar'], requiredCapabilities: registrationCapabilities,
     execute: (q,id,input) => q.page(id,input.tipo as 'clientes', { ...page(input), filters: input.status ? { status: String(input.status) } : {} }) },
+  { name:'buscar_apoio', title:'Buscar formas de pagamento, tabelas, transportadoras, centros de custo e locais', output: outputs.page, description: toolDescription('buscar_apoio'),
+    schema: z.object({ ...paging, tipo: supportTypes }).strict(),
+    capabilities: ['erp.cadastros.visualizar'], requiredCapabilities: input => [supportCapability[input.tipo as SupportType]],
+    execute: (_q,id,input) => supportPage(id,input.tipo as SupportType,page(input)) },
   {name:'obter_cadastro',title:'Detalhes do cadastro',output:outputs.record,description:toolDescription('obter_cadastro'),
     schema:z.object({empresa_id:company,tipo:registrationTypes,registro_id:z.number().int().positive()}).strict(),
     capabilities:['erp.cadastros.visualizar'],requiredCapabilities:registrationCapabilities,
