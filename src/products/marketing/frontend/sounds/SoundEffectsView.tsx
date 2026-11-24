@@ -3,14 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AudioLines, Download, Loader2, Pause, Play, Search } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
-import { remoteMode } from '../lib/sync'
-import { supabase } from '../lib/supabase'
 import s from '@/products/editor/frontend/shell/ui.module.css'
 import x from './sounds.module.css'
 
-const BUCKET = 'sound-effects'
-
-type SoundEffect = { id: string; storage_path: string; title: string; category: string; duration_ms: number | null; tags: string[] }
+type SoundEffect = { id: string; storage_path: string; title: string; category: string; duration_ms: number | null; tags: string[]; url: string | null }
 
 const categoryNames: Record<string, string> = {
   ambientes: 'Ambientes',
@@ -21,48 +17,47 @@ const categoryNames: Record<string, string> = {
 }
 const categoryName = (c: string) => categoryNames[c] ?? (c.charAt(0).toUpperCase() + c.slice(1)).replace(/-/g, ' ')
 const duration = (ms: number | null) => ms == null ? '' : ms < 60000 ? `${(ms / 1000).toFixed(1).replace('.', ',')} s` : `${Math.floor(ms / 60000)}:${String(Math.round(ms / 1000) % 60).padStart(2, '0')}`
+const URLS_FOR_MS = 50 * 60000 // the server signs the URLs for an hour
 
-/** Signed URL to play a file (cached for the hour it is valid). */
-const playUrls = new Map<string, { url: string; until: number }>()
-async function playUrl(path: string) {
-  const hit = playUrls.get(path)
-  if (hit && hit.until > Date.now()) return hit.url
-  const { data, error } = await supabase().storage.from(BUCKET).createSignedUrl(path, 3600)
-  if (error || !data) throw error ?? new Error('Sem URL')
-  playUrls.set(path, { url: data.signedUrl, until: Date.now() + 55 * 60000 })
-  return data.signedUrl
+async function fetchEffects(): Promise<SoundEffect[]> {
+  const response = await fetch('/api/marketing/sound-effects', { cache: 'no-store' })
+  const body = await response.json().catch(() => ({})) as { efeitos?: SoundEffect[]; erro?: string }
+  if (!response.ok || !body.efeitos) throw new Error(body.erro ?? `HTTP ${response.status}`)
+  return body.efeitos
 }
 
-/** Library of sound effects (bucket "sound-effects", cataloged in marketing.sound_effects). */
+/** Library of sound effects (bucket "sound-effects", cataloged in marketing.sound_effects), read through the server. */
 export function SoundEffectsView() {
-  const [items, setItems] = useState<SoundEffect[] | null>(remoteMode ? null : [])
+  const [items, setItems] = useState<SoundEffect[] | null>(null)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('todas')
   const [playing, setPlaying] = useState<string | null>(null)
   const [loading, setLoading] = useState<string | null>(null)
   const audio = useRef<HTMLAudioElement | null>(null)
+  const loadedAt = useRef(0)
 
-  // Loads once Clerk knows the person. The library is the same for every company: RLS only checks that the
-  // person is an active member of some company (marketing.can_use_sound_effects).
   const { isLoaded, userId } = useAuth()
   useEffect(() => {
-    if (!remoteMode || !isLoaded) return
+    if (!isLoaded) return
     if (!userId) { setItems([]); return }
     let live = true
-    void (async () => {
-      try {
-        const { data, error } = await supabase().from('sound_effects').select('id, storage_path, title, category, duration_ms, tags').order('category').order('title')
-        if (error) throw error
-        if (live) { setError(''); setItems(data ?? []) }
-      } catch (e) {
-        console.error('Sound effects: falha ao carregar', e)
-        if (live) { setError('Não foi possível carregar os efeitos.'); setItems([]) }
-      }
-    })()
+    fetchEffects().then(list => { if (live) { loadedAt.current = Date.now(); setError(''); setItems(list) } }, e => {
+      console.error('Sound effects: falha ao carregar', e)
+      if (live) { setError('Não foi possível carregar os efeitos.'); setItems([]) }
+    })
     return () => { live = false }
   }, [isLoaded, userId])
   useEffect(() => () => audio.current?.pause(), [])
+
+  /** The effect with a URL that is still valid (reloads the list when the signed URLs are about to expire). */
+  const fresh = async (i: SoundEffect) => {
+    if (Date.now() - loadedAt.current < URLS_FOR_MS) return i
+    const list = await fetchEffects()
+    loadedAt.current = Date.now()
+    setItems(list)
+    return list.find(e => e.id === i.id) ?? i
+  }
 
   const categories = useMemo(() => [...new Set((items ?? []).map(i => i.category))], [items])
   const list = useMemo(() => {
@@ -78,7 +73,9 @@ export function SoundEffectsView() {
     setLoading(i.id)
     try {
       a.pause()
-      a.src = await playUrl(i.storage_path)
+      const url = (await fresh(i)).url
+      if (!url) throw new Error('Sem URL')
+      a.src = url
       a.onended = () => setPlaying(null)
       await a.play()
       setPlaying(i.id)
@@ -86,10 +83,12 @@ export function SoundEffectsView() {
     finally { setLoading(null) }
   }
   const download = async (i: SoundEffect) => {
-    const name = i.storage_path.split('/').pop() ?? `${i.title}.mp3`
-    const { data, error } = await supabase().storage.from(BUCKET).createSignedUrl(i.storage_path, 60, { download: name })
-    if (error || !data) { setError('Não foi possível baixar este efeito.'); return }
-    window.location.href = data.signedUrl
+    try {
+      const url = (await fresh(i)).url
+      if (!url) throw new Error('Sem URL')
+      const name = i.storage_path.split('/').pop() ?? `${i.title}.mp3`
+      window.location.href = `${url}&download=${encodeURIComponent(name)}`
+    } catch (e) { console.error('Sound effects: falha ao baixar', e); setError('Não foi possível baixar este efeito.') }
   }
 
   return <section className={s.content}>
@@ -118,7 +117,7 @@ export function SoundEffectsView() {
 
     {items && !list.length && <div className={x.empty}><AudioLines size={40} strokeWidth={1.3} />
       <b>{items.length ? 'Nenhum efeito encontrado' : 'Nenhum efeito ainda'}</b>
-      <span>{items.length ? 'Tente outra busca ou categoria.' : remoteMode ? 'Os efeitos adicionados à biblioteca aparecem aqui.' : 'Entre com sua conta para ver a biblioteca de efeitos.'}</span>
+      <span>{items.length ? 'Tente outra busca ou categoria.' : userId ? 'Os efeitos adicionados à biblioteca aparecem aqui.' : 'Entre com sua conta para ver a biblioteca de efeitos.'}</span>
     </div>}
   </section>
 }
