@@ -1,16 +1,16 @@
 'use client'
 
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, CloudCheck, Download, History } from 'lucide-react'
+import { Check, CloudCheck, Download, History, Plus, RectangleVertical } from 'lucide-react'
 import type { PlayerRef } from '@remotion/player'
 import { formatDateTime } from '@/products/editor/frontend/lib/format'
 import { Preview } from './preview/Preview'
 import { Timeline } from './timeline/Timeline'
-import { LeftPanel, type ChatMessage } from './panels/LeftPanel'
+import { LeftPanel, uploadToEditor, type ChatMessage } from './panels/LeftPanel'
 import { Properties } from './panels/Properties'
 import { runCommand } from './ai/commands'
 import { blankProject, defaultBox, fullBox, media, type MediaItem } from './project/data'
+import { fromTemplate } from './project/templates'
 import { addClip, clipEnd, duplicateClip, groupClips, insertClip, isLocked, projectDuration, removeClips, rippleDelete, splitAt, toggleMarker, ungroupClips, withGroup } from './project/ops'
 import { listVersions, saveVersion, type Version } from './project/store'
 import { copyClips, pasteClips, type ClipboardItem } from './project/clipboard'
@@ -26,6 +26,8 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   const [loop, setLoop] = useState<{ start: number; end: number } | null>(null)
   const [rate, setRate] = useState(1)
   const [pane, setPane] = useState<'ferramentas' | 'propriedades'>('ferramentas')
+  /** The project's settings (format, background) open on the right when nothing is selected. */
+  const [projectOpen, setProjectOpen] = useState(false)
   const [versions, setVersions] = useState<Version[] | null>(null)
   const clipboard = useRef<ClipboardItem[]>([])
   const [playing, setPlaying] = useState(false)
@@ -75,6 +77,35 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
     apply(() => r.project)
     setSelection([r.id])
   }, [apply, frames, project, insertMode])
+
+  /** Several media at once, one after the other from the playhead (built on the latest project, so all of them stay). */
+  const addMediaMany = useCallback((list: MediaItem[]) => {
+    if (!list.length) return
+    let at = frames.get()
+    const placed = list.map(m => {
+      const seconds = m.kind === 'imagem' ? 3 : Math.min(m.duration ?? 5, m.kind === 'audio' ? 30 : 10)
+      const props: ClipProps = m.kind === 'audio' ? { fileId: m.id, volume: 0.4 } : { fileId: m.id, box: m.kind === 'video' ? fullBox : defaultBox.imagem, opacity: 1, volume: 1 }
+      const clip = { start: at, duration: Math.round(seconds * FPS), trimStart: 0, props }
+      if (m.kind !== 'audio') at += clip.duration
+      return { kind: m.kind as TrackKind, clip }
+    })
+    apply(p => placed.reduce((acc, x) => addClip(acc, x.kind, x.clip).project, p))
+    setSelection([])
+  }, [apply, frames])
+
+  /** Swaps the project for a template (same id and name); Ctrl+Z brings the old one back. */
+  const applyTemplate = useCallback((templateId: string) => {
+    apply(p => { const t = fromTemplate(p.id, templateId); return t ? { ...t, name: p.name } : p })
+    setSelection([])
+    setToast('Modelo aplicado. Ctrl+Z desfaz.')
+  }, [apply])
+
+  const uploadInput = useRef<HTMLInputElement>(null)
+  /** Files picked or dropped on the empty preview: saved to the Drive and put in the video. */
+  const uploadAndAdd = useCallback(async (list: File[]) => {
+    const ids = await uploadToEditor(list, setToast)
+    addMediaMany(ids.flatMap(id => media(id) ?? []))
+  }, [addMediaMany])
 
   /** seconds 0 means the whole video (progress bar). */
   const addPreset = useCallback((kind: TrackKind, props: ClipProps, seconds: number) => {
@@ -177,12 +208,11 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 2600); return () => clearTimeout(t) }, [toast])
   useEffect(() => { if (externalChanges) setToast('O projeto foi alterado pelo assistente. Ctrl+Z desfaz.') }, [externalChanges])
 
+  const empty = project.tracks.every(t => !t.clips.length)
+  // Properties only show for a selection (or the project's settings), so the preview gets the room.
+  const showProps = selected.length > 0 || projectOpen
   return <div className={e.editor} data-editor>
     <header className={e.top}>
-      <Link href="/editor" className={e.home} aria-label="Voltar ao início do Editor" title="Voltar ao início do Editor">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logoOttoIcon.svg" alt="" width={22} height={22} />
-      </Link>
       <input className={e.name} value={project.name} onChange={ev => apply(p => ({ ...p, name: ev.target.value }), 'name')} aria-label="Nome do projeto" />
       <span className={e.saved}><CloudCheck size={15} />Salvo neste navegador</span>
       <span className={e.grow} />
@@ -200,11 +230,19 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       </div>
       <button className={e.export} onClick={() => { playerRef.current?.pause(); setExporting(true) }}><Download size={16} />Exportar</button>
     </header>
-    <div className={`${e.body} ${pane === 'propriedades' ? e.showProps : e.showTools}`}>
+    <LeftPanel project={project} selectedIds={selected} apply={apply} onApplyTemplate={applyTemplate} onAddMedia={m => addMedia(m)} onAddMediaMany={addMediaMany} onAddPreset={addPreset} onToast={setToast} chat={chat} onAsk={ask} />
+    <div className={`${e.body} ${showProps ? e.withProps : ''} ${pane === 'propriedades' ? e.showProps : e.showTools}`}>
       <div className={e.paneSwitch}><button className={pane === 'ferramentas' ? e.segOn : ''} onClick={() => setPane('ferramentas')}>Ferramentas</button><button className={pane === 'propriedades' ? e.segOn : ''} onClick={() => setPane('propriedades')}>Propriedades</button></div>
-      <LeftPanel onAddMedia={m => addMedia(m)} onAddPreset={addPreset} chat={chat} onAsk={ask} />
-      <Preview project={project} playerRef={playerRef} frames={frames} selectedId={selected.length === 1 ? selected[0] : null} onSelect={id => select(id)} transient={transient} commit={commit} onPlaying={setPlaying} playbackRate={rate} />
-      <Properties project={project} selectedIds={selected} frames={frames} apply={apply} seek={seek} onDuplicate={duplicate} onSplit={split} onDelete={remove} onRipple={ripple} onCopy={copy} onGroup={group} onUngroup={ungroup} />
+      <div className={e.stage}>
+        <button type="button" className={`${e.projectBtn} ${projectOpen && !selected.length ? e.projectBtnOn : ''}`} onClick={() => { setSelection([]); setProjectOpen(o => !(o && !selected.length)) }} aria-pressed={projectOpen && !selected.length} title="Formato e fundo do projeto"><RectangleVertical size={16} />Projeto</button>
+        <Preview project={project} playerRef={playerRef} frames={frames} selectedId={selected.length === 1 ? selected[0] : null} onSelect={id => select(id)} transient={transient} commit={commit} onPlaying={setPlaying} playbackRate={rate} />
+        {empty && <div className={e.emptyStage} onDragOver={ev => { if (ev.dataTransfer.types.includes('Files')) ev.preventDefault() }} onDrop={ev => { ev.preventDefault(); void uploadAndAdd([...ev.dataTransfer.files]) }}>
+          <input ref={uploadInput} type="file" multiple accept="video/*,image/*,audio/*" hidden onChange={ev => { void uploadAndAdd([...(ev.target.files ?? [])]); ev.target.value = '' }} />
+          <button type="button" className={e.emptyPlus} onClick={() => uploadInput.current?.click()} aria-label="Carregar mídia"><Plus size={30} /></button>
+          <b>Clique para carregar</b><span>Ou arraste e solte um arquivo aqui</span>
+        </div>}
+      </div>
+      {showProps && <Properties project={project} selectedIds={selected} frames={frames} apply={apply} seek={seek} onDuplicate={duplicate} onSplit={split} onDelete={remove} onRipple={ripple} onCopy={copy} onGroup={group} onUngroup={ungroup} />}
     </div>
     <Timeline project={project} frames={frames} duration={duration} selectedIds={selected} playing={playing} onSelect={select} onSelectMany={setSelection} insertMode={insertMode} setInsertMode={setInsertMode} loop={loop} onToggleLoop={toggleLoop} onFullscreen={fullscreen} rate={rate} seek={seek} toggle={toggle}
       apply={apply} transient={transient} commit={commit} onSplit={split} onDelete={remove} onRipple={ripple} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo}
