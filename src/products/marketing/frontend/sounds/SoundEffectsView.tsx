@@ -8,13 +8,21 @@ import x from './sounds.module.css'
 
 type SoundEffect = { id: string; storage_path: string; title: string; category: string; duration_ms: number | null; tags: string[]; url: string | null }
 
+/** Bucket folders, in the order the screen shows them (most used in Reels first). */
 const categoryNames: Record<string, string> = {
-  ambientes: 'Ambientes',
-  'comicos-e-reacoes': 'Cômicos e reações',
-  impactos: 'Impactos',
-  'interface-e-sons-digitais': 'Interface e sons digitais',
   transicoes: 'Transições',
+  impactos: 'Impactos',
+  texto: 'Texto e destaque',
+  interface: 'Interface e digital',
+  comicos: 'Cômicos e reações',
+  risers: 'Risers e tensão',
+  sucesso: 'Sucesso e dinheiro',
+  erro: 'Erro e alerta',
+  objetos: 'Corpo e objetos',
+  ambientes: 'Ambientes',
 }
+const categoryOrder = Object.keys(categoryNames)
+const categoryRank = (c: string) => { const i = categoryOrder.indexOf(c); return i < 0 ? categoryOrder.length : i }
 const categoryName = (c: string) => categoryNames[c] ?? (c.charAt(0).toUpperCase() + c.slice(1)).replace(/-/g, ' ')
 const duration = (ms: number | null) => ms == null ? '' : ms < 60000 ? `${(ms / 1000).toFixed(1).replace('.', ',')} s` : `${Math.floor(ms / 60000)}:${String(Math.round(ms / 1000) % 60).padStart(2, '0')}`
 const URLS_FOR_MS = 50 * 60000 // the server signs the URLs for an hour
@@ -59,7 +67,7 @@ export function SoundEffectsView() {
     return list.find(e => e.id === i.id) ?? i
   }
 
-  const categories = useMemo(() => [...new Set((items ?? []).map(i => i.category))], [items])
+  const categories = useMemo(() => [...new Set((items ?? []).map(i => i.category))].sort((x, y) => categoryRank(x) - categoryRank(y)), [items])
   const list = useMemo(() => {
     const q = query.trim().toLowerCase()
     return (items ?? []).filter(i => (category === 'todas' || i.category === category)
@@ -103,7 +111,7 @@ export function SoundEffectsView() {
     </div>
     {error && <p className={x.error} role="alert">{error}</p>}
 
-    {Object.entries(byCategory).map(([c, sounds]) => <div key={c} className={x.block}>
+    {Object.entries(byCategory).sort(([x], [y]) => categoryRank(x) - categoryRank(y)).map(([c, sounds]) => <div key={c} className={x.block}>
       <h3>{categoryName(c)}</h3>
       <ul className={x.list}>{sounds.map(i => <li key={i.id} className={`${x.item} ${playing === i.id ? x.on : ''}`}>
         <button className={x.play} onClick={() => void toggle(i)} aria-label={playing === i.id ? `Pausar ${i.title}` : `Tocar ${i.title}`}>
