@@ -8,7 +8,7 @@ import {
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
   IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
-  IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
+  IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
 } from "@tabler/icons-react"
 
 import { AuthUserMenu } from "@/products/auth/frontend/components/AuthUserMenu"
@@ -113,6 +113,7 @@ const sections: Section[] = [
       { title: "Editor", url: "/editor", icon: IconVideoFilled },
       { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
+      { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
       {
         title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
         children: [

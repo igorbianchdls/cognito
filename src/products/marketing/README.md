@@ -4,7 +4,8 @@ Antes se chamava Social. Posts e agendamento, contas sociais e notificações, v
 
 ## Onde fica
 
-- Telas: `src/app/marketing` (`/marketing/posts`, `/marketing/postar`, `/marketing/notificacoes`).
+- Telas: `src/app/marketing` (`/marketing/posts`, `/marketing/postar`, `/marketing/notificacoes`, `/marketing/sound-effects`).
+- Sound effects: `frontend/sounds`. Os arquivos ficam no bucket privado `sound-effects` (uma pasta por categoria) e o catálogo na tabela `marketing.sound_effects` (`supabase/migrations/20261125150000_marketing_sound_effects.sql`), a mesma para todas as empresas. Quem é membro ativo da empresa ativa lê e toca por URL assinada; só o `service_role` inclui efeitos (arquivo no bucket + linha na tabela).
 - Código: `frontend/posts` (posts, composer e contas), `frontend/notifications`, `frontend/settings` (preferências de postagem e de notificações, por enquanto só no navegador) e `frontend/shell` (sincroniza a empresa ativa).
 - Banco: schema `marketing` (criado como `social` em `supabase/migrations/20261119150000_social_schema.sql` e renomeado em `20261125140000_marketing_schema.sql`). `marketing.post_files` aponta para `editor.files`.
 

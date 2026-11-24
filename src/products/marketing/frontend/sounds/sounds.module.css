@@ -1,0 +1,21 @@
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips button { height: 30px; padding: 0 12px; border-radius: 15px; border: 1px solid var(--line-strong); color: var(--text); font-size: 12.5px; font-weight: 500; }
+.chips button:hover { background: var(--soft); }
+.chips .chipOn { background: var(--ink); border-color: var(--ink); color: var(--panel); }
+.block { margin-bottom: 20px; }
+.block h3 { font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; margin: 0 0 8px 2px; }
+.list { list-style: none; margin: 0; padding: 0; border-radius: var(--radius); background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; }
+.item { display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.on { background: color-mix(in srgb, var(--blue-soft) 55%, var(--panel)); }
+.play { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; background: var(--ink); color: var(--panel); }
+.play:hover { opacity: .85; }
+.text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.text b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.text small { color: var(--muted); font-size: 12px; }
+.time { color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 60px 20px; color: var(--muted); text-align: center; }
+.empty b { color: var(--ink); font-size: 15px; }
+.error { color: var(--red); font-size: 13px; margin: 0 0 12px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
