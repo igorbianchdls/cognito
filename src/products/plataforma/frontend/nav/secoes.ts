@@ -4,7 +4,7 @@ import {
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
   IconReceiptFilled, IconSendFilled, IconShoppingCartFilled,
-  IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
+  IconBriefcase2Filled, IconCategoryFilled, IconFileImport, IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
 } from "@tabler/icons-react"
 
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
@@ -61,6 +61,8 @@ export const sections: Section[] = [
       { title: "Notas de serviço", url: "/erp/vendas/notas-fiscais", icon: IconReceiptFilled, capability: "erp.vendas.visualizar" },
       { title: "Clientes", url: "/erp/cadastros/clientes", icon: IconUserFilled, capability: "erp.cadastros.visualizar" },
       { title: "Vendedores", url: "/erp/cadastros/vendedores", icon: IconBriefcaseFilled, capability: "erp.cadastros.visualizar" },
+      { title: "Produtos", url: "/erp/cadastros/produtos", icon: IconTagFilled, capability: "erp.cadastros.visualizar" },
+      { title: "Serviços", url: "/erp/cadastros/servicos", icon: IconBriefcase2Filled, capability: "erp.cadastros.visualizar" },
     ],
   },
   {
@@ -95,16 +97,11 @@ export const sections: Section[] = [
         ],
       },
       { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: IconTruckFilled, capability: "erp.cadastros.visualizar" },
+      { title: "Categorias financeiras", url: "/erp/cadastros/categorias", icon: IconCategoryFilled, capability: "erp.cadastros.visualizar" },
       {
-        title: "Produtos e serviços", url: "/erp/cadastros/produtos", icon: IconTagFilled, capability: "erp.cadastros.visualizar",
-        activePaths: ["/erp/cadastros/produtos", "/erp/cadastros/servicos", "/erp/cadastros/categorias", "/erp/cadastros/importacoes", "/erp/cadastros/automacoes"],
-        children: [
-          { title: "Produtos", url: "/erp/cadastros/produtos" },
-          { title: "Serviços", url: "/erp/cadastros/servicos" },
-          { title: "Categorias", url: "/erp/cadastros/categorias" },
-          { title: "Importar e exportar", url: "/erp/cadastros/importacoes" },
-          { title: "Rotinas e recorrências", url: "/erp/cadastros/automacoes" },
-        ],
+        title: "Importar e exportar", url: "/erp/cadastros/importacoes", icon: IconFileImport, capability: "erp.cadastros.visualizar",
+        activePaths: ["/erp/cadastros/importacoes", "/erp/cadastros/automacoes"],
+        tabs: [{ title: "Rotinas e recorrências", url: "/erp/cadastros/automacoes" }],
       },
     ],
   },

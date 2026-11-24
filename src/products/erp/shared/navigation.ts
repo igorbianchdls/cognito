@@ -140,6 +140,13 @@ export const ERP_TAB_GROUPS: { id: string; label: string; tabs: { id: string; la
     ],
   },
   {
+    id: 'dados', label: 'Importar e exportar',
+    tabs: [
+      { id: 'importar', label: 'Importar e exportar', section: 'cadastros', module: 'importacoes', href: '/erp/cadastros/importacoes' },
+      { id: 'rotinas', label: 'Rotinas e recorrências', section: 'cadastros', module: 'automacoes', href: '/erp/cadastros/automacoes' },
+    ],
+  },
+  {
     id: 'contabilidade', label: 'Contabilidade',
     tabs: [
       { id: 'plano-de-contas', label: 'Plano de contas', section: 'cadastros', module: 'contas-contabeis', href: '/erp/cadastros/contas-contabeis' },
