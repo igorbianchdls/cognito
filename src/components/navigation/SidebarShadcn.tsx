@@ -6,8 +6,8 @@ import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
-  IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLayoutDashboardFilled, IconLockFilled,
-  IconReceiptFilled, IconReportAnalyticsFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
+  IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLockFilled,
+  IconReceiptFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
   IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
 } from "@tabler/icons-react"
 
@@ -42,21 +42,37 @@ type NavigationItem = {
 }
 type Section = { id: "vendas" | "financeiro" | "marketing" | "drive" | "analytics" | "inbox" | "automacao" | "crm"; title: string; items: NavigationItem[] }
 
-const reports = [
-  { title: "DRE", url: "/erp/relatorios/dre" }, { title: "Fluxo de caixa", url: "/erp/relatorios/fluxo-de-caixa" },
-  { title: "Contas em atraso", url: "/erp/relatorios/contas-em-atraso" }, { title: "Margem", url: "/erp/relatorios/margem" },
-  { title: "Orçado × realizado", url: "/erp/relatorios/orcado-realizado" }, { title: "Relatório de vendas", url: "/erp/relatorios/vendas" },
-  { title: "Relatório de compras", url: "/erp/relatorios/compras" },
-]
-
-/** Always visible, above the sections. */
-const topNavigation: NavigationItem[] = [
-  { title: "Visão geral", url: "/erp", icon: IconLayoutDashboardFilled, exactActive: true, capability: "erp.relatorios.visualizar" },
-  { title: "Relatórios", url: "/erp/relatorios/dre", icon: IconReportAnalyticsFilled, activePaths: ["/erp/relatorios"], capability: "erp.relatorios.visualizar", tabs: reports },
-]
-
 /** The sections that open and close. Each ERP item shows only to profiles with its capability. */
 const sections: Section[] = [
+  {
+    id: "marketing", title: "Marketing", items: [
+      { title: "Editor", url: "/editor", icon: IconVideoFilled },
+      { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
+      { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
+      { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
+      {
+        title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
+        children: [
+          { title: "Vídeos", url: "/videohosting", excludePaths: ["/videohosting/configuracoes"] },
+          { title: "Configurações", url: "/videohosting/configuracoes" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "analytics", title: "Analytics", items: [
+      { title: "Painéis", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
+      { title: "Eventos", url: "/analytics/eventos", icon: IconBoltFilled },
+      { title: "Sites e apps", url: "/analytics/sites", icon: IconWorldFilled },
+    ],
+  },
+  {
+    id: "automacao", title: "Automação", items: [
+      { title: "Automações", url: "/automacoes", icon: IconBoltFilled },
+      { title: "Disparos", url: "/disparos", icon: IconSpeakerphone },
+      { title: "Segmentos", url: "/segmentos", icon: IconFilterFilled },
+    ],
+  },
   {
     id: "vendas", title: "Vendas", items: [
       { title: "Orçamentos", url: "/erp/vendas/orcamentos", icon: IconFileTextFilled, capability: "erp.vendas.visualizar" },
@@ -109,21 +125,6 @@ const sections: Section[] = [
     ],
   },
   {
-    id: "marketing", title: "Marketing", items: [
-      { title: "Editor", url: "/editor", icon: IconVideoFilled },
-      { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
-      { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
-      { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
-      {
-        title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
-        children: [
-          { title: "Vídeos", url: "/videohosting", excludePaths: ["/videohosting/configuracoes"] },
-          { title: "Configurações", url: "/videohosting/configuracoes" },
-        ],
-      },
-    ],
-  },
-  {
     id: "drive", title: "Drive", items: [
       { title: "Início", url: "/drive", icon: IconFolderFilled, excludePaths: ["/drive/recentes", "/drive/favoritos", "/drive/lixeira"] },
       { title: "Recentes", url: "/drive/recentes", icon: IconClockFilled },
@@ -132,25 +133,11 @@ const sections: Section[] = [
     ],
   },
   {
-    id: "analytics", title: "Analytics", items: [
-      { title: "Painéis", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
-      { title: "Eventos", url: "/analytics/eventos", icon: IconBoltFilled },
-      { title: "Sites e apps", url: "/analytics/sites", icon: IconWorldFilled },
-    ],
-  },
-  {
     id: "inbox", title: "Atendimento", items: [
       { title: "Caixa de entrada", url: "/inbox", icon: IconMessageCircleFilled, exactActive: true },
       { title: "Contatos", url: "/inbox/contatos", icon: IconUserFilled },
       { title: "Canais", url: "/inbox/canais", icon: IconArrowsExchange },
       { title: "Configurações", url: "/inbox/configuracoes", icon: IconAdjustmentsFilled },
-    ],
-  },
-  {
-    id: "automacao", title: "Automação", items: [
-      { title: "Automações", url: "/automacoes", icon: IconBoltFilled },
-      { title: "Disparos", url: "/disparos", icon: IconSpeakerphone },
-      { title: "Segmentos", url: "/segmentos", icon: IconFilterFilled },
     ],
   },
   {
@@ -305,10 +292,8 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
   }, [])
 
   const allowed = (item: { capability?: ErpCapability }) => !item.capability || access.can(item.capability)
-  const top = topNavigation.filter(allowed)
   const visibleSections = sections.map((section) => ({ section, items: section.items.filter(allowed) })).filter((s) => s.items.length)
   const searchable = [
-    ...top.flatMap((item) => [{ ...item, context: undefined as string | undefined }, ...(item.tabs ?? []).map((tab) => ({ ...tab, icon: undefined, context: item.title }))]),
     ...visibleSections.flatMap(({ section, items }) => items.flatMap((item) => [
       { ...item, context: section.title }, ...(item.children ?? []).map((child) => ({ ...child, icon: undefined, context: item.title })),
     ])),
@@ -362,11 +347,6 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
               <p className="text-xs">{access.error}</p>
               <button type="button" onClick={access.refresh} className="rounded-lg border bg-white px-3 py-2 text-[#1d1d1f] hover:bg-[#f7f7f7]">Tentar novamente</button>
             </div>
-          ) : null}
-          {top.length ? (
-            <ul className="mb-3 grid gap-0.5 group-data-[collapsible=icon]:mb-2">
-              {top.map((item) => <Row key={item.url} item={item} pathname={pathname} onNavigate={navigate} />)}
-            </ul>
           ) : null}
           {visibleSections.map(({ section, items }) => {
             const current = items.some((item) => isActive(item, pathname))
