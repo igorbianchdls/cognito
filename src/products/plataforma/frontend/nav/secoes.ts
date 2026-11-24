@@ -25,7 +25,8 @@ export type NavigationItem = {
   capability?: ErpCapability
   children?: NavigationItem[]
 }
-export type Section = { id: SecaoId; title: string; items: NavigationItem[] }
+/** alwaysOpen: the section has no open/close arrow; its items always show. */
+export type Section = { id: SecaoId; title: string; items: NavigationItem[]; alwaysOpen?: boolean }
 
 /** The sections that open and close. Each ERP item shows only to profiles with its capability. */
 export const sections: Section[] = [
@@ -63,7 +64,7 @@ export const sections: Section[] = [
     ],
   },
   {
-    id: "financeiro", title: "Financeiro", items: [
+    id: "financeiro", title: "Financeiro", alwaysOpen: true, items: [
       { title: "Contas a pagar", url: "/erp/financeiro/contas-a-pagar", icon: IconCreditCardFilled, capability: "erp.financeiro.visualizar" },
       { title: "Contas a receber", url: "/erp/financeiro/contas-a-receber", icon: IconCoinFilled, capability: "erp.financeiro.visualizar" },
       { title: "Conciliação", url: "/erp/financeiro/conciliacao-bancaria", icon: IconScaleFilled, capability: "erp.financeiro.visualizar" },

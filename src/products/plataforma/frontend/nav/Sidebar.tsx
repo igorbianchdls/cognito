@@ -62,14 +62,20 @@ function SectionGroup({ section, items, open, onToggle, pathname, onNavigate }: 
   section: Section; items: NavigationItem[]; open: boolean; onToggle: () => void; pathname: string; onNavigate: (url: string) => void
 }) {
   const { state } = useSidebar()
-  const showItems = open || state === "collapsed"
+  const showItems = open || section.alwaysOpen || state === "collapsed"
   return (
     <div className="mt-[18px] first:mt-0 group-data-[collapsible=icon]:mt-2">
-      <button type="button" onClick={onToggle} aria-expanded={open} data-sidebar="group-label"
-        className="flex h-9 w-full items-center gap-1.5 rounded-xl px-3 text-left text-[16px] font-medium text-[#6e6e73] outline-none hover:text-[#1d1d1f] focus-visible:ring-2 focus-visible:ring-[#1d1d1f]/30 group-data-[collapsible=icon]:hidden">
-        <span>{section.title}</span>
-        {open ? <IconChevronDown className="size-4" stroke={2} /> : <IconChevronRight className="size-4" stroke={2} />}
-      </button>
+      {section.alwaysOpen ? (
+        <div data-sidebar="group-label" className="flex h-9 w-full items-center px-3 text-[16px] font-medium text-[#6e6e73] group-data-[collapsible=icon]:hidden">
+          <span>{section.title}</span>
+        </div>
+      ) : (
+        <button type="button" onClick={onToggle} aria-expanded={open} data-sidebar="group-label"
+          className="flex h-9 w-full items-center gap-1.5 rounded-xl px-3 text-left text-[16px] font-medium text-[#6e6e73] outline-none hover:text-[#1d1d1f] focus-visible:ring-2 focus-visible:ring-[#1d1d1f]/30 group-data-[collapsible=icon]:hidden">
+          <span>{section.title}</span>
+          {open ? <IconChevronDown className="size-4" stroke={2} /> : <IconChevronRight className="size-4" stroke={2} />}
+        </button>
+      )}
       {showItems ? (
         <ul className="mt-0.5 grid gap-0.5">
           {items.map((item) => <Row key={item.url + item.title} item={item} pathname={pathname} onNavigate={onNavigate} />)}
