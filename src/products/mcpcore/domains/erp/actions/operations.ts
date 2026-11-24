@@ -17,6 +17,7 @@ import {editServiceInvoice,actOnServiceInvoice} from '@/products/erp/server/fisc
 import {serviceInvoiceInputSchema} from '@/products/erp/shared/serviceInvoiceContracts'
 import {changeSalesContractState} from '@/products/erp/server/erpSalesContracts'
 import {editSnapshot,type EditSnapshot} from './editSnapshot'
+import {financialCompositionSql} from '@/products/erp/server/erpFinancialComposition'
 
 const tables = {receber_compra:'compras',suspender_contrato:'contratos_vendas',retomar_contrato:'contratos_vendas',encerrar_contrato:'contratos_vendas',devolver_compra:'compras',editar_fornecedor:'entidades',editar_vendedor:'entidades',editar_servico:'servicos',editar_categoria:'categorias',editar_conta_financeira:'contas_financeiras',
   editar_ordem_servico:'ordens_servico',aprovar_ordem_servico:'ordens_servico',iniciar_ordem_servico:'ordens_servico',concluir_ordem_servico:'ordens_servico',cancelar_ordem_servico:'ordens_servico',gerar_orcamento_os:'ordens_servico',gerar_venda_os:'ordens_servico',arquivar_pdf_ordem_servico:'ordens_servico',
@@ -84,6 +85,12 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     if(!accounts[0])throw new PluginError('INVALID_REFERENCE','Escolha uma conta financeira ativa desta empresa.')
     related.push(accounts[0])
     contaFinanceira={id:String(accounts[0].id),nome:String(accounts[0].nome)}
+    // Same balance rule as the settlement: refuse an amount above what is still open already at the preview.
+    const side=proposal.tipo==='receber_parcela'?'receber':'pagar'
+    const balance=(await query(`SELECT composicao.saldo FROM erp.contas_${side}_parcelas parcelas ${financialCompositionSql(side)} WHERE parcelas.empresa_id=$1 AND parcelas.id=$2`,[tenantId,proposal.dados.registro_id]))[0]
+    const open=Number(balance?.saldo??0),amount=Number(proposal.dados.valor)
+    if(open<=0)throw new PluginError('VALIDATION_ERROR','Esta parcela não tem saldo em aberto.')
+    if(amount>open+0.004)throw new PluginError('VALIDATION_ERROR',`O valor (R$ ${amount.toFixed(2)}) passa do saldo em aberto da parcela (R$ ${open.toFixed(2)}).`)
   }
   let resumoExclusao:OperationSnapshot['resumo_exclusao']
   if(proposal.tipo.startsWith('excluir_')){

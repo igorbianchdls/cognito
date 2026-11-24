@@ -72,7 +72,7 @@ function normalizePurchaseItems(values: Record<string, unknown>): PurchaseItemIn
     return {
       produtoId,
       servicoId,
-      descricao: optionalText(item.descricao) || `${produtoId ? 'Produto' : 'Servico'} ${produtoId || servicoId}`,
+      descricao: optionalText(item.descricao) || '', // empty: the insert takes the catalog name
       detalhes: optionalText(item.detalhes),
       unidade: optionalText(item.unidade),
       quantidade,
@@ -1145,7 +1145,11 @@ export async function createPurchaseRecord(client: SQLClient, input: CreateInput
          valor_liquido, total, item_descricao_snapshot, item_unidade_snapshot,
          criado_por, atualizado_por
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $13, $5, $7, $14, $14)`,
+       SELECT $1, $2, $3, $4, d.descricao, $6, $7, $8, $9, $10, $11, $12, $13, $13, d.descricao, $7, $14, $14
+       FROM (SELECT coalesce(nullif($5::text, ''),
+         (SELECT nome FROM erp.produtos WHERE empresa_id = $1 AND id = $3),
+         (SELECT nome FROM erp.servicos WHERE empresa_id = $1 AND id = $4),
+         CASE WHEN $3::bigint IS NOT NULL THEN 'Produto ' || $3::text ELSE 'Serviço ' || $4::text END) AS descricao) d`,
       [
         input.tenantId,
         purchaseId,

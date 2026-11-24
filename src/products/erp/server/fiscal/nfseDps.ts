@@ -73,7 +73,7 @@ export function buildDps(input: DpsInput) {
   // Tomador.
   const document = digits(input.customer.documento)
   const isCompany = document.length === 14
-  require(isCompany ? validCnpj(document) : validCpf(document), isCompany ? 'toma.CNPJ' : 'toma.CPF', 'CPF/CNPJ do cliente ausente ou inválido.')
+  require(isCompany ? validCnpj(document) : validCpf(document), isCompany ? 'toma.CNPJ' : 'toma.CPF', 'CPF/CNPJ do cliente ausente ou inválido. Se o cadastro foi corrigido depois de criar o rascunho, edite a nota para atualizar o cliente.')
   require(Boolean(String(input.customer.nome || '').trim()), 'toma.xNome', 'Informe o nome do cliente.')
   if (input.issRetido) require(isCompany, 'valores.trib.tribMun.tpRetISSQN', 'Retenção de ISS só ocorre quando o tomador é pessoa jurídica.')
   // Serviço (o leiaute nacional aceita um serviço por DPS; vários itens viram a discriminação do mesmo serviço).
