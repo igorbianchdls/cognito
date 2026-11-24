@@ -43,11 +43,12 @@ export function SoundEffectsView() {
   const [loading, setLoading] = useState<string | null>(null)
   const audio = useRef<HTMLAudioElement | null>(null)
 
-  // Loads once Clerk knows the person and their active company (the token carries it; RLS checks membership).
-  const { isLoaded, userId, orgId } = useAuth()
+  // Loads once Clerk knows the person. The library is the same for every company: RLS only checks that the
+  // person is an active member of some company (marketing.can_use_sound_effects).
+  const { isLoaded, userId } = useAuth()
   useEffect(() => {
     if (!remoteMode || !isLoaded) return
-    if (!userId || !orgId) { setError(userId ? 'Escolha uma empresa para ver os efeitos.' : ''); setItems([]); return }
+    if (!userId) { setItems([]); return }
     let live = true
     void (async () => {
       try {
@@ -60,7 +61,7 @@ export function SoundEffectsView() {
       }
     })()
     return () => { live = false }
-  }, [isLoaded, userId, orgId])
+  }, [isLoaded, userId])
   useEffect(() => () => audio.current?.pause(), [])
 
   const categories = useMemo(() => [...new Set((items ?? []).map(i => i.category))], [items])
