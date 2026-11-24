@@ -35,10 +35,8 @@ async function visibleEffects(clerkUserId: string) {
 
 /** Signed URLs (valid for an hour) for files of the bucket, by path. */
 async function signedUrls(paths: string[]) {
-  // Own settings: the general NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY of the deployment point to another
-  // Supabase project than the database (same reason the ERP has its own ERP_*_SUPABASE_* settings).
-  const base = process.env.MARKETING_SUPABASE_URL, key = process.env.MARKETING_SUPABASE_SERVICE_ROLE_KEY
-  if (!base || !key) throw new Error('MARKETING_SUPABASE_URL / MARKETING_SUPABASE_SERVICE_ROLE_KEY ausentes')
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!base || !key) throw new Error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY ausentes')
   const urls = new Map<string, string>()
   for (let i = 0; i < paths.length; i += 100) {
     const response = await fetch(`${base}/storage/v1/object/sign/${SOUND_EFFECTS_BUCKET}`, {

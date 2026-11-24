@@ -79,4 +79,5 @@ A suíte usa banco real com reversão integral e Storage simulado: projeto/crede
 - Verificação TypeScript dos cinco arquivos de implementação/teste selecionados: zero erros.
 - Encontrados 28 PDFs versionados de 11 notas no banco durante o levantamento.
 - As configurações gerais de Storage da Vercel apontam para `ovdvpfxwfvqzseekwqqp`, diferente do banco do ERP (`mtadnxqoqxzbdksktwdr`). Elas não foram alteradas.
+- Atualização (24/11/2026): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` e `SUPABASE_SERVICE_ROLE_KEY` da Vercel passaram a apontar para `mtadnxqoqxzbdksktwdr`, o mesmo projeto do banco.
 - A migração ao bucket real, a publicação e a remoção dos bytes dependem da credencial administrativa do projeto correto. Os PDFs originais permanecem no banco até essa etapa ser verificada.
