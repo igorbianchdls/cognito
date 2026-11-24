@@ -7,9 +7,7 @@ import { DashboardRecordsPage } from '@/products/erp/frontend/modules/dashboards
 import { DASHBOARD_IDS, type DashboardId } from '@/products/erp/shared/dashboardContracts'
 
 import PageContainer from '@/components/layout/PageContainer'
-import { AppHeader } from '@/components/navigation/AppHeader'
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppShell } from '@/products/plataforma/frontend/shell/AppShell'
 import { ErpEntityPage } from '@/products/erp/frontend/components/ErpEntityPage'
 import { ErpImportExportPage } from '@/products/erp/frontend/components/ErpImportExportPage'
 import { ErpOperationsWorkspacePage } from '@/products/erp/frontend/components/ErpOperationsWorkspacePage'
@@ -87,10 +85,7 @@ function ErpPageContent({
     ['compras', 'estoque'].includes(sectionConfig.id) || Boolean(entityConfig)
 
   return (
-    <ErpConfirmationProvider><SidebarProvider>
-      <SidebarShadcn />
-      <SidebarInset className="h-screen overflow-hidden">
-        <AppHeader />
+    <ErpConfirmationProvider><AppShell insetClassName="h-screen overflow-hidden">
         <PageContainer className="h-auto min-h-0 flex-1 bg-white">
           <ErpShell
             sectionId={sectionConfig.id}
@@ -161,8 +156,7 @@ function ErpPageContent({
             )}
           </ErpShell>
         </PageContainer>
-      </SidebarInset>
-    </SidebarProvider></ErpConfirmationProvider>
+    </AppShell></ErpConfirmationProvider>
   )
 }
 

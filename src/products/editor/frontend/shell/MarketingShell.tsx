@@ -1,6 +1,4 @@
-import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { AppHeader } from '@/components/navigation/AppHeader'
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { AppShell } from '@/products/plataforma/frontend/shell/AppShell'
 import { ottoFonts } from './fonts'
 import s from './ui.module.css'
 import './editor-base.css'
@@ -10,13 +8,9 @@ import './editor-base.css'
  * and the screens' own look (scoped to .otto-editor) on the right.
  */
 export function MarketingShell({ children }: { children: React.ReactNode }) {
-  return <SidebarProvider>
-    <SidebarShadcn />
-    <SidebarInset className="min-w-0">
-      <AppHeader />
-      <div className={`otto-editor ${ottoFonts}`}>
-        <div className={s.main}>{children}</div>
-      </div>
-    </SidebarInset>
-  </SidebarProvider>
+  return <AppShell>
+    <div className={`otto-editor ${ottoFonts}`}>
+      <div className={s.main}>{children}</div>
+    </div>
+  </AppShell>
 }

@@ -9,7 +9,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { AuthUserMenu } from "@/products/auth/frontend/components/AuthUserMenu"
 import { useNotifications } from "@/products/marketing/frontend/notifications/store"
-import { OPEN_SEARCH_EVENT, roleLabel } from "./SidebarShadcn"
+import { roleLabel } from "../empresa/Seletor"
+import { OPEN_SEARCH_EVENT } from "../nav/Sidebar"
 
 const button = "relative grid size-9 place-items-center rounded-xl text-[#1d1d1f] outline-none hover:bg-black/[0.05] focus-visible:ring-2 focus-visible:ring-[#1d1d1f]/30"
 
