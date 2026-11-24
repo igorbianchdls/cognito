@@ -6,7 +6,7 @@ Antes se chamava Social. Posts e agendamento, contas sociais e notificações, v
 
 - Telas: `src/app/marketing` (`/marketing/posts`, `/marketing/postar`, `/marketing/notificacoes`).
 - Código: `frontend/posts` (posts, composer e contas), `frontend/notifications`, `frontend/settings` (preferências de postagem e de notificações, por enquanto só no navegador) e `frontend/shell` (sincroniza a empresa ativa).
-- Banco: schema `social` (`supabase/migrations/20261119150000_social_schema.sql`). `social.post_files` aponta para `editor.files`.
+- Banco: schema `marketing` (criado como `social` em `supabase/migrations/20261119150000_social_schema.sql` e renomeado em `20261125140000_marketing_schema.sql`). `marketing.post_files` aponta para `editor.files`.
 
 ## Acesso
 
