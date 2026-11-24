@@ -1,5 +1,5 @@
 /* File explorer, Google Drive style, on top of the shared ui.module.css. */
-.page { position: relative; min-height: 100vh; }
+.page { position: relative; min-height: calc(100vh - var(--app-header-h)); }
 .grow { flex: 1; }
 .muted { color: var(--muted); }
 .hint { color: var(--muted); font-size: 12px; }

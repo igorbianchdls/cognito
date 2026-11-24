@@ -10,7 +10,6 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SidebarTrigger } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { getErpSection } from '@/products/erp/shared/navigation'
 import type { ErpSectionId } from '@/products/erp/shared/types'
@@ -31,7 +30,6 @@ export function ErpWorkspaceHeader({
   return (
     <header className="erp-workspace-header">
       <div className="flex min-w-0 items-start gap-3">
-        <SidebarTrigger className="mt-6 md:hidden" />
         <div className="min-w-0">
           <p className="erp-workspace-eyebrow">{section}</p>
           <h1 className="erp-workspace-title">{title}</h1>

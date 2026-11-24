@@ -4,26 +4,24 @@ import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { useOrganization, useOrganizationList } from "@clerk/nextjs"
 import {
-  IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBellFilled, IconBookFilled, IconBriefcaseFilled,
+  IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBookFilled, IconBriefcaseFilled,
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconPlayerPlayFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconCheck, IconChevronDown, IconChevronRight, IconClipboardListFilled, IconCoinFilled,
-  IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconHelpCircleFilled, IconLockFilled,
-  IconReceiptFilled, IconScaleFilled, IconSearch, IconSendFilled, IconSettingsFilled, IconShoppingCartFilled,
+  IconCreditCardFilled, IconEdit, IconFileTextFilled, IconFolderFilled, IconLockFilled,
+  IconReceiptFilled, IconScaleFilled, IconSearch, IconSendFilled, IconShoppingCartFilled,
   IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
 } from "@tabler/icons-react"
 
-import { AuthUserMenu } from "@/products/auth/frontend/components/AuthUserMenu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, useSidebar } from "@/components/ui/sidebar"
+import { Sidebar, SidebarContent, SidebarHeader, useSidebar } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import "./sidebar-dark.css"
 import { sidebarFont } from "./sidebarFont"
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess"
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
-import { useNotifications } from "@/products/marketing/frontend/notifications/store"
 
 type IconComponent = React.ComponentType<{ className?: string; style?: React.CSSProperties }>
 type NavigationItem = {
@@ -166,7 +164,7 @@ function isActive(item: NavigationItem, pathname: string): boolean {
   return item.exactActive ? pathname === item.url : matches(pathname, item.url)
 }
 
-const roleLabel: Record<string, string> = { "org:admin": "Administrador", "org:member": "Membro" }
+export const roleLabel: Record<string, string> = { "org:admin": "Administrador", "org:member": "Membro" }
 const OPEN_KEY = "otto-sidebar-sections"
 
 function readOpen(): Record<string, boolean> {
@@ -260,15 +258,15 @@ function CompanySwitcher() {
   )
 }
 
+/** Opens the search of the menu (the Ajuda button of the header sends it). */
+export const OPEN_SEARCH_EVENT = "otto:open-search"
+
 // ---------- the menu ----------
 
 export function SidebarShadcn({ className, style, ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const router = useRouter()
   const access = useErpAccess()
-  const { membership } = useOrganization()
-  const notifications = useNotifications()
-  const unread = notifications.filter((n) => !n.read).length
   const [searchOpen, setSearchOpen] = React.useState(false)
   const [query, setQuery] = React.useState("")
   // Sections open by the visitor's choice (kept in this browser); the section of the current page always opens.
@@ -287,8 +285,10 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
         setSearchOpen(true)
       }
     }
+    const openSearch = () => setSearchOpen(true)
     window.addEventListener("keydown", handleShortcut)
-    return () => window.removeEventListener("keydown", handleShortcut)
+    window.addEventListener(OPEN_SEARCH_EVENT, openSearch)
+    return () => { window.removeEventListener("keydown", handleShortcut); window.removeEventListener(OPEN_SEARCH_EVENT, openSearch) }
   }, [])
 
   const allowed = (item: { capability?: ErpCapability }) => !item.capability || access.can(item.capability)
@@ -354,21 +354,6 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
             return <SectionGroup key={section.id} section={section} items={items} open={open} onToggle={() => toggle(section.id, open)} pathname={pathname} onNavigate={navigate} />
           })}
         </SidebarContent>
-
-        <SidebarFooter className="gap-0.5 px-3 pb-3 pt-2">
-          <ul className="grid gap-0.5">
-            <Row item={{ title: "Notificações", url: "/marketing/notificacoes", icon: IconBellFilled }} pathname={pathname} onNavigate={navigate}
-              badge={unread ? <span className="rounded-full bg-black/[0.06] px-2.5 py-0.5 text-[13px] font-medium text-[#3a3a3c] group-data-[collapsible=icon]:hidden">{unread > 99 ? "99+" : unread}</span> : null} />
-            <Row item={{ title: "Configurações", url: "/configuracoes", icon: IconSettingsFilled }} pathname={pathname} onNavigate={navigate} />
-            <li>
-              <button type="button" onClick={() => setSearchOpen(true)} className={rowClass} data-sidebar="menu-button">
-                <IconHelpCircleFilled className="size-[22px] shrink-0 text-[#1d1d1f]" />
-                <span className="flex-1 truncate group-data-[collapsible=icon]:hidden">Ajuda</span>
-              </button>
-            </li>
-          </ul>
-          <div className="mt-2"><AuthUserMenu subtitle={membership?.role ? roleLabel[membership.role] ?? "Membro" : undefined} /></div>
-        </SidebarFooter>
       </Sidebar>
 
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>

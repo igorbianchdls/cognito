@@ -2,7 +2,8 @@
 
 import { usePathname } from 'next/navigation'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { AppHeader } from '@/components/navigation/AppHeader'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 
 /**
  * The Inbox inside Otto. The inbox itself has its own column of views and boxes, so the Otto menu starts as icons
@@ -13,7 +14,7 @@ export function InboxShell({ children }: { children: React.ReactNode }) {
   return <SidebarProvider defaultOpen={pathname !== '/inbox'}>
     <SidebarShadcn />
     <SidebarInset className="min-w-0 bg-[#fafafa]">
-      <SidebarTrigger className="m-2 md:hidden" />
+      <AppHeader />
       {children}
     </SidebarInset>
   </SidebarProvider>

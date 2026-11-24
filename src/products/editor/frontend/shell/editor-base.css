@@ -34,7 +34,7 @@
   color-scheme: dark;
 }
 .otto-editor {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--app-header-h));
   background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 13.5px; line-height: 1.5; letter-spacing: .005em;
   font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; font-feature-settings: 'ss01', 'cv11';
 }

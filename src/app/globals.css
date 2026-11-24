@@ -8,6 +8,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* Height of the top bar of the app (AppHeader); full-height screens subtract it. */
+  --app-header-h: 56px;
   --background: #ffffff;
   --foreground: #181818;
   --card: #ffffff;

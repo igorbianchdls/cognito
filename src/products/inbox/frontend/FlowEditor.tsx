@@ -225,7 +225,7 @@ function Editor({ flowId }: { flowId: string }) {
   const node = graph.nodes.find(n => n.id === selected) ?? null
   const changed = JSON.stringify({ ...graph, positions: undefined }) !== JSON.stringify({ ...(flow.graph ?? {}), positions: undefined })
   return (
-    <div className="flex h-[calc(100dvh-3rem)] min-h-0 flex-col bg-white md:h-[100dvh]">
+    <div className="flex h-[calc(100dvh-var(--app-header-h))] min-h-0 flex-col bg-white">
       <header className="flex flex-wrap items-center gap-2 border-b border-[#ececef] px-3 py-2">
         <Link href="/automacoes" className="rounded-md px-2 py-1 text-[13px] text-[#555] hover:bg-[#f2f2f4]">← Automações</Link>
         <input value={name} onChange={e => { dirty.current = true; setName(e.target.value) }} aria-label="Nome da automação" className="min-w-0 flex-1 rounded-md px-2 py-1 text-[15px] font-semibold outline-none hover:bg-[#f7f7f8] focus:bg-[#f7f7f8]" />

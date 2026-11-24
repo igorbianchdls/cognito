@@ -28,7 +28,7 @@ export function DealsView() {
   const params = useSearchParams(), router = useRouter(), pathname = usePathname()
   const tab = params.get('aba') === 'tarefas' ? 'tarefas' : 'funil'
   return (
-    <div className="flex h-[calc(100dvh-3rem)] min-h-0 flex-col bg-[#fafafa] md:h-[100dvh]">
+    <div className="flex h-[calc(100dvh-var(--app-header-h))] min-h-0 flex-col bg-[#fafafa]">
       <header className="flex items-center gap-3 border-b border-[#ececef] bg-white px-4 py-2.5">
         <h1 className="text-[17px] font-semibold">Negócios</h1>
         <div role="tablist" className="flex rounded-lg bg-[#f2f2f4] p-0.5 text-[13px]">

@@ -29,6 +29,13 @@ import SettingsPanel from '@/products/auth/frontend/components/SettingsPanel'
 import { fetchSettingsState } from '@/products/auth/frontend/services/settingsApi'
 import type { SettingsState } from '@/products/auth/shared/settingsContracts'
 
+function SidebarWrap({ children }: { children: React.ReactNode }) {
+  return <SidebarMenu><SidebarMenuItem>{children}</SidebarMenuItem></SidebarMenu>
+}
+function HeaderWrap({ children }: { children: React.ReactNode }) {
+  return <div className="flex items-center">{children}</div>
+}
+
 function getInitials(name: string, email: string) {
   const source = name && name !== 'Conta' ? name : email
   const parts = source
@@ -39,8 +46,12 @@ function getInitials(name: string, email: string) {
   return (parts[0]?.[0] || 'C').concat(parts[1]?.[0] || '').toUpperCase()
 }
 
-/** subtitle replaces the e-mail under the name (the sidebar shows the role in the company). */
-export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
+/**
+ * subtitle replaces the e-mail under the name (the role in the company).
+ * variant "header": only the avatar, for the top bar of the app; "sidebar" (default): a full row of the menu.
+ */
+export function AuthUserMenu({ subtitle, variant = 'sidebar' }: { subtitle?: string; variant?: 'sidebar' | 'header' } = {}) {
+  const header = variant === 'header'
   const { signOut } = useClerk()
   const { user } = useUser()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -73,14 +84,22 @@ export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
     }
   }, [isSettingsOpen])
 
+  const Outer = header ? HeaderWrap : SidebarWrap
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
+    <Outer>
         <Show when="signed-in">
           <>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
+                {header ? (
+                  <button type="button" aria-label={`Conta: ${displayName}`} title={displayName}
+                    className="grid size-9 place-items-center rounded-full outline-none hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[#1d1d1f]/30">
+                    <Avatar className="size-8 rounded-full">
+                      <AvatarImage alt={displayName} src={avatarUrl} />
+                      <AvatarFallback className="rounded-full bg-[#e4e4e4] text-[12px] font-semibold text-[#333]">{initials}</AvatarFallback>
+                    </Avatar>
+                  </button>
+                ) : <SidebarMenuButton
                   className="h-14 w-full justify-start gap-3 rounded-xl px-2 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:w-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
                 >
                   <span className="relative shrink-0">
@@ -96,9 +115,9 @@ export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
                     <span className="truncate text-[15px] font-semibold text-sidebar-accent-foreground">{displayName}</span>
                     {subtitle ?? email ? <span className="truncate text-[13px] text-sidebar-accent-foreground/60">{subtitle ?? email}</span> : null}
                   </div>
-                </SidebarMenuButton>
+                </SidebarMenuButton>}
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64" side="right" sideOffset={8}>
+              <DropdownMenuContent align="end" className="w-64" side={header ? 'bottom' : 'right'} sideOffset={8}>
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-3 px-2 py-2">
                     <Avatar className="size-9 rounded-md">
@@ -109,7 +128,7 @@ export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
                     </Avatar>
                     <div className="grid min-w-0 flex-1 leading-tight">
                       <span className="truncate text-sm font-medium text-slate-950">{displayName}</span>
-                      {email ? <span className="truncate text-xs text-slate-500">{email}</span> : null}
+                      {(header ? subtitle ?? email : email) ? <span className="truncate text-xs text-slate-500">{header ? subtitle ?? email : email}</span> : null}
                     </div>
                   </div>
                 </DropdownMenuLabel>
@@ -169,7 +188,7 @@ export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
           </>
         </Show>
         <Show when="signed-out">
-          <div className="grid gap-1 p-1 group-data-[collapsible=icon]:hidden">
+          <div className={header ? 'flex gap-1' : 'grid gap-1 p-1 group-data-[collapsible=icon]:hidden'}>
             <SignInButton
               mode="modal"
               forceRedirectUrl="/onboarding"
@@ -196,7 +215,6 @@ export function AuthUserMenu({ subtitle }: { subtitle?: string } = {}) {
             </SignUpButton>
           </div>
         </Show>
-      </SidebarMenuItem>
-    </SidebarMenu>
+    </Outer>
   )
 }

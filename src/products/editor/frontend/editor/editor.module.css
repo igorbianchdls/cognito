@@ -1,5 +1,5 @@
 /* Editor: top bar, three columns (panel, preview, properties) and the timeline below. */
-.editor { flex: 1; min-width: 0; height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 52px minmax(0, 1fr) 300px; background: var(--panel); position: relative; }
+.editor { flex: 1; min-width: 0; height: calc(100vh - var(--app-header-h)); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 52px minmax(0, 1fr) 300px; background: var(--panel); position: relative; }
 .top { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--line); min-width: 0; }
 .back { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }
 .back:hover { background: var(--soft); color: var(--ink); }
@@ -186,7 +186,7 @@
   .saved { display: none; }
 }
 @media (max-width: 960px) {
-  .editor { height: auto; min-height: 100vh; grid-template-rows: 56px auto 300px; }
+  .editor { height: auto; min-height: calc(100vh - var(--app-header-h)); grid-template-rows: 56px auto 300px; }
   .body { grid-template-columns: 1fr; }
   .previewArea { height: 56vh; order: -1; }
   .left { border-right: 0; border-top: 1px solid var(--line); max-height: 360px; }

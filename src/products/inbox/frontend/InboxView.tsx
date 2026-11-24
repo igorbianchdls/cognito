@@ -154,7 +154,7 @@ export function InboxView() {
   }
   const allActive = !box && !label
   return (
-    <div className="flex h-[calc(100dvh-3rem)] min-h-0 bg-white text-[#1c1c1e] md:h-[100dvh]">
+    <div className="flex h-[calc(100dvh-var(--app-header-h))] min-h-0 bg-white text-[#1c1c1e]">
       {/* ---------- views and boxes ---------- */}
       <nav aria-label="Caixas do Inbox" className="hidden w-[232px] shrink-0 flex-col overflow-y-auto border-r border-[#ececef] bg-[#f7f7f8] px-2.5 py-3 lg:flex">
         <div className="mb-3 flex items-center gap-2 px-1.5">

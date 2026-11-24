@@ -7,6 +7,7 @@ import { DashboardRecordsPage } from '@/products/erp/frontend/modules/dashboards
 import { DASHBOARD_IDS, type DashboardId } from '@/products/erp/shared/dashboardContracts'
 
 import PageContainer from '@/components/layout/PageContainer'
+import { AppHeader } from '@/components/navigation/AppHeader'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { ErpEntityPage } from '@/products/erp/frontend/components/ErpEntityPage'
@@ -89,7 +90,8 @@ function ErpPageContent({
     <ErpConfirmationProvider><SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="h-screen overflow-hidden">
-        <PageContainer className="bg-white">
+        <AppHeader />
+        <PageContainer className="h-auto min-h-0 flex-1 bg-white">
           <ErpShell
             sectionId={sectionConfig.id}
             moduleId={moduleConfig?.id}

@@ -75,7 +75,7 @@
 .newFolder:hover { color: var(--ink); border-color: var(--ink); background: var(--panel); }
 
 /* Info panel */
-.info { width: 320px; flex-shrink: 0; position: sticky; top: 0; height: 100vh; overflow: auto; padding: 18px 20px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
+.info { width: 320px; flex-shrink: 0; position: sticky; top: var(--app-header-h); height: calc(100vh - var(--app-header-h)); overflow: auto; padding: 18px 20px; background: var(--panel); border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 14px; }
 .infoHead { display: flex; align-items: center; justify-content: space-between; height: 36px; }
 .infoHead h2 { font-family: var(--font-serif); font-size: 19px; font-weight: 500; }
 .statCard { position: relative; padding: 14px 14px 16px; border-radius: var(--radius); border: 1px solid var(--line); }
