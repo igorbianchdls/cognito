@@ -1,0 +1,65 @@
+/* Home of the Editor: a top line, the create card, a toolbar and grids of projects and exported videos. */
+.page { max-width: none; }
+
+.top { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; }
+.top h1 { font-size: 30px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+.usage { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+.usage span { display: inline-flex; align-items: center; gap: 1px; color: var(--text); font-weight: 500; }
+.usage:hover span { color: var(--ink); }
+
+.actions { display: flex; flex-wrap: wrap; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+.create { position: relative; display: flex; align-items: stretch; width: min(260px, 100%); height: 68px; border-radius: 12px; background: #dff4fb; color: #0b4a5e; }
+.createMain { flex: 1; display: flex; align-items: center; gap: 12px; padding: 0 18px; font-size: 15.5px; font-weight: 600; text-align: left; border-radius: 12px 0 0 12px; }
+.createMore { width: 52px; display: grid; place-items: center; border-radius: 0 12px 12px 0; }
+.createMain:hover, .createMore:hover { background: rgb(11 74 94 / .07); }
+.templates { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; width: 320px; padding: 6px; border-radius: 12px; background: var(--panel); box-shadow: 0 12px 32px rgb(17 24 39 / .16), 0 0 0 1px var(--line); }
+.templates button { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 8px; text-align: left; }
+.templates button:hover { background: var(--soft); }
+.templates b { display: block; font-weight: 600; color: var(--ink); }
+.templates small { color: var(--muted); font-size: 12px; }
+.ratio { flex-shrink: 0; width: 42px; padding: 3px 0; border-radius: 6px; background: var(--soft); text-align: center; font-size: 11.5px; font-weight: 600; color: var(--text); }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 22px; }
+.toolsLeft, .toolsRight { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tool { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 9px; background: var(--soft); color: var(--ink); font-weight: 500; }
+.toolsRight .tool { background: none; padding: 0 8px; }
+.tool:hover, .iconTool:hover { background: var(--surface-hover); }
+.iconTool { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; color: var(--ink); }
+.menuWrap { position: relative; }
+.menu { position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; min-width: 200px; padding: 6px; border-radius: 10px; background: var(--panel); box-shadow: 0 12px 32px rgb(17 24 39 / .16), 0 0 0 1px var(--line); }
+.menuRight { left: auto; right: 0; }
+.menu button { width: 100%; display: block; padding: 8px 10px; border-radius: 7px; text-align: left; color: var(--ink); }
+.menu button:hover { background: var(--soft); }
+.menu .menuOn { font-weight: 600; }
+
+.section { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin: 6px 0 12px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px 16px; margin-bottom: 30px; }
+.card { display: flex; flex-direction: column; gap: 8px; min-width: 0; text-align: left; }
+.thumb { position: relative; display: grid; place-items: center; aspect-ratio: 3 / 2; padding: 8px 0; border-radius: 12px; background: #eeeef0; overflow: hidden; transition: background .15s; }
+.card:hover .thumb, .row:hover .thumb { background: #e5e5e8; }
+.frame { display: block; height: 100%; max-width: 100%; border-radius: 4px; overflow: hidden; background: #0b0d12; }
+.fileThumb { width: 100%; height: 100%; object-fit: cover; }
+.badge { position: absolute; left: 8px; bottom: 8px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; border-radius: 6px; background: rgb(0 0 0 / .55); color: #fff; font-size: 12px; font-style: normal; font-weight: 500; font-variant-numeric: tabular-nums; }
+.meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.meta b { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta small { color: var(--muted); font-size: 12px; }
+
+.list { display: flex; flex-direction: column; gap: 2px; margin-bottom: 30px; }
+.row { display: flex; align-items: center; gap: 14px; padding: 6px; border-radius: 10px; text-align: left; }
+.row:hover { background: var(--soft); }
+.row .thumb { width: 96px; flex-shrink: 0; padding: 4px 0; border-radius: 8px; }
+.row .badge { left: 4px; bottom: 4px; padding: 1px 5px; font-size: 10.5px; }
+
+.folders { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px; }
+.folder { display: inline-flex; align-items: center; gap: 9px; height: 44px; padding: 0 16px; border-radius: 10px; background: var(--soft); color: var(--ink); font-weight: 500; }
+.folder:hover { background: var(--surface-hover); }
+
+.empty { display: inline-flex; align-items: center; gap: 8px; height: 44px; padding: 0 16px; margin-bottom: 30px; border-radius: 10px; border: 1px dashed var(--line-strong); color: var(--muted); font-weight: 500; }
+.empty:hover { color: var(--ink); background: var(--soft); }
+.emptyText { display: flex; align-items: center; gap: 8px; margin: 0 0 30px; color: var(--muted); }
+.emptyText a { color: var(--ink); text-decoration: underline; }
+
+@media (max-width: 760px) {
+  .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .toolsRight .tool span { display: none; }
+}
