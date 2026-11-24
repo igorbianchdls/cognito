@@ -4,7 +4,7 @@ O que é comum a todos os produtos do Otto: a moldura das telas (menu lateral, c
 
 ## Onde fica
 
-- `shared/categorias.ts`: as categorias (`marketing`, `gestao`, `completo`), as seções do menu de cada uma, na ordem, e onde o Otto abre (`/`). É a regra única, usada no navegador e no servidor.
+- `shared/categorias.ts`: as categorias (`marketing`, `gestao`, `atendimento`, `completo`), as seções do menu de cada uma, na ordem, e onde o Otto abre (`/`). É a regra única, usada no navegador e no servidor.
 - `frontend/shell/AppShell.tsx`: a moldura usada por ERP, Marketing/Editor/Drive, Analytics, Inbox e Configurações. `AppHeader.tsx` é o cabeçalho do topo (notificações, configurações, ajuda e conta).
 - `frontend/nav/`: o menu lateral (`Sidebar.tsx`) e as seções e atalhos do "Novo" (`secoes.ts`). O menu mostra as seções da categoria da empresa ativa, na ordem dela, e cada item do ERP só para perfis com a permissão (`useErpAccess`).
 - `frontend/empresa/`: o seletor de empresa (com a categoria de cada uma e "Criar empresa"), `useEmpresaAtiva` (empresas da pessoa e a categoria da ativa) e o cartão "Categoria da empresa" das Configurações.

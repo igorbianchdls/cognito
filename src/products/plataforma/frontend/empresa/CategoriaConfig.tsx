@@ -27,7 +27,7 @@ export function CategoriaConfig() {
       <p className="mt-1 text-sm text-slate-600">
         {ativa ? <>Define o que aparece no menu de <b>{ativa.nome}</b> e onde o Otto abre.</> : "Define o que aparece no menu e onde o Otto abre."}
       </p>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Categoria da empresa">
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4" role="radiogroup" aria-label="Categoria da empresa">
         {CATEGORIAS.map((c) => (
           <button key={c} type="button" role="radio" aria-checked={categoria === c} disabled={!carregado || !!salvando} onClick={() => void escolher(c)}
             className={`rounded-lg border px-3 py-2.5 text-left transition-colors disabled:cursor-default ${categoria === c ? "border-slate-950 bg-slate-50" : "border-slate-200 hover:border-slate-400"}`}>
