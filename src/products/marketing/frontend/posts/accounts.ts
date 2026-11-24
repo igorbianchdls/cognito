@@ -4,7 +4,7 @@
 // Signed in, they are rows in social_accounts (one per network for now); the connection itself is still simulated
 // until the real Instagram/TikTok login exists. Without Supabase, the offline demo kept in this browser.
 import { useSyncExternalStore } from 'react'
-import { db, must, onRemoteError, persist, remoteMode, type WorkspaceContext } from '@/products/social/frontend/lib/sync'
+import { db, must, onRemoteError, persist, remoteMode, type WorkspaceContext } from '@/products/marketing/frontend/lib/sync'
 import { accounts as base, type Account, type Network } from './data'
 
 export type AccountState = Account & { status: 'conectada' | 'reconectar' | 'desconectada'; connectedAt?: string }

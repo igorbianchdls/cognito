@@ -162,7 +162,7 @@ export function ExportDialog({ project, onClose }: { project: Project; onClose: 
         {stage.fileId && <p className={x.hint}>Salvo em {stage.driveName ?? 'Drive'} / {FOLDER}.</p>}
         {stage.saveError && <p className={x.blocker}><AlertTriangle size={15} />O download funcionou, mas não deu para salvar no Drive. Você pode enviar o arquivo por lá.</p>}
         <div className={x.doneActions}>
-          {stage.fileId && <Link className={x.primary} href={`/social/postar?arquivos=${stage.fileId}`}><Send size={15} />Postar agora</Link>}
+          {stage.fileId && <Link className={x.primary} href={`/marketing/postar?arquivos=${stage.fileId}`}><Send size={15} />Postar agora</Link>}
           {stage.folderId && <Link className={x.secondary} href={`/drive/pastas/${stage.folderId}`}><FolderOpen size={15} />Ver no Drive</Link>}
           <button className={x.secondary} onClick={() => setStage({ kind: 'config' })}><RotateCcw size={15} />Exportar de novo</button>
         </div>

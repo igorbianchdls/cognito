@@ -3,7 +3,7 @@
 // User and workspace preferences. Kept in this browser as a cache; signed in, AccountSync loads them from the
 // database (profiles, workspaces, user_settings) and saves every change back.
 import { useSyncExternalStore } from 'react'
-import { remoteMode } from '@/products/social/frontend/lib/sync'
+import { remoteMode } from '@/products/marketing/frontend/lib/sync'
 import type { NotificationKind } from '../notifications/data'
 import type { PostFormat } from '../posts/data'
 

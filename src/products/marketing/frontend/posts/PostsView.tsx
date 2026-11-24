@@ -106,11 +106,11 @@ export function PostsView({ openPostId }: { openPostId?: string }) {
   })
 
   const remove = (x: Post) => { deletePost(x.id); setOpen(null); setToast({ text: 'Post excluído.', undo: () => restorePost(x) }) }
-  const duplicate = (x: Post) => { const id = duplicatePost(x.id); if (id) router.push(`/social/postar?editar=${id}`) }
+  const duplicate = (x: Post) => { const id = duplicatePost(x.id); if (id) router.push(`/marketing/postar?editar=${id}`) }
   const publishNow = (x: Post) => { savePost({ ...x, status: 'publicado', date: nowStamp() }); setToast({ text: 'Post enviado para publicação (demonstração).' }) }
   const toDraft = (x: Post) => { savePost({ ...x, status: 'rascunho' }); setToast({ text: 'Movido para rascunhos.', undo: () => savePost(x) }) }
   const actions = (x: Post) => [
-    ...(x.status !== 'publicado' ? [{ label: 'Editar', icon: Pencil, run: () => router.push(`/social/postar?editar=${x.id}`) }] : []),
+    ...(x.status !== 'publicado' ? [{ label: 'Editar', icon: Pencil, run: () => router.push(`/marketing/postar?editar=${x.id}`) }] : []),
     { label: 'Duplicar', icon: Copy, run: () => duplicate(x) },
     ...(x.status === 'agendado' || x.status === 'rascunho' ? [{ label: 'Publicar agora', icon: Send, run: () => publishNow(x) }] : []),
     ...(x.status === 'agendado' ? [{ label: 'Mover para rascunhos', icon: FileEdit, run: () => toDraft(x) }] : []),
@@ -126,7 +126,7 @@ export function PostsView({ openPostId }: { openPostId?: string }) {
   const earlyThisWeek = posts.filter(x => weekDays.some(d => x.date.startsWith(dayKey(d))) && +x.date.slice(11, 13) < HOURS[0]).length
 
   return <section className={s.content}>
-    <div className={s.pageHead}><div><h1>Posts</h1><p>Agendados, publicados e rascunhos em todas as contas. Arraste no calendário para reagendar.</p></div><Link href="/social/postar" className={s.primary}><Plus size={16} />Novo post</Link></div>
+    <div className={s.pageHead}><div><h1>Posts</h1><p>Agendados, publicados e rascunhos em todas as contas. Arraste no calendário para reagendar.</p></div><Link href="/marketing/postar" className={s.primary}><Plus size={16} />Novo post</Link></div>
     <div className={s.statsRow}>
       <div className={s.stat}><small>Agendados</small><b>{count('agendado')}</b></div>
       <div className={s.stat}><small>Publicados</small><b>{count('publicado')}</b></div>

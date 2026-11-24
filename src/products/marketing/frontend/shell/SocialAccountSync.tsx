@@ -5,9 +5,9 @@ import { useAuth } from '@clerk/nextjs'
 import { setWorkspace } from '@/products/editor/frontend/lib/sync'
 import { supabaseConfigured } from '@/products/editor/frontend/lib/supabase'
 import { connectDrive } from '@/products/drive/frontend/store'
-import { connectPosts } from '@/products/social/frontend/posts/store'
-import { connectAccounts } from '@/products/social/frontend/posts/accounts'
-import { connectNotifications } from '@/products/social/frontend/notifications/store'
+import { connectPosts } from '@/products/marketing/frontend/posts/store'
+import { connectAccounts } from '@/products/marketing/frontend/posts/accounts'
+import { connectNotifications } from '@/products/marketing/frontend/notifications/store'
 
 /** Opens the active company's posts, accounts and notifications, and the Drive the posts take their media from. */
 function Sync() {

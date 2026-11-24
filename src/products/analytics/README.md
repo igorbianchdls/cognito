@@ -5,7 +5,7 @@ Medir sites e apps: páginas vistas, eventos próprios, origens e aparelhos. Dep
 ## Onde fica
 
 - **Telas** (`src/app/analytics`, seção Analytics do menu): Painéis (`/analytics`), Eventos ao vivo (`/analytics/eventos`) e Sites e apps (`/analytics/sites`).
-- **Configurações no Supabase:** schema `analytics` (`supabase/migrations/20261122150000_analytics_schema.sql`): `properties` (sites e apps, domínios, chave pública, consentimento), `funnels`, `flags` e `experiments`. Acesso pelos papéis do ERP, como Drive e Social.
+- **Configurações no Supabase:** schema `analytics` (`supabase/migrations/20261122150000_analytics_schema.sql`): `properties` (sites e apps, domínios, chave pública, consentimento), `funnels`, `flags` e `experiments`. Acesso pelos papéis do ERP, como Drive e Marketing.
 - **Eventos no BigQuery:** dataset `analytics`, tabela `events`, uma partição por dia e organizada por propriedade e evento. O Otto cria os dois na primeira vez (`server/bigquery.ts`, sem SDK: a conta de serviço assina um JWT).
 - **Script** `public/otto.js`: `<script async src="https://ottogestao.com.br/otto.js" data-key="otto_…"></script>`. Registra páginas vistas (também nas trocas de página sem recarregar), `otto.track`, `otto.identify`, `otto.consent` e `otto.reset`. Envia em lotes, sem IP, respeita "não rastrear". Com `data-consent="required"`, só guarda o id do visitante depois de `otto.consent(true)`.
 - **Rotas:** `POST /api/analytics/eventos` (pública: confere chave e domínio, ignora robôs, limita envios, grava depois de responder) e `GET /api/analytics/relatorios` (só membros da empresa da propriedade; consulta com teto de leitura).

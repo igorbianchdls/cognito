@@ -23,7 +23,7 @@ import "./sidebar-dark.css"
 import { sidebarFont } from "./sidebarFont"
 import { useErpAccess } from "@/products/erp/frontend/hooks/useErpAccess"
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
-import { useNotifications } from "@/products/social/frontend/notifications/store"
+import { useNotifications } from "@/products/marketing/frontend/notifications/store"
 
 type IconComponent = React.ComponentType<{ className?: string; style?: React.CSSProperties }>
 type NavigationItem = {
@@ -111,8 +111,8 @@ const sections: Section[] = [
   {
     id: "marketing", title: "Marketing", items: [
       { title: "Editor", url: "/editor", icon: IconVideoFilled },
-      { title: "Postar", url: "/social/postar", icon: IconSendFilled },
-      { title: "Agendados", url: "/social/posts", icon: IconCalendarFilled },
+      { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
+      { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
       {
         title: "Video Hosting", url: "/videohosting", icon: IconPlayerPlayFilled, activePaths: ["/videohosting"],
         children: [
@@ -167,7 +167,7 @@ const createActions: { title: string; url: string; capability?: ErpCapability }[
   { title: "Nova conta a pagar", url: "/erp/financeiro/contas-a-pagar", capability: "erp.financeiro.visualizar" },
   { title: "Nova conta a receber", url: "/erp/financeiro/contas-a-receber", capability: "erp.financeiro.visualizar" },
   { title: "Novo vídeo", url: "/editor" },
-  { title: "Novo post", url: "/social/postar" },
+  { title: "Novo post", url: "/marketing/postar" },
 ]
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(path + "/")
@@ -376,7 +376,7 @@ export function SidebarShadcn({ className, style, ...props }: React.ComponentPro
 
         <SidebarFooter className="gap-0.5 px-3 pb-3 pt-2">
           <ul className="grid gap-0.5">
-            <Row item={{ title: "Notificações", url: "/social/notificacoes", icon: IconBellFilled }} pathname={pathname} onNavigate={navigate}
+            <Row item={{ title: "Notificações", url: "/marketing/notificacoes", icon: IconBellFilled }} pathname={pathname} onNavigate={navigate}
               badge={unread ? <span className="rounded-full bg-black/[0.06] px-2.5 py-0.5 text-[13px] font-medium text-[#3a3a3c] group-data-[collapsible=icon]:hidden">{unread > 99 ? "99+" : unread}</span> : null} />
             <Row item={{ title: "Configurações", url: "/configuracoes", icon: IconSettingsFilled }} pathname={pathname} onNavigate={navigate} />
             <li>

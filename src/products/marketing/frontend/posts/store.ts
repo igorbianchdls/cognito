@@ -4,7 +4,7 @@
 // Signed in, they are the workspace's rows (posts + post_files + post_accounts): the screen updates at once and
 // saves in the background; a failed save reloads from the database. Without Supabase, the offline demo in this browser.
 import { useSyncExternalStore } from 'react'
-import { db, localStamp, must, onRemoteError, persist, remoteMode, toIso, workspaceReady, type WorkspaceContext } from '@/products/social/frontend/lib/sync'
+import { db, localStamp, must, onRemoteError, persist, remoteMode, toIso, workspaceReady, type WorkspaceContext } from '@/products/marketing/frontend/lib/sync'
 import { initialPosts, type Post, type PostStatus } from './data'
 
 const KEY = 'otto-social-posts-v1'

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function SocialPage() {
-  redirect('/social/posts')
+  redirect('/marketing/posts')
 }

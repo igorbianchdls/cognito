@@ -13,8 +13,8 @@ import { formatLabel, networkLabel, type Post, type PostFormat, type PostStatus 
 import { checkPost, hashtags, limits, networksOf } from './rules'
 import { PostPreview } from './Preview'
 import { deletePost, getPosts, newPostId, nowStamp, savePost, usePosts } from './store'
-import { getSettings, useSettings } from '@/products/social/frontend/settings/store'
-import { notify } from '@/products/social/frontend/notifications/store'
+import { getSettings, useSettings } from '@/products/marketing/frontend/settings/store'
+import { notify } from '@/products/marketing/frontend/notifications/store'
 import s from '@/products/editor/frontend/shell/ui.module.css'
 import p from './posts.module.css'
 
@@ -88,14 +88,14 @@ export function Composer({ initialFiles, editId }: { initialFiles: string[]; edi
     if (status === 'publicado' && postingPrefs.confirm && !window.confirm(`Publicar agora em ${nets.length} ${nets.length === 1 ? 'rede' : 'redes'}?`)) return
     const base = editing ?? { id: newPostId() }
     savePost({ ...base, fileIds: picked, caption: caption.trim(), accountIds, format, date: status === 'agendado' || status === 'rascunho' ? date : nowStamp(), status } as Post)
-    if (status !== 'rascunho') notify({ kind: status === 'agendado' ? 'agendado' : 'publicado', title: status === 'agendado' ? `Post agendado para ${date.slice(8, 10)}/${date.slice(5, 7)} às ${date.slice(11, 16)}` : 'Post enviado para publicação', text: caption.trim().slice(0, 120), href: `/social/posts?post=${base.id}`, action: 'Ver post' })
+    if (status !== 'rascunho') notify({ kind: status === 'agendado' ? 'agendado' : 'publicado', title: status === 'agendado' ? `Post agendado para ${date.slice(8, 10)}/${date.slice(5, 7)} às ${date.slice(11, 16)}` : 'Post enviado para publicação', text: caption.trim().slice(0, 120), href: `/marketing/posts?post=${base.id}`, action: 'Ver post' })
     setToast(status === 'rascunho' ? 'Rascunho salvo.' : status === 'agendado' ? (editing ? 'Agendamento atualizado.' : 'Post agendado.') : 'Post enviado para publicação (demonstração).')
-    setTimeout(() => router.push('/social/posts'), 900)
+    setTimeout(() => router.push('/marketing/posts'), 900)
   }
 
   return <section className={s.content}>
     <div className={s.pageHead}><div><h1>{editing ? (published ? 'Post publicado' : 'Editar post') : 'Postar'}</h1><p>{published ? 'Este post já foi ao ar. Duplique na tela de posts para publicar de novo.' : 'Escolha os arquivos do seu Drive, escreva a legenda e publique ou agende.'}</p></div>
-      {editing && !published && <button className={s.ghost} onClick={() => { deletePost(editing.id); router.push('/social/posts') }}><Trash2 size={15} />Excluir post</button>}
+      {editing && !published && <button className={s.ghost} onClick={() => { deletePost(editing.id); router.push('/marketing/posts') }}><Trash2 size={15} />Excluir post</button>}
     </div>
     <div className={s.composer}>
       <fieldset className={p.fieldset} disabled={published}>
@@ -141,7 +141,7 @@ export function Composer({ initialFiles, editId }: { initialFiles: string[]; edi
       </fieldset>
       <aside className={s.preview} aria-label="Prévia">
         <PostPreview files={pickedFiles} caption={caption} accountIds={accountIds} format={format} />
-        <p className={s.note}>Prévia aproximada de {nets.length ? nets.map(n => networkLabel[n]).join(' e ') : 'cada rede'}. Nesta versão de demonstração nada é publicado de verdade. <Link href="/social/conectores?aba=redes" className={s.link}>Ver conectores</Link></p>
+        <p className={s.note}>Prévia aproximada de {nets.length ? nets.map(n => networkLabel[n]).join(' e ') : 'cada rede'}. Nesta versão de demonstração nada é publicado de verdade. <Link href="/marketing/conectores?aba=redes" className={s.link}>Ver conectores</Link></p>
       </aside>
     </div>
     {toast && <div className={s.toast} role="status"><Check size={15} />{toast}</div>}

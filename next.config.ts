@@ -18,6 +18,9 @@ const nextConfig: NextConfig = {
         { source: `/inbox/${p}`, destination: `/${p}`, permanent: true },
         { source: `/inbox/${p}/:path*`, destination: `/${p}/:path*`, permanent: true },
       ]),
+      // Social virou Marketing (novembro de 2026): links antigos continuam funcionando.
+      { source: '/social', destination: '/marketing', permanent: true },
+      { source: '/social/:path*', destination: '/marketing/:path*', permanent: true },
       // Spaces virou Drive (novembro de 2026): links antigos continuam funcionando.
       { source: '/editor/spaces', destination: '/drive', permanent: true },
       { source: '/editor/spaces/:path*', destination: '/drive/:path*', permanent: true },

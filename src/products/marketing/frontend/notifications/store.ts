@@ -4,7 +4,7 @@
 // Signed in, they are the person's rows in the workspace (notifications made by the app go to whoever did the action;
 // rows with no user are for everyone). Without Supabase, the offline demo in this browser with sample notifications.
 import { useSyncExternalStore } from 'react'
-import { db, localStamp, must, persist, remoteMode, toIso, workspaceReady, type WorkspaceContext } from '@/products/social/frontend/lib/sync'
+import { db, localStamp, must, persist, remoteMode, toIso, workspaceReady, type WorkspaceContext } from '@/products/marketing/frontend/lib/sync'
 import { seedNotifications, type AppNotification } from './data'
 
 const KEY = 'otto-social-notifications-v1'

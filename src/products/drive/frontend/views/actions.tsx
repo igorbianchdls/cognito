@@ -71,7 +71,7 @@ export function useDriveActions(where?: { driveId: string; folderId: string | nu
     for (const f of list) if (f.uploaded && await (remoteDrive ? !!f.storagePath && downloadObject(f.storagePath, f.name) : downloadBlob(f.id, f.name))) got++
     setToast(got ? `Baixando ${got} ${got === 1 ? 'arquivo' : 'arquivos'}.` : 'Arquivos de exemplo não têm conteúdo para baixar.')
   }
-  const post = (list: DFile[]) => { const ok = list.filter(f => f.kind === 'video' || f.kind === 'image'); if (ok.length) router.push(`/social/postar?arquivos=${ok.map(f => f.id).join(',')}`) }
+  const post = (list: DFile[]) => { const ok = list.filter(f => f.kind === 'video' || f.kind === 'image'); if (ok.length) router.push(`/marketing/postar?arquivos=${ok.map(f => f.id).join(',')}`) }
   const edit = (list: DFile[]) => { const ok = list.filter(f => f.kind !== 'text'); if (ok.length) router.push(`/editor/${newProjectId()}?arquivos=${ok.map(f => f.id).join(',')}`) }
   const trash = (items: Item[]) => { trashItems(items); setToast(`${label(items)} ${items.length === 1 ? 'foi para' : 'foram para'} a lixeira.`) }
   const favorite = (items: Item[]) => { const on = !items.every(isFavorite); setFavorite(items, on); setToast(on ? 'Adicionado aos favoritos.' : 'Removido dos favoritos.') }
