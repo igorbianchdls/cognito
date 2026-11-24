@@ -2,8 +2,8 @@
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBookFilled, IconBriefcaseFilled,
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconClipboardListFilled, IconCoinFilled,
-  IconCreditCardFilled, IconFileTextFilled, IconFolderFilled, IconLockFilled,
-  IconReceiptFilled, IconScaleFilled, IconSendFilled, IconShoppingCartFilled,
+  IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
+  IconReceiptFilled, IconSendFilled, IconShoppingCartFilled,
   IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
 } from "@tabler/icons-react"
 
@@ -67,10 +67,16 @@ export const sections: Section[] = [
     id: "financeiro", title: "Financeiro", alwaysOpen: true, items: [
       { title: "Contas a pagar", url: "/erp/financeiro/contas-a-pagar", icon: IconCreditCardFilled, capability: "erp.financeiro.visualizar" },
       { title: "Contas a receber", url: "/erp/financeiro/contas-a-receber", icon: IconCoinFilled, capability: "erp.financeiro.visualizar" },
-      { title: "Conciliação", url: "/erp/financeiro/conciliacao-bancaria", icon: IconScaleFilled, capability: "erp.financeiro.visualizar" },
-      { title: "Contas financeiras", url: "/erp/financeiro/contas-financeiras", icon: IconCashBanknoteFilled, capability: "erp.financeiro.visualizar" },
-      { title: "Transferências", url: "/erp/financeiro/transferencias-financeiras", icon: IconArrowsExchange, capability: "erp.financeiro.visualizar" },
-      { title: "Fechamentos", url: "/erp/financeiro/fechamentos", icon: IconLockFilled, capability: "erp.financeiro.visualizar" },
+      {
+        title: "Contas bancárias", url: "/erp/financeiro/contas-financeiras", icon: IconCashBanknoteFilled, capability: "erp.financeiro.visualizar",
+        activePaths: ["/erp/financeiro/contas-financeiras", "/erp/financeiro/transferencias-financeiras", "/erp/financeiro/conciliacao-bancaria"],
+        tabs: [{ title: "Transferências", url: "/erp/financeiro/transferencias-financeiras" }, { title: "Conciliação", url: "/erp/financeiro/conciliacao-bancaria" }],
+      },
+      {
+        title: "Contabilidade", url: "/erp/cadastros/contas-contabeis", icon: IconBookFilled, capability: "erp.financeiro.visualizar",
+        activePaths: ["/erp/cadastros/contas-contabeis", "/erp/financeiro/fechamentos"],
+        tabs: [{ title: "Plano de contas", url: "/erp/cadastros/contas-contabeis" }, { title: "Fechamentos", url: "/erp/financeiro/fechamentos" }],
+      },
       {
         title: "Compras", url: "/erp/compras/pedidos-compra", icon: IconBasketFilled, activePaths: ["/erp/compras"], capability: "erp.compras.visualizar",
         children: [
@@ -89,7 +95,6 @@ export const sections: Section[] = [
         ],
       },
       { title: "Fornecedores", url: "/erp/cadastros/fornecedores", icon: IconTruckFilled, capability: "erp.cadastros.visualizar" },
-      { title: "Contas contábeis", url: "/erp/cadastros/contas-contabeis", icon: IconBookFilled, capability: "erp.cadastros.visualizar" },
       {
         title: "Produtos e serviços", url: "/erp/cadastros/produtos", icon: IconTagFilled, capability: "erp.cadastros.visualizar",
         activePaths: ["/erp/cadastros/produtos", "/erp/cadastros/servicos", "/erp/cadastros/categorias", "/erp/cadastros/importacoes", "/erp/cadastros/automacoes"],

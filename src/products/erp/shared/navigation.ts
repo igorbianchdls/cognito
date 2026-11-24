@@ -125,3 +125,30 @@ export function getErpModule(sectionId?: string, moduleId?: string) {
   if (section.id === 'overview') return undefined
   return section.modules.find((module) => module.id === moduleId) ?? section.modules[0]
 }
+
+/**
+ * Pages that share one item of the menu and switch with tabs at the top (like Conta Azul and Omie group bank accounts,
+ * transfers and reconciliation around the account, and keep the accounting setup apart).
+ */
+export const ERP_TAB_GROUPS: { id: string; label: string; tabs: { id: string; label: string; section: ErpSectionId; module: string; href: string }[] }[] = [
+  {
+    id: 'contas-bancarias', label: 'Contas bancárias',
+    tabs: [
+      { id: 'contas', label: 'Contas', section: 'financeiro', module: 'contas-financeiras', href: '/erp/financeiro/contas-financeiras' },
+      { id: 'transferencias', label: 'Transferências', section: 'financeiro', module: 'transferencias-financeiras', href: '/erp/financeiro/transferencias-financeiras' },
+      { id: 'conciliacao', label: 'Conciliação', section: 'financeiro', module: 'conciliacao-bancaria', href: '/erp/financeiro/conciliacao-bancaria' },
+    ],
+  },
+  {
+    id: 'contabilidade', label: 'Contabilidade',
+    tabs: [
+      { id: 'plano-de-contas', label: 'Plano de contas', section: 'cadastros', module: 'contas-contabeis', href: '/erp/cadastros/contas-contabeis' },
+      { id: 'fechamentos', label: 'Fechamentos', section: 'financeiro', module: 'fechamentos', href: '/erp/financeiro/fechamentos' },
+    ],
+  },
+]
+
+/** The tab group a page belongs to, if any. */
+export function getErpTabGroup(sectionId?: string, moduleId?: string) {
+  return ERP_TAB_GROUPS.find(group => group.tabs.some(tab => tab.section === sectionId && tab.module === moduleId))
+}
