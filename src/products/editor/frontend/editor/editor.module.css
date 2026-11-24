@@ -3,6 +3,9 @@
 .top { display: flex; align-items: center; gap: 10px; padding: 0 16px; border-bottom: 1px solid var(--line); min-width: 0; }
 .back { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: var(--muted); flex-shrink: 0; }
 .back:hover { background: var(--soft); color: var(--ink); }
+.home { width: 36px; height: 36px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.home:hover { background: var(--soft); }
+.home img { filter: invert(1); }
 .name { min-width: 0; width: 320px; height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid transparent; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); outline: none; }
 .name:hover { border-color: var(--line-strong); }
 .name:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }

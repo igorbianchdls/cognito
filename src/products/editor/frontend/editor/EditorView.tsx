@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, Check, CloudCheck, Download, History } from 'lucide-react'
+import { Check, CloudCheck, Download, History } from 'lucide-react'
 import type { PlayerRef } from '@remotion/player'
 import { formatDateTime } from '@/products/editor/frontend/lib/format'
 import { Preview } from './preview/Preview'
@@ -179,7 +179,10 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
 
   return <div className={e.editor} data-editor>
     <header className={e.top}>
-      <Link href="/editor" className={e.back} aria-label="Voltar aos projetos"><ArrowLeft size={18} /></Link>
+      <Link href="/editor" className={e.home} aria-label="Voltar ao início do Editor" title="Voltar ao início do Editor">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logoOttoIcon.svg" alt="" width={22} height={22} />
+      </Link>
       <input className={e.name} value={project.name} onChange={ev => apply(p => ({ ...p, name: ev.target.value }), 'name')} aria-label="Nome do projeto" />
       <span className={e.saved}><CloudCheck size={15} />Salvo neste navegador</span>
       <span className={e.grow} />
