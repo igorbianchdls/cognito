@@ -5,8 +5,11 @@ import { buildPostgresPoolConfig } from '@/lib/postgres'
 
 export const SOUND_EFFECTS_BUCKET = 'sound-effects'
 const URL_SECONDS = 3600
+export const PAGE_SIZE = 40
 
 export type SoundEffect = { id: string; storage_path: string; title: string; category: string; duration_ms: number | null; tags: string[]; url: string | null }
+export type SoundEffectPage = { efeitos: SoundEffect[]; total: number }
+export type SoundEffectQuery = { category?: string; search?: string; offset?: number; id?: string }
 
 let pool: InstanceType<typeof Pool> | undefined
 function getPool() {
@@ -15,16 +18,17 @@ function getPool() {
   return pool
 }
 
-/** The effects the person can see (none when they aren't an active member of any company). */
-async function visibleEffects(clerkUserId: string) {
+/** Runs queries as the person (none of the rows are visible when they aren't an active member of any company). */
+type Client = Awaited<ReturnType<InstanceType<typeof Pool>["connect"]>>
+async function asPerson<T>(clerkUserId: string, run: (client: Client) => Promise<T>) {
   const client = await getPool().connect()
   try {
     await client.query('BEGIN')
     await client.query("SELECT set_config('request.jwt.claims', $1, true)", [JSON.stringify({ sub: clerkUserId, role: 'authenticated' })])
     await client.query("SELECT set_config('role', 'authenticated', true)")
-    const { rows } = await client.query('SELECT id, storage_path, title, category, duration_ms, tags FROM marketing.sound_effects ORDER BY category, title')
+    const result = await run(client)
     await client.query('COMMIT')
-    return rows as Omit<SoundEffect, 'url'>[]
+    return result
   } catch (error) {
     await client.query('ROLLBACK').catch(() => undefined)
     throw error
@@ -54,9 +58,30 @@ async function signedUrls(paths: string[]) {
   return urls
 }
 
-export async function listSoundEffects(clerkUserId: string): Promise<SoundEffect[]> {
-  const effects = await visibleEffects(clerkUserId)
-  if (!effects.length) return []
-  const urls = await signedUrls(effects.map(e => e.storage_path))
-  return effects.map(e => ({ ...e, url: urls.get(e.storage_path) ?? null }))
+/** How many effects each category has (the filters of the screen). */
+export function soundEffectCategories(clerkUserId: string) {
+  return asPerson(clerkUserId, async client => {
+    const { rows } = await client.query('SELECT category, count(*)::int AS total FROM marketing.sound_effects GROUP BY category')
+    return rows as { category: string; total: number }[]
+  })
+}
+
+/** A page of effects (one category or all, optionally searched in title and tags), with signed URLs. */
+export async function soundEffectPage(clerkUserId: string, q: SoundEffectQuery): Promise<SoundEffectPage> {
+  const search = (q.search ?? '').trim().slice(0, 100)
+  const { rows, total } = await asPerson(clerkUserId, async client => {
+    const { rows } = await client.query(
+      `SELECT id, storage_path, title, category, duration_ms, tags, count(*) OVER ()::int AS total
+       FROM marketing.sound_effects
+       WHERE ($1::uuid IS NULL OR id = $1::uuid)
+         AND ($2::text IS NULL OR category = $2)
+         AND ($3::text = '' OR title ILIKE '%' || $3 || '%' OR EXISTS (SELECT 1 FROM unnest(tags) t WHERE t ILIKE '%' || $3 || '%'))
+       ORDER BY title, id
+       LIMIT $4 OFFSET $5`,
+      [q.id ?? null, q.category ?? null, search.replace(/[\\%_]/g, m => '\\' + m), PAGE_SIZE, Math.max(0, q.offset ?? 0)],
+    )
+    return { rows: rows as (Omit<SoundEffect, 'url'> & { total: number })[], total: (rows[0] as { total?: number } | undefined)?.total ?? 0 }
+  })
+  const urls = rows.length ? await signedUrls(rows.map(e => e.storage_path)) : new Map<string, string>()
+  return { efeitos: rows.map(({ total: _total, ...e }) => ({ ...e, url: urls.get(e.storage_path) ?? null })), total }
 }

@@ -23,6 +23,21 @@ export const CATEGORIES = {
   erro: { count: 25, maxMs: 3000, terms: ['buzzer', 'wrong answer', 'alarm', 'glitch', 'error beep', 'warning', 'denied'] },
   ambientes: { count: 25, minMs: 10000, maxMs: 30000, terms: ['office ambience', 'cafe ambience', 'city street ambience', 'nature ambience', 'rain', 'restaurant ambience', 'beach waves', 'crowd ambience'] },
   objetos: { count: 30, maxMs: 5000, terms: ['footsteps', 'door', 'paper', 'phone vibrate', 'keyboard typing', 'zipper', 'glass clink', 'pen writing', 'bag', 'water splash'] },
+  // Themes, for content in different niches.
+  vozes: { count: 60, maxMs: 5000, terms: ['wow reaction', 'yes voice', 'oh no voice', 'sigh', 'whistle', 'kiss', 'kids laugh', 'surprised gasp', 'cheer voice', 'hmm thinking', 'woohoo'] },
+  natureza: { count: 45, maxMs: 15000, terms: ['strong wind', 'heavy rain', 'thunder', 'fire crackling', 'water stream', 'ocean waves', 'birds chirping', 'leaves rustle'] },
+  animais: { count: 45, maxMs: 5000, terms: ['dog bark', 'cat meow', 'bird', 'rooster', 'horse', 'cow', 'insects', 'puppy', 'duck quack'] },
+  veiculos: { count: 40, maxMs: 5000, terms: ['car pass by', 'car horn', 'engine start', 'motorcycle', 'airplane', 'car brake', 'siren', 'car door', 'train'] },
+  comida: { count: 40, maxMs: 5000, terms: ['frying', 'knife chopping', 'pouring drink', 'can open', 'crunchy bite', 'coffee machine', 'sizzle', 'bottle pop', 'eating'] },
+  esporte: { count: 35, maxMs: 5000, terms: ['referee whistle', 'ball kick', 'stadium crowd', 'gym weights', 'running', 'basketball', 'tennis', 'boxing punch'] },
+  casa: { count: 35, maxMs: 5000, terms: ['keys', 'light switch', 'doorbell', 'vacuum cleaner', 'faucet', 'washing machine', 'drawer', 'curtain', 'cleaning spray'] },
+  tecnologia: { count: 35, maxMs: 5000, terms: ['laser', 'robot', 'hologram', 'power up', 'teleport', 'sci-fi interface', 'computer processing', 'energy charge'] },
+  terror: { count: 35, maxMs: 15000, terms: ['creaking door', 'whisper', 'jump scare', 'dark drone', 'horror sting', 'eerie', 'heartbeat horror', 'scream'] },
+  festa: { count: 30, maxMs: 5000, terms: ['confetti', 'champagne', 'fireworks', 'party horn', 'party crowd', 'balloon pop', 'birthday'] },
+  musicais: { count: 30, maxMs: 15000, terms: ['jingle', 'logo sting', 'bell', 'harp glissando', 'fanfare', 'musical sting', 'piano sting'] },
+  beleza: { count: 25, maxMs: 5000, terms: ['spray', 'hair dryer', 'scissors', 'camera flash', 'high heels', 'clothes hanger', 'makeup brush', 'perfume'] },
+  negocios: { count: 25, maxMs: 5000, terms: ['printer', 'stamp', 'stapler', 'office phone', 'card payment', 'cash counting', 'calculator'] },
+  saude: { count: 20, maxMs: 8000, terms: ['heartbeat human', 'calm breathing', 'heart monitor beep', 'pill bottle', 'spa relaxing', 'singing bowl', 'meditation bell'] },
 }
 
 const args = process.argv.slice(2)
@@ -99,6 +114,15 @@ async function insertRow(row) {
 /** A file name the bucket accepts: the Epidemic title as is, only characters Storage refuses become "-". */
 const fileName = title => title.replace(/[^\p{L}\p{N} _.,;:!@$&'()=+-]/gu, '-').replace(/\s+/g, ' ').trim()
 
+/** Titles that never go into a business library. */
+const BLOCKED = /\b(sex|sexy|orgasm|moan|toilet|fart|vomit|burp|pee)\b/i
+/** A search result counts only when a word of the search is in its Epidemic title or tags (Epidemic also returns loose matches). */
+function relevant(effect, term) {
+  const text = `${effect.title} ${effect.tags.map(t => t.displayName).join(' ')}`.toLowerCase()
+  if (BLOCKED.test(text)) return false
+  return term.toLowerCase().split(/\s+/).filter(w => w.length >= 3).some(w => text.includes(w.replace(/s$/, '')))
+}
+
 async function candidates(term, minMs, maxMs, after) {
   const data = await tool('SearchSoundEffects', { query: { term }, filter: { duration: { min: minMs ?? null, max: maxMs } }, first: 50, after: after ?? null })
   return { items: data.soundEffects.nodes.map(n => n.soundEffect), next: data.soundEffects.pageInfo.hasNextPage ? data.soundEffects.pageInfo.endCursor : null }
@@ -121,7 +145,7 @@ async function pick(slug, config, taken) {
       }
       while (q.items.length) {
         const effect = q.items.shift()
-        if (taken.has(effect.id)) continue
+        if (taken.has(effect.id) || !relevant(effect, q.term)) continue
         taken.set(effect.id, { category: slug })
         picked.push({ ...effect, term: q.term })
         break
