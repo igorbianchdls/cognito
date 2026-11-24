@@ -13,16 +13,16 @@ const BUCKET = 'sound-effects'
 
 /** Category (bucket folder) → how many effects, longest duration, and the Epidemic searches that fill it. */
 export const CATEGORIES = {
-  transicoes: { count: 30, maxMs: 3000, terms: ['whoosh', 'swoosh', 'swipe transition', 'short riser', 'reverse transition', 'glitch transition'] },
-  impactos: { count: 20, maxMs: 3000, terms: ['hit impact', 'boom', 'punch', 'bass drop', 'cinematic impact'] },
-  interface: { count: 25, maxMs: 3000, terms: ['click', 'tap', 'pop', 'notification', 'typing', 'camera shutter', 'user interface swipe', 'scroll'] },
-  texto: { count: 15, maxMs: 3000, terms: ['pop up', 'ding', 'sparkle', 'bling', 'text whoosh'] },
-  comicos: { count: 25, maxMs: 5000, terms: ['boing', 'record scratch', 'fail trombone', 'slide whistle', 'cartoon', 'laugh', 'crowd ohh', 'crowd aww'] },
-  risers: { count: 15, maxMs: 8000, terms: ['riser', 'build up', 'suspense', 'drumroll', 'countdown'] },
-  sucesso: { count: 15, maxMs: 5000, terms: ['cash register', 'coin', 'level up', 'success chime', 'applause', 'crowd cheer'] },
-  erro: { count: 10, maxMs: 3000, terms: ['buzzer', 'wrong answer', 'alarm', 'glitch', 'error beep'] },
-  ambientes: { count: 15, minMs: 10000, maxMs: 30000, terms: ['office ambience', 'cafe ambience', 'city street ambience', 'nature ambience', 'rain'] },
-  objetos: { count: 10, maxMs: 5000, terms: ['footsteps', 'door', 'paper', 'phone vibrate', 'keyboard typing'] },
+  transicoes: { count: 100, maxMs: 3000, terms: ['whoosh', 'swoosh', 'swipe transition', 'short riser', 'reverse transition', 'glitch transition', 'whoosh transition fast', 'swish', 'zoom transition', 'tape rewind', 'air whoosh', 'cinematic whoosh', 'digital transition', 'flyby'] },
+  impactos: { count: 60, maxMs: 3000, terms: ['hit impact', 'boom', 'punch', 'bass drop', 'cinematic impact', 'thud', 'slam', 'sub drop', 'braam', 'drum hit', 'stomp'] },
+  interface: { count: 60, maxMs: 3000, terms: ['click', 'tap', 'pop', 'notification', 'typing', 'camera shutter', 'user interface swipe', 'scroll', 'button', 'message sent', 'bubble pop', 'toggle', 'beep'] },
+  texto: { count: 60, maxMs: 3000, terms: ['pop up', 'ding', 'sparkle', 'bling', 'text whoosh', 'title reveal', 'shimmer', 'magic', 'pluck', 'chime', 'stinger', 'appear'] },
+  comicos: { count: 60, maxMs: 5000, terms: ['boing', 'record scratch', 'fail trombone', 'slide whistle', 'cartoon', 'laugh', 'crowd ohh', 'crowd aww', 'cartoon run', 'squeak', 'gasp', 'crickets', 'bonk', 'honk'] },
+  risers: { count: 40, maxMs: 8000, terms: ['riser', 'build up', 'suspense', 'drumroll', 'countdown', 'tension', 'uplifter', 'ticking clock', 'heartbeat'] },
+  sucesso: { count: 40, maxMs: 5000, terms: ['cash register', 'coin', 'level up', 'success chime', 'applause', 'crowd cheer', 'win', 'achievement', 'money', 'celebration'] },
+  erro: { count: 25, maxMs: 3000, terms: ['buzzer', 'wrong answer', 'alarm', 'glitch', 'error beep', 'warning', 'denied'] },
+  ambientes: { count: 25, minMs: 10000, maxMs: 30000, terms: ['office ambience', 'cafe ambience', 'city street ambience', 'nature ambience', 'rain', 'restaurant ambience', 'beach waves', 'crowd ambience'] },
+  objetos: { count: 30, maxMs: 5000, terms: ['footsteps', 'door', 'paper', 'phone vibrate', 'keyboard typing', 'zipper', 'glass clink', 'pen writing', 'bag', 'water splash'] },
 }
 
 const args = process.argv.slice(2)
