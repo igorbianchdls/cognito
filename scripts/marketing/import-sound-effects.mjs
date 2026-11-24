@@ -4,9 +4,9 @@
 // and tags exactly as Epidemic has them. Running it again only adds what is missing (dedupe by the Epidemic id).
 //
 //   EPIDEMIC_SOUND_MCP_API_KEY=… SUPABASE_URL=https://<ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=… \
-//     node scripts/marketing/import-sound-effects.mjs [--apply] [--only=transicoes,impactos]
+//     node scripts/marketing/import-sound-effects.mjs [--apply] [--only=transicoes,impactos] [--waveforms]
 //
-// Without --apply it only lists what it would import.
+// Without --apply it only lists what it would import. --waveforms fills the waveform of effects that have none.
 
 const MCP_URL = 'https://www.epidemicsound.com/a/mcp-service/mcp'
 const BUCKET = 'sound-effects'
@@ -155,9 +155,59 @@ async function pick(slug, config, taken) {
   return picked
 }
 
+// ---------- category, subcategory and waveform ----------
+
+/** "Vehicles, Siren, Police Siren" → Vehicles / Siren (the first two parts of an Epidemic title). */
+function taxonomy(title) {
+  const [category, subcategory] = title.split(',').map(s => s.trim())
+  return { epidemic_category: category || null, epidemic_subcategory: subcategory || null }
+}
+
+/** Epidemic's waveform (min/max pairs) reduced to 100 bars from 0 to 100, to draw without loading the audio. */
+async function waveform(url, bars = 100) {
+  if (!url) return null
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`waveform HTTP ${response.status}`)
+  const { data } = await response.json()
+  const peaks = []
+  for (let i = 0; i + 1 < data.length; i += 2) peaks.push(Math.max(Math.abs(data[i]), Math.abs(data[i + 1])))
+  if (!peaks.length) return null
+  const out = []
+  for (let b = 0; b < bars; b++) {
+    const from = Math.floor(b * peaks.length / bars), to = Math.max(from + 1, Math.floor((b + 1) * peaks.length / bars))
+    out.push(Math.max(...peaks.slice(from, to)))
+  }
+  const top = Math.max(...out) || 1
+  return out.map(v => Math.round(v / top * 100))
+}
+
+/** --waveforms: fills the waveform of effects that don't have one yet (only reads Epidemic, downloads nothing). */
+async function backfillWaveforms() {
+  const response = await fetch(`${supabaseUrl}/rest/v1/sound_effects?select=id,source_id&waveform=is.null&source_id=not.is.null`, { headers: { ...sbHeaders, 'accept-profile': 'marketing' } })
+  const rows = await response.json()
+  console.log(`${rows.length} efeitos sem forma de onda`)
+  let done = 0, missing = 0
+  for (let i = 0; i < rows.length; i += 50) {
+    const batch = rows.slice(i, i + 50)
+    const data = await tool('SearchSoundEffects', { filter: { soundEffectIDs: batch.map(r => r.source_id) }, first: 50 })
+    const urls = new Map(data.soundEffects.nodes.map(n => [n.soundEffect.id, n.soundEffect.audioFile.waveformUrl]))
+    for (const row of batch) {
+      const wf = await waveform(urls.get(row.source_id)).catch(() => null)
+      if (!wf) { missing++; continue }
+      const r = await fetch(`${supabaseUrl}/rest/v1/sound_effects?id=eq.${row.id}`, {
+        method: 'PATCH', headers: { ...sbHeaders, 'content-type': 'application/json', 'content-profile': 'marketing', prefer: 'return=minimal' }, body: JSON.stringify({ waveform: wf }),
+      })
+      if (r.ok) done++; else missing++
+    }
+    console.log(`  ${Math.min(i + 50, rows.length)}/${rows.length}`)
+  }
+  console.log(`Formas de onda: ${done} preenchidas, ${missing} sem dados.`)
+}
+
 // ---------- run ----------
 
 await connect()
+if (args.includes('--waveforms')) { await backfillWaveforms(); process.exit(0) }
 const rows = await existingRows()
 const taken = new Map(rows.filter(r => r.source_id).map(r => [r.source_id, { category: r.category }]))
 const paths = new Set(rows.map(r => r.storage_path))
@@ -182,6 +232,7 @@ for (const [slug, config] of Object.entries(CATEGORIES)) {
       await insertRow({
         storage_path: path, title: effect.title, category: slug, duration_ms: effect.audioFile.durationInMilliseconds,
         size_bytes: bytes.length, mime: 'audio/mpeg', tags, source: 'epidemic_sound', source_id: effect.id,
+        ...taxonomy(effect.title), waveform: await waveform(effect.audioFile.waveformUrl).catch(() => null),
       })
       imported++
     } catch (error) {
