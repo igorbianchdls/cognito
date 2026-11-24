@@ -3,7 +3,7 @@
 .otto-editor {
   /* Direction A, "estúdio editorial": warm paper, ink, hairlines and a single vermilion accent.
      The --blue* names are kept for compatibility: they now carry the accent. */
-  --bg: #f5f1ea; --panel: #fbf9f5; --line: #e9e2d7; --line-strong: #d9d0c2;
+  --bg: #ffffff; --panel: #ffffff; --line: #e9e2d7; --line-strong: #d9d0c2;
   --ink: #1c1915; --text: #4b453d; --muted: #8e867b; --soft: #f2ede5;
   --sidebar: #f3eee6; --sidebar-hover: #ebe4d9;
   --surface: #f1ece4; --surface-hover: #e9e2d7; --subtle: #f6f2ec; --select: #f3c9b9; --select-soft: #fbebe4;
@@ -14,7 +14,8 @@
   --radius: 10px;
   --shadow: 0 1px 0 rgb(28 25 21 / .03), 0 14px 34px -14px rgb(28 25 21 / .16);
   --font-sans: var(--font-ui), 'Helvetica Neue', system-ui, sans-serif;
-  --font-serif: var(--font-display), 'Iowan Old Style', Georgia, serif;
+  /* Titles use the interface sans too (Marketing is all sans serif); the name is kept for the existing rules. */
+  --font-serif: var(--font-sans);
   /* Numbers: the interface sans with even-width digits. The editor switches to mono for timecodes. */
   --font-num: var(--font-sans);
   color-scheme: light;
