@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AudioLines, Download, Loader2, Pause, Play, Search } from 'lucide-react'
-import { remoteMode, workspaceReady } from '../lib/sync'
+import { useAuth } from '@clerk/nextjs'
+import { remoteMode } from '../lib/sync'
 import { supabase } from '../lib/supabase'
 import s from '@/products/editor/frontend/shell/ui.module.css'
 import x from './sounds.module.css'
@@ -42,18 +43,25 @@ export function SoundEffectsView() {
   const [loading, setLoading] = useState<string | null>(null)
   const audio = useRef<HTMLAudioElement | null>(null)
 
+  // Loads once Clerk knows the person and their active company (the token carries it; RLS checks membership).
+  const { isLoaded, userId, orgId } = useAuth()
   useEffect(() => {
-    if (!remoteMode) return
+    if (!remoteMode || !isLoaded) return
+    if (!userId || !orgId) { setError(userId ? 'Escolha uma empresa para ver os efeitos.' : ''); setItems([]); return }
     let live = true
     void (async () => {
-      await workspaceReady()
-      const { data, error } = await supabase().from('sound_effects').select('id, storage_path, title, category, duration_ms, tags').order('category').order('title')
-      if (!live) return
-      if (error) { console.error('Sound effects: falha ao carregar', error); setError('Não foi possível carregar os efeitos.'); setItems([]) }
-      else setItems(data ?? [])
+      try {
+        const { data, error } = await supabase().from('sound_effects').select('id, storage_path, title, category, duration_ms, tags').order('category').order('title')
+        if (error) throw error
+        if (live) { setError(''); setItems(data ?? []) }
+      } catch (e) {
+        console.error('Sound effects: falha ao carregar', e)
+        if (live) { setError('Não foi possível carregar os efeitos.'); setItems([]) }
+      }
     })()
-    return () => { live = false; audio.current?.pause() }
-  }, [])
+    return () => { live = false }
+  }, [isLoaded, userId, orgId])
+  useEffect(() => () => audio.current?.pause(), [])
 
   const categories = useMemo(() => [...new Set((items ?? []).map(i => i.category))], [items])
   const list = useMemo(() => {
