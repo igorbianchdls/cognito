@@ -1,6 +1,7 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
 import { validarBaixa } from '../regras/contas-receber'
 import { validarParcelas } from '../regras/geral'
+import { indiceDaOcorrencia, validarCalendario, validarOcorrencia } from '../regras/recorrencias'
 import { exigirRegra } from './erpRegras'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { ERP_TODAY_SQL, erpToday } from '@/products/erp/server/erpBusinessDate'
@@ -1296,6 +1297,11 @@ export async function processErpFinancialRecurrences(input: {
       // The calendar, not the count of surviving documents, identifies an occurrence.
       occurrence = recurrenceOccurrenceIndex(start,next || start,frequency,interval)
       while (next && next <= throughDate && (!recurrence.termino_em || next <= dateText(recurrence.termino_em)!) && occurrence < maxOccurrences && generated < limit) {
+        // RC-02 (antes no banco, BD-44): recorrência ativa, competência no período e no calendário, dentro da quantidade.
+        exigirRegra(validarOcorrencia({ ativa: Boolean(recurrence.ativa), pausada: recurrence.pausada_em != null, encerrada: recurrence.encerrada_em != null,
+          inicio: start, termino: dateText(recurrence.termino_em) || null,
+          quantidadeOcorrencias: recurrence.termino_tipo === 'ocorrencias' ? Number(recurrence.quantidade_ocorrencias) : null,
+          frequencia: frequency, intervalo: interval, competencia: next }))
         await assertErpPeriodOpen(client,{tenantId:input.tenantId,module:'financeiro',date:next})
         const shiftModelDate = (value: unknown) => {
           const date = dateText(value)
@@ -1353,12 +1359,10 @@ export async function processErpFinancialRecurrences(input: {
     return { generated, throughDate, processed }
   })
 }
+/** RC-01 (regras/recorrencias.ts): número da ocorrência que cai em `current`; recusa data fora do calendário. */
 export function recurrenceOccurrenceIndex(start:string,current:string,frequency:string,interval:number) {
-  const a=new Date(`${start}T12:00:00Z`),b=new Date(`${current}T12:00:00Z`)
-  const units=frequency==='dia'?(b.getTime()-a.getTime())/86400000:frequency==='semana'?(b.getTime()-a.getTime())/(86400000*7):frequency==='mes'?(b.getUTCFullYear()-a.getUTCFullYear())*12+b.getUTCMonth()-a.getUTCMonth():b.getUTCFullYear()-a.getUTCFullYear()
-  const index=units/interval
-  if (!Number.isInteger(index)||index<0||shiftDate(start,frequency,interval,index)!==current) throw new ErpDomainError('VALIDATION_ERROR','Próxima ocorrência fora do calendário da recorrência.')
-  return index
+  exigirRegra(validarCalendario({ inicio: start, competencia: current, frequencia: frequency, intervalo: interval }))
+  return indiceDaOcorrencia(start, current, frequency, interval)!
 }
 async function createRecurringReceivable(client:SQLClient,input:{tenantId:number;actorId:number;recurrenceId:number;key:string;values:Record<string,unknown>}) {
   const existing=await client.query(`SELECT id FROM erp.contas_receber WHERE empresa_id=$1 AND recorrencia_financeira_id=$2 AND data_competencia=$3`,[input.tenantId,input.recurrenceId,input.values.data_competencia])

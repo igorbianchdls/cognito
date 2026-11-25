@@ -45,6 +45,7 @@ Enquanto uma regra não migra, a coluna **Onde** aponta para o lugar atual (repo
 | [compras.md](compras.md) | CP | Cotação, confirmação, recebimento, devolução, cancelamento, NF-e de entrada |
 | [ordens-servico.md](ordens-servico.md) | OS | Aprovar → iniciar → concluir → gerar orçamento/venda |
 | [contratos.md](contratos.md) | CT | Recorrência, suspender/retomar/encerrar, novas versões |
+| [recorrencias.md](recorrencias.md) | RC | Calendário e geração das recorrências financeiras e de compras |
 | [contas-bancarias.md](contas-bancarias.md) | CB | Contas, transferências, formas de pagamento, cartões, extrato, conciliação |
 | [estoque.md](estoque.md) | ES | Movimentos, reservas, ajustes, contagem, transferência entre locais, kits, unidades |
 | [notas-servico.md](notas-servico.md) | NS | NFS-e simulada: rascunho, emissão (DPS), cancelamento, lote |

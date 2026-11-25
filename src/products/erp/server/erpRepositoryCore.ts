@@ -1,5 +1,6 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
 import { type SQLClient } from '@/lib/postgres'
+import { deslocarData } from '../regras/recorrencias'
 import type { ErpConnectedModuleId } from '@/products/erp/server/erpModuleRegistry'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { nonNegativeDecimal } from '@/products/erp/shared/erpMoney'
@@ -318,18 +319,7 @@ export const editableModuleTables = {
   'contas-financeiras': { table: 'contas_financeiras', eventType: 'conta_financeira' },
 } as const
 export type EditableModuleId = keyof typeof editableModuleTables
+/** RC-01: calendário das recorrências (regras/recorrencias.ts → deslocarData). */
 export function shiftDate(value: string, frequency: string, interval: number, occurrence: number) {
-  const date = new Date(`${value}T12:00:00.000Z`)
-  const amount = interval * occurrence
-  if (frequency === 'dia') date.setUTCDate(date.getUTCDate() + amount)
-  else if (frequency === 'semana') date.setUTCDate(date.getUTCDate() + (amount * 7))
-  else {
-    const originalDay = date.getUTCDate()
-    const targetMonths = frequency === 'ano' ? amount * 12 : amount
-    date.setUTCDate(1)
-    date.setUTCMonth(date.getUTCMonth() + targetMonths)
-    const lastDay = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + 1, 0, 12)).getUTCDate()
-    date.setUTCDate(Math.min(originalDay, lastDay))
-  }
-  return date.toISOString().slice(0, 10)
+  return deslocarData(value, frequency, interval, occurrence)
 }

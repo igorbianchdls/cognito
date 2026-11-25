@@ -2,6 +2,8 @@ import { runQuery, withTransaction } from '@/lib/postgres'
 import { ErpDomainError } from '../shared/erpErrors'
 import { createErpEntityWithClient, shiftDate, recurrenceOccurrenceIndex } from './erpRepository'
 import { assertErpPeriodOpen } from './erpPeriodRepository'
+import { exigirRegra } from './erpRegras'
+import { validarOcorrencia } from '../regras/recorrencias'
 import { erpDateSchema } from '@/products/erp/shared/erpTransport'
 
 function day(value: unknown) {
@@ -65,6 +67,10 @@ export async function processPurchaseRecurrences(input: {
           )
         ).rows[0]
         if (!existing) {
+          // RC-02 (antes no banco, BD-44): recorrência ativa, competência no período e no calendário, dentro da quantidade.
+          exigirRegra(validarOcorrencia({ ativa: Boolean(r.ativa) && r.excluido_em == null, inicio: start,
+            termino: r.termino_em ? day(r.termino_em) : null, quantidadeOcorrencias: Number.isFinite(max) ? max : null,
+            frequencia: frequency, intervalo: interval, competencia: next }))
           await assertErpPeriodOpen(client, {
             tenantId: input.tenantId,
             module: 'compras',
