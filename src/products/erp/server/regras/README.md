@@ -8,21 +8,21 @@ Enquanto uma regra não migra, a coluna **Onde** aponta para o lugar atual (repo
 
 ## Arquivos
 
-| Arquivo | Área | Situação |
+| Arquivo | Prefixo | Área |
 |---|---|---|
-| [geral.md](geral.md) | Regras que valem para todo o ERP: data da empresa, numeração, versão, idempotência, período fechado, empresa | catalogado |
-| [vendas.md](vendas.md) | Orçamentos, vendas, crédito, descontos, entrega, cancelamento, devolução | catalogado |
-| [contas-receber.md](contas-receber.md) | Títulos e parcelas a receber, baixas, estornos, previsões, crédito de devolução | catalogado |
-| contas-pagar.md | Títulos e parcelas a pagar, recorrências, rateio | a fazer |
-| compras.md | Cotação, confirmação, recebimento, devolução, cancelamento | a fazer |
-| ordens-servico.md | Aprovar → iniciar → concluir → gerar orçamento/venda | a fazer |
-| contratos.md | Recorrência, suspender/retomar/encerrar | a fazer |
-| contas-bancarias.md | Contas, transferências, conciliação | a fazer |
-| estoque.md | Reservas, saídas, ajustes, custo médio, locais | a fazer |
-| notas-servico.md | NFS-e simulada: emissão, cancelamento, retenções | a fazer |
-| contabilidade.md | Plano de contas, DRE, fechamentos | a fazer |
-| cadastros.md | Clientes, fornecedores, produtos, serviços, exclusão com vínculos | a fazer |
-| permissoes.md | Perfis, capacidades, quem pode o quê | a fazer |
+| [geral.md](geral.md) | GE | Data da empresa, valores, numeração, versão, idempotência, período fechado, empresa, chat |
+| [vendas.md](vendas.md) | VD | Orçamentos, vendas, crédito, descontos, entrega, cancelamento, devolução |
+| [contas-receber.md](contas-receber.md) | CR | Títulos e parcelas a receber, baixas, estornos, previsões, crédito de devolução |
+| [contas-pagar.md](contas-pagar.md) | CPG | Diferenças em relação a contas a receber, recorrência, rateio, classificação, comissões |
+| [compras.md](compras.md) | CP | Cotação, confirmação, recebimento, devolução, cancelamento, NF-e de entrada |
+| [ordens-servico.md](ordens-servico.md) | OS | Aprovar → iniciar → concluir → gerar orçamento/venda |
+| [contratos.md](contratos.md) | CT | Recorrência, suspender/retomar/encerrar, novas versões |
+| [contas-bancarias.md](contas-bancarias.md) | CB | Contas, transferências, formas de pagamento, cartões, extrato, conciliação |
+| [estoque.md](estoque.md) | ES | Movimentos, reservas, ajustes, contagem, transferência entre locais, kits, unidades |
+| [notas-servico.md](notas-servico.md) | NS | NFS-e simulada: rascunho, emissão (DPS), cancelamento, lote |
+| [contabilidade.md](contabilidade.md) | CO | Categorias financeiras, DRE, plano de contas, fechamento, orçamento anual, metas |
+| [cadastros.md](cadastros.md) | CD | Pessoas e papéis, produtos, serviços, categorias de cadastro, tabelas de preço, exclusão |
+| [permissoes.md](permissoes.md) | PE | Papéis, perfis, capacidades, tabela de perfis padrão |
 
 ## Como ler uma regra
 
@@ -51,5 +51,10 @@ Regras repetidas ou inconsistentes encontradas ao montar o catálogo. São as pr
 | Baixa a receber × a pagar | `settleReceivableInstallment()` e `settlePayableInstallment()` são quase cópias (mesmas regras de saldo, conta, idempotência). | CR-10 a CR-17 |
 | Parcelas somam o total | Conferido em `erpSalesRepository.ts` → `validateSaleInstallments()` e de novo em `createSaleRecord()`, além do contrato do chat. | VD-12 |
 | Conflito de versão | Mesma situação com dois códigos e mensagens: `VERSION_CONFLICT` "Venda alterada; atualize antes de continuar." e `VALIDATION_ERROR` "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." | GE-04 |
-| "Hoje" | Até 2026-11-25 a emissão individual de NFS-e usava a data UTC e o lote usava a da empresa. Corrigido; toda regra de data deve usar GE-01. | GE-01 |
-| Textos | Várias mensagens sem acento ("invalido", "esta paga"). | — |
+| "Hoje" | Até 2026-11-25 a emissão individual de NFS-e usava a data UTC e o lote usava a da empresa. Corrigido; toda regra de data deve usar GE-01. | GE-01, NS-15 |
+| Data no estoque | Movimentos de estoque só aceitam o dia atual, mas a ferramenta do chat `movimentar_estoque` aceita `data`. | ES-04 |
+| Mensagens diferentes, mesma regra | Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
+| Efetivar previsão | A pagar grava `efetivado_em`; a receber não. | CR-09 |
+| Sem trava | Título manual duplicando venda (CR-03); transferência deixando conta negativa (CB-10); receber compra ainda em rascunho (CP-20); cancelar compra já recebida (CP-31). Decidir se são desejados. | CR-03, CB-10, CP-20, CP-31 |
+| Perfis | Vendas e Compras criam cadastros mas não excluem; Vendas não vê o financeiro do cliente; Compras não recebe mercadoria. | PE, CD-31 |
+| Textos | Várias mensagens sem acento ("invalido", "esta paga", "esta fechado"). | — |
