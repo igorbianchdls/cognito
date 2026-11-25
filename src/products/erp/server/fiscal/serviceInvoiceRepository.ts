@@ -189,7 +189,7 @@ function authorization(row:Row){
  const snapshot=(row.integracao_snapshot||{}) as Row,dps=(snapshot.dps||{}) as {infDPS?:Row},inf=dps.infDPS||{},prest=(inf.prest||{}) as Row
  const competence=String(inf.dCompet||row.data_competencia||'').slice(0,10)
  const key=nfseAccessKey({municipio:String(inf.cLocEmi||row.codigo_municipio_emissao||'0'),ambiente:Number(inf.tpAmb)===1?'producao':'homologacao',
-  cnpj:String(prest.CNPJ||''),numero:Number(row.numero_dps||0),competencia:competence||new Date().toISOString().slice(0,10),semente:String(row.referencia_externa)})
+  cnpj:String(prest.CNPJ||''),numero:Number(row.numero_dps||0),competencia:competence||erpToday(),semente:String(row.referencia_externa)})
  return {numero:String(row.numero_dps),chave:key,codigo:createHash('sha256').update(key).digest('hex').slice(0,8).toUpperCase(),
   retido:Number(((snapshot.retencoes||{}) as Row).total||0)}
 }
@@ -203,7 +203,7 @@ async function applyRetention(client:SQLClient,company:number,actor:number,row:R
    AND parcelas.status IN ('aberto','parcial','vencido') AND composicao.saldo>0 ORDER BY parcelas.data_vencimento,parcelas.id`,[company,row.venda_id])
  const account=(await query(client,'SELECT id FROM erp.contas_financeiras WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC,id LIMIT 1',[company]))[0]?.id
  let remaining=Math.round(retained*100)
- const date=new Date().toISOString().slice(0,10)
+ const date=erpToday() // GE-01: data da empresa, não UTC
  if(open.length)await assertErpPeriodOpen(client,{tenantId:company,module:'financeiro',date})
  for(const parcel of open){
   if(remaining<=0||!account)break

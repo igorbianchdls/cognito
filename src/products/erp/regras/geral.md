@@ -6,7 +6,7 @@ Valem para todas as áreas do ERP. Quando uma regra de área depende de uma dest
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| GE-01 | "Hoje" é sempre a data no fuso da empresa (padrão `America/Sao_Paulo`), nunca a data UTC do servidor. Vencimentos, competências, "vencido", "futuro" e relatórios usam essa data. | **`regras/geral.ts` → `hojeDaEmpresa()`** (fonte única). No servidor: `erpBusinessDate.ts` → `erpToday()` (pega o fuso do contexto) e `ERP_TODAY_SQL` (consultas). `shared/businessDate.ts` só repassa os nomes antigos. | — | ✅ `regras/geral.test.ts` · `scripts/erp/business-date-smoke.ts` · 🧪 |
+| GE-01 | "Hoje" é sempre a data no fuso da empresa (padrão `America/Sao_Paulo`), nunca a data UTC do servidor. Vencimentos, competências, "vencido", "futuro" e relatórios usam essa data. | **`regras/geral.ts` → `hojeDaEmpresa()`** (fonte única). No servidor: `erpBusinessDate.ts` → `erpToday()` (pega o fuso do contexto) e `ERP_TODAY_SQL` (consultas). No banco: `erp.hoje()` (usada também pelo bloqueio de período do estoque desde a migração `20261125210000`). `shared/businessDate.ts` só repassa os nomes antigos. | — | ✅ `regras/geral.test.ts` · `scripts/erp/business-date-smoke.ts` · 🧪 |
 | GE-02 | Datas de entrada são `AAAA-MM-DD` e precisam ser datas reais. | `erpFinanceRepository.ts` → `date()`; contratos em `shared/*Contracts.ts` | "… invalida." | ❌ |
 
 ## Valores
