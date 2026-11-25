@@ -1,3 +1,5 @@
+import { validarAcaoOrcamento, validarOrcamentoVigente, situacaoAposAcaoOrcamento } from '../regras/vendas';
+import { proximaSituacaoOS } from '../regras/ordens-servico';
 import { validarEntrega } from '../regras/vendas';
 import { exigirRegra } from './erpRegras';
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
@@ -13,7 +15,7 @@ import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
 import { commercialRequest, assertCommercialReplay as assertDeliveryReplay } from './erpCommercialIdempotency'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
-import { quoteSituation, quoteIsClosed } from '../shared/quoteLifecycle';
+import { quoteIsClosed } from '../shared/quoteLifecycle';
 import { processDueSalesContracts } from "@/products/erp/server/erpManagementRepository";
 import {
   createSaleRecord,
@@ -243,25 +245,15 @@ export async function createServiceOrder(
   });
 }
 
-const serviceOrderTransitions: Record<string, Record<string, string>> = {
-  aprovar: { rascunho: "aprovada", orcamento_pendente: "aprovada" },
-  iniciar: { aprovada: "em_execucao" },
-  concluir: { em_execucao: "concluida" },
-  cancelar: {
-    rascunho: "cancelada",
-    orcamento_pendente: "cancelada",
-    aprovada: "cancelada",
-    em_execucao: "cancelada",
-  },
-};
+// Transições da OS: regras/ordens-servico.ts → TRANSICOES_OS (OS-03).
 
 /** All entry points lock conversions before locking either source document. */
 export async function lockCommercialConversion(client: SQLClient, tenantId: number) {
   await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`erp:commercial-conversion:${tenantId}`]);
 }
+// VD-02 (regras/vendas.ts → validarOrcamentoVigente)
 function assertQuoteValid(quote: Record<string,unknown>) {
-  if (quote.validade_em && date(quote.validade_em) < erpToday())
-    throw new ErpDomainError('QUOTE_EXPIRED', 'Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter.', 409);
+  exigirRegra(validarOrcamentoVigente({ validade: quote.validade_em ? date(quote.validade_em) : null, hoje: erpToday() }));
 }
 async function convertServiceOrder(input: ActorInput & {orderId:number;documentType:'orcamento'|'venda';expectedVersion:number}) {
   return withTransaction(async client => {
@@ -329,13 +321,10 @@ export async function runServiceOrderAction(
         "A ordem foi alterada por outra pessoa.",
         409,
       );
-    const next = serviceOrderTransitions[input.action]?.[String(order.status)];
-    if (!next)
-      throw new ErpDomainError(
-        "INVALID_STATE",
-        "Ação indisponível para a situação atual.",
-        409,
-      );
+    // OS-03 (regras/ordens-servico.ts → proximaSituacaoOS)
+    const transition = proximaSituacaoOS(input.action, String(order.status));
+    if (!transition.ok) exigirRegra(transition);
+    const next = transition.ok ? transition.proxima : '';
     const updated = await client.query(
       `UPDATE erp.ordens_servico SET status = $3,
          concluida_em = CASE WHEN $3 = 'concluida' THEN now() ELSE concluida_em END,
@@ -425,21 +414,10 @@ export async function runQuoteAction(
         "O orçamento foi alterado por outra pessoa.",
         409,
       );
-    if (quote.status === "cancelada" || quoteIsClosed(quote.situacao))
-      throw new ErpDomainError(
-        "INVALID_STATE",
-        "Orçamento encerrado não pode ser alterado.",
-        409,
-      );
-
-    if (['enviar','aprovar'].includes(input.action)) assertQuoteValid(quote);
-    if (input.action === 'enviar' && !['em_andamento','enviada'].includes(quoteSituation(quote.situacao))) throw new ErpDomainError('INVALID_STATE','Orçamento aprovado não pode voltar para enviado.',409);
-    const nextSituation =
-      input.action === "aprovar"
-        ? "aprovado"
-        : input.action === "recusar"
-          ? "recusado"
-          : input.action === "enviar" ? "enviada" : "cancelado";
+    // VD-01, VD-02, VD-03 (regras/vendas.ts → validarAcaoOrcamento)
+    exigirRegra(validarAcaoOrcamento({ acao: input.action, situacao: quote.situacao, cancelado: quote.status === "cancelada",
+      validade: quote.validade_em ? date(quote.validade_em) : null, hoje: erpToday() }));
+    const nextSituation = situacaoAposAcaoOrcamento(input.action);
     const nextStatus = input.action === "cancelar" ? "cancelada" : quote.status;
     const updated = await client.query(
       `UPDATE erp.vendas SET status = $3, situacao = $4,

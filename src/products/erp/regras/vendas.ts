@@ -77,3 +77,83 @@ export function validarDescontoVendedor(dados: { descontoMaximo: number | null |
     : recusa('VD-16', `Desconto de ${percentual.toFixed(2)}% acima do máximo permitido para você (${dados.descontoMaximo.toFixed(2)}%).`,
       { codigo: 'DISCOUNT_LIMIT_EXCEEDED', status: 403, detalhes: { desconto_percentual: percentual, desconto_maximo_percentual: dados.descontoMaximo } })
 }
+
+// ---------------------------------------------------------------- orçamento (etapa 4)
+
+/** Situações comerciais do orçamento (proposta). */
+export const SITUACOES_ORCAMENTO = ['em_andamento', 'enviada', 'aprovado', 'recusado', 'convertido', 'cancelado'] as const
+export type SituacaoOrcamento = typeof SITUACOES_ORCAMENTO[number]
+
+/** Normaliza a situação gravada (aceita nomes antigos como "aprovada", "em_aberto"). */
+export function situacaoOrcamento(valor: unknown): SituacaoOrcamento {
+  const apelidos: Record<string, SituacaoOrcamento> = { em_aberto: 'em_andamento', aprovada: 'aprovado', recusada: 'recusado', cancelada: 'cancelado' }
+  const bruto = String(valor || 'em_andamento')
+  return apelidos[bruto] || (SITUACOES_ORCAMENTO.includes(bruto as SituacaoOrcamento) ? bruto as SituacaoOrcamento : 'em_andamento')
+}
+
+/** VD-01: recusado, convertido ou cancelado é orçamento encerrado. */
+export function orcamentoEncerrado(situacao: unknown): boolean {
+  return ['recusado', 'convertido', 'cancelado'].includes(situacaoOrcamento(situacao))
+}
+
+/** VD-02: orçamento com validade antes de hoje (da empresa, GE-01) está vencido. */
+export function validarOrcamentoVigente(dados: { validade?: string | null; hoje: string }): Resultado {
+  return !dados.validade || dados.validade >= dados.hoje ? ok()
+    : recusa('VD-02', 'Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter.', { codigo: 'QUOTE_EXPIRED', status: 409 })
+}
+
+export type AcaoOrcamento = 'enviar' | 'aprovar' | 'recusar' | 'cancelar'
+
+/**
+ * VD-01, VD-02, VD-03: encerrado não aceita nenhuma ação; enviar e aprovar exigem orçamento vigente;
+ * aprovado não volta para enviado.
+ */
+export function validarAcaoOrcamento(dados: { acao: AcaoOrcamento; situacao: unknown; cancelado?: boolean; validade?: string | null; hoje: string }): Resultado {
+  if (dados.cancelado || orcamentoEncerrado(dados.situacao)) {
+    return recusa('VD-01', 'Orçamento encerrado não pode ser alterado.', { codigo: 'INVALID_STATE', status: 409 })
+  }
+  if (dados.acao === 'enviar' || dados.acao === 'aprovar') {
+    const vigente = validarOrcamentoVigente(dados)
+    if (!vigente.ok) return vigente
+  }
+  if (dados.acao === 'enviar' && !['em_andamento', 'enviada'].includes(situacaoOrcamento(dados.situacao))) {
+    return recusa('VD-03', 'Orçamento aprovado não pode voltar para enviado.', { codigo: 'INVALID_STATE', status: 409 })
+  }
+  return ok()
+}
+
+/** Situação do orçamento depois da ação. */
+export function situacaoAposAcaoOrcamento(acao: AcaoOrcamento): SituacaoOrcamento {
+  return ({ enviar: 'enviada', aprovar: 'aprovado', recusar: 'recusado', cancelar: 'cancelado' } as const)[acao]
+}
+
+// ---------------------------------------------------------------- cancelar e devolver (etapa 5)
+
+/**
+ * VD-41, VD-42, VD-43: venda confirmada não é cancelada direto se tiver devolução, mercadoria entregue,
+ * nota fiscal ativa, cobrança ativa ou pagamento. Recebe só os fatos já conferidos (na ordem das consultas).
+ */
+export function validarCancelamentoVenda(fatos: {
+  temDevolucao?: boolean; temEntrega?: boolean; temNotaAtiva?: boolean; temCobrancaAtiva?: boolean; temPagamento?: boolean
+}): Resultado {
+  if (fatos.temDevolucao) return recusa('VD-41', 'Esta venda possui devolução registrada e não pode ser cancelada diretamente. Para encerrar o saldo, use o abatimento ou aplique o crédito nas parcelas da própria venda.', { codigo: 'SALE_HAS_RETURNS', status: 409 })
+  if (fatos.temEntrega) return recusa('VD-42', 'Esta venda já possui mercadoria entregue. Registre a devolução e seu tratamento financeiro; o cancelamento direto não está disponível.', { codigo: 'SALE_HAS_DELIVERIES', status: 409 })
+  if (fatos.temNotaAtiva) return recusa('VD-43', 'Cancele ou exclua a nota fiscal antes de cancelar a venda.')
+  if (fatos.temCobrancaAtiva) return recusa('VD-43', 'Cancele a cobrança ativa antes de cancelar a venda.')
+  if (fatos.temPagamento) return recusa('VD-43', 'Venda com pagamento não pode ser cancelada sem estorno.')
+  return ok()
+}
+
+/** VD-51: produto devolve só o entregue ainda não devolvido; serviço, o vendido ainda não devolvido. */
+export function validarQuantidadeDevolucao(dados: { posicao: number; quantidade: number; limite: number; ehProduto: boolean }): Resultado {
+  if (dados.quantidade <= dados.limite + 1e-9) return ok()
+  return recusa('VD-51', dados.ehProduto
+    ? `Item ${dados.posicao}: só ${dados.limite} unidade(s) entregue(s) ainda podem ser devolvidas. Itens não entregues: cancele a venda.`
+    : `Item ${dados.posicao}: só ${dados.limite} unidade(s) ainda podem ser devolvidas.`)
+}
+
+/** VD-53: no tratamento "abater", o em aberto da venda precisa cobrir o valor devolvido (em centavos). */
+export function validarAbatimentoDevolucao(dados: { emAbertoCentavos: number; totalCentavos: number }): Resultado {
+  return dados.emAbertoCentavos >= dados.totalCentavos ? ok()
+    : recusa('VD-53', `A venda tem ${(dados.emAbertoCentavos / 100).toFixed(2)} em aberto, menos que a devolução (${(dados.totalCentavos / 100).toFixed(2)}). Use crédito ou reembolso.`, { status: 409 })
+}

@@ -1,3 +1,5 @@
+import { validarAcaoContrato, validarVigenciaRetomada, situacaoAposAcaoContrato } from '../regras/contratos';
+import { exigirRegra } from './erpRegras';
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
@@ -27,8 +29,8 @@ export async function changeSalesContractState(input: Actor & { id: number; expe
     if (!allowed) throw new ErpDomainError('ACCESS_DENIED', 'Seu perfil não permite alterar contratos.', 403);
     if (!row) throw new ErpDomainError('NOT_FOUND', 'Contrato não encontrado.', 404);
     if (Number(row.versao) !== input.expectedVersion) throw new ErpDomainError('VERSION_CONFLICT', 'O contrato mudou. Atualize antes de continuar.', 409);
-    const valid = input.action === 'suspender' ? row.status === 'ativo' : input.action === 'retomar' ? row.status === 'pausado' : input.action === 'encerrar' && ['ativo', 'pausado'].includes(String(row.status));
-    if (!valid) throw new ErpDomainError('INVALID_STATE', 'Esta ação não está disponível na situação atual do contrato.', 409);
+    // CT-02 (regras/contratos.ts → validarAcaoContrato)
+    exigirRegra(validarAcaoContrato({ acao: input.action, situacao: String(row.status) }));
     let next = row.proxima_geracao_em ? day(row.proxima_geracao_em) : null;
     let skipped = 0;
     if (input.action === 'retomar') {
@@ -40,9 +42,9 @@ export async function changeSalesContractState(input: Actor & { id: number; expe
         if (!version || ++skipped > 10000) throw new ErpDomainError('INVALID_STATE', 'Confira a vigência do contrato antes de retomar.', 409);
         next = nextCommercialCycle(next, String(version.periodicidade), day(version.vigencia_inicio));
       }
-      if (row.data_fim && next > day(row.data_fim)) throw new ErpDomainError('INVALID_STATE', 'A vigência terminou. Encerre este contrato.', 409);
+      exigirRegra(validarVigenciaRetomada({ proximaGeracao: next, fim: row.data_fim ? day(row.data_fim) : null })); // CT-06
     }
-    const status = input.action === 'suspender' ? 'pausado' : input.action === 'retomar' ? 'ativo' : 'encerrado';
+    const status = situacaoAposAcaoContrato(input.action);
     const event = { acao: input.action, motivo, usuario_id: input.actorId, registrado_em: new Date().toISOString(), ciclos_ignorados: skipped, proxima_geracao_anterior: row.proxima_geracao_em };
     const metadata = (row.metadata || {}) as Record<string, unknown>;
     const history = Array.isArray(metadata.alteracoes_situacao) ? metadata.alteracoes_situacao : [];

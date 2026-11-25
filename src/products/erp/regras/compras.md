@@ -29,7 +29,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CP-10 | Confirmar exige fornecedor, pelo menos um item, total > 0 e data válida; compra cancelada não é confirmada. | `erpPurchasesRepository.ts` → `confirmErpPurchase()` | "Compra precisa ter fornecedor …" / "… total maior que zero …" / "Compra cancelada não pode ser confirmada." | 🧪 |
+| CP-10 | Confirmar exige fornecedor, pelo menos um item, total > 0 e data válida; compra cancelada não é confirmada. | `regras/compras.ts` → `validarConfirmacaoCompra()` | "Compra precisa ter fornecedor …" / "… total maior que zero …" / "Compra cancelada não pode ser confirmada." | ✅ `etapas-4-5.test.ts` (CP-10) · 🧪 |
 | CP-11 | Confirmar gera (ou efetiva) a conta a pagar quando "gera financeiro" está ligado. Não recebe mercadoria. | `confirmErpPurchase()`; `createOrUpdatePurchasePayable()` | — | 🧪 |
 | CP-12 | A natureza da conta a pagar (previsão/efetivo) não muda depois que ela tem pagamento. | `erpPurchasesRepository.ts` → `createOrUpdatePurchasePayable()` | "Não e possível alterar a natureza de uma conta que já possui pagamento." | ❌ |
 
@@ -48,7 +48,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | CP-30 | Cancelar é para compra confirmada (rascunho se exclui, CP-08). | `erpPurchasesRepository.ts` → `cancelErpPurchase()` → `reversePurchase()` | — | 🧪 |
-| CP-31 | Não cancela compra com nota fiscal vinculada ativa nem com pagamento (estorne antes). | `reversePurchase()` | "Desvincule ou cancele a nota fiscal antes de cancelar a compra." / "Compra com pagamento não pode ser cancelada sem estorno." | ❌ |
+| CP-31 | Não cancela compra com nota fiscal vinculada ativa nem com pagamento (estorne antes). | `regras/compras.ts` → `validarCancelamentoCompra()` | "Desvincule ou cancele a nota fiscal antes de cancelar a compra." / "Compra com pagamento não pode ser cancelada sem estorno." | ✅ `etapas-4-5.test.ts` (CP-10/31) |
 
 > A conferir: não há trava explícita para cancelar compra com mercadoria já recebida (a devolução, CP-40, é o caminho previsto).
 
@@ -56,10 +56,10 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CP-40 | Devolução é **integral** e só de compra de produtos **totalmente recebida**; não faz devolução parcial. | `erpPurchasesRepository.ts` → `returnErpPurchase()` | "A devolução integral exige uma compra de produtos totalmente recebida." | 🧪 compra não recebida recusada |
-| CP-41 | Uma compra só é devolvida uma vez; exige versão atual e motivo de 3 a 1000 caracteres. | `returnErpPurchase()` | "Esta compra já foi devolvida integralmente." / "Informe a versão atual e um motivo …" | ❌ |
+| CP-40 | Devolução é **integral** e só de compra de produtos **totalmente recebida**; não faz devolução parcial. | `regras/compras.ts` → `validarDevolucaoCompra()` | "A devolução integral exige uma compra de produtos totalmente recebida." | ✅ `etapas-4-5.test.ts` (CP-10/31/40) · 🧪 compra não recebida recusada |
+| CP-41 | Uma compra só é devolvida uma vez; exige versão atual e motivo de 3 a 1000 caracteres. | `regras/compras.ts` → `validarDevolucaoCompra()` (já devolvida) | "Esta compra já foi devolvida integralmente." / "Informe a versão atual e um motivo …" | ✅ `etapas-4-5.test.ts` (CP-10/31/40/41) |
 | CP-42 | Exige permissão de compras, financeiro e movimentação de estoque juntas. | `returnErpPurchase()` | "A devolução exige permissão de compras, financeiro e movimentação de estoque." | ❌ |
-| CP-43 | Antes de devolver, reverter créditos e renegociações vinculados; pagamentos também precisam estar estornados. A devolução tira do estoque o que entrou e cancela as contas a pagar. | `returnErpPurchase()` | "Reverta créditos e renegociações vinculados antes de devolver a compra." | ❌ |
+| CP-43 | Antes de devolver, reverter créditos e renegociações vinculados; pagamentos também precisam estar estornados. A devolução tira do estoque o que entrou e cancela as contas a pagar. | `regras/compras.ts` → `validarDevolucaoCompra()` | "Reverta créditos e renegociações vinculados antes de devolver a compra." | ✅ `etapas-4-5.test.ts` (CP-10/31/40/41/43) |
 
 ## Importar NF-e de entrada
 

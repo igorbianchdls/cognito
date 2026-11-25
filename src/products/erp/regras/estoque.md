@@ -15,8 +15,8 @@ Caminhos relativos a `src/products/erp/server/`. Legenda no [README](README.md).
 |---|---|---|---|---|
 | ES-01 | Só produto ativo que controla estoque movimenta saldo. | `erpStockRepository.ts` → `lockStockBalance()` | "Produto N não encontrado ou inativo." / "O produto X não controla estoque." | ❌ |
 | ES-02 | Local de estoque precisa estar ativo e permitir o tipo de operação (entrada, saída, reserva…). Sem local informado, usa o padrão da empresa. | `resolveStockLocation()`; `ensureDefaultStockLocation()` | "Local de estoque não encontrado ou inativo." / "Este local não permite operações de X." | ❌ |
-| ES-03 | Saída não pode deixar o **disponível** negativo. | `applyStockMovement()` | "Saldo insuficiente para X. Disponível para saída: N. …" | ❌ |
-| ES-04 | Movimentos de estoque usam **sempre o dia atual** (GE-01); a data histórica fica só no documento de origem. Contagem e transferência também. | `applyStockMovement()`; `createStockOperationWithClient()` | "Movimentos de estoque devem usar o dia atual. …" / "A contagem deve ser registrada no dia atual." / "A transferência deve ser registrada no dia atual." | ❌ |
+| ES-03 | Saída não pode deixar o **disponível** negativo. | `regras/estoque.ts` → `validarSaidaEstoque()` | "Saldo insuficiente para X. Disponível para saída: N. …" | ✅ `etapas-4-5.test.ts` (ES-03) |
+| ES-04 | Movimentos de estoque usam **sempre o dia atual** (GE-01); a data histórica fica só no documento de origem. Contagem e transferência também. | `regras/estoque.ts` → `validarDataMovimento()` | "Movimentos de estoque devem usar o dia atual. …" / "A contagem deve ser registrada no dia atual." / "A transferência deve ser registrada no dia atual." | ✅ `etapas-4-5.test.ts` (ES-03/04) |
 | ES-05 | Quantidade mínima 0,0001 (precisão de 4 casas); custo ≥ 0. | `quantity()`; `applyStockMovement()` | "… deve ser pelo menos 0,0001." / "Quantidade abaixo da precisão de estoque." | ❌ |
 | ES-06 | Entradas atualizam o custo médio; estorno não pode deixar o valor do estoque negativo. | `applyStockMovement()` | "O estorno excede o valor remanescente do estoque; revise o custo antes de cancelar." | ❌ |
 | ES-07 | Mesma identificação de operação com conteúdo diferente é recusada (GE-31). | `assertSameRequest()` | "Esta identificação já foi usada com outro conteúdo." | ❌ |
@@ -25,7 +25,7 @@ Caminhos relativos a `src/products/erp/server/`. Legenda no [README](README.md).
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| ES-10 | Confirmar venda reserva o disponível dos produtos controlados; sem disponível suficiente, não confirma. | `reserveStockForSale()` | "Estoque disponível insuficiente para X. Disponível: N." | ❌ |
+| ES-10 | Confirmar venda reserva o disponível dos produtos controlados; sem disponível suficiente, não confirma. | `regras/estoque.ts` → `validarReservaEstoque()` | "Estoque disponível insuficiente para X. Disponível: N." | ✅ `etapas-4-5.test.ts` (ES-03/04/10) |
 | ES-11 | Entregar consome a reserva e baixa o físico. Detalhes em VD-30 a VD-33. | `attendStockForSale()` / `erpProfessionalRepository.ts` → `attendSaleItems()`; a regra de quando pode entregar é `regras/vendas.ts` → `validarEntrega()` (VD-30) | "Venda precisa estar confirmada e com entrega pendente para atender." | ✅ (VD-30) · 🧪 19 → 17 |
 | ES-12 | Cancelar venda confirmada libera a reserva; devolução devolve ao estoque (VD-56). | `erpSalesRepository.ts` → `cancelErpSale()`; `erpReturnsRepository.ts` | — | 🧪 |
 

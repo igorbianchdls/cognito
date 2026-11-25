@@ -1,5 +1,6 @@
 import { validarEntrega } from '../regras/vendas'
 import { exigirRegra } from './erpRegras'
+import { validarDataMovimento, validarReservaEstoque, validarSaidaEstoque } from '../regras/estoque'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import type { ErpOperationListInput, ErpOperationPage } from '@/products/erp/server/erpManagementRepository'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
@@ -185,7 +186,7 @@ export async function applyStockMovement(
   )
   if (duplicate.rows[0]) { assertSameRequest(duplicate.rows[0].request_hash, requestHash); return { id: duplicate.rows[0].id } }
   const operationDate = dateText(input.dataOperacional)
-  if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'Movimentos de estoque devem usar o dia atual. A data histórica do documento permanece no documento de origem.', 422)
+  exigirRegra(validarDataMovimento({ data: operationDate, hoje: businessDay() }))
   await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'estoque', date: operationDate })
 
   const { product, balance } = await lockStockBalance(
@@ -200,9 +201,8 @@ export async function applyStockMovement(
   const movementQuantity = Number(input.quantidade.toFixed(4))
   if (!movementQuantity) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Quantidade abaixo da precisão de estoque.')
   const nextQuantity = Number((currentQuantity + movementQuantity).toFixed(4))
-  if (nextQuantity < Number(balance.quantidade_reservada || 0) && !product.permite_estoque_negativo) {
-    throw new ErpDomainError('STOCK_OPERATION_INVALID', `Saldo insuficiente para ${String(product.nome)}. Disponível para saída: ${Number((currentQuantity - Number(balance.quantidade_reservada || 0)).toFixed(4))}. Saldo físico: ${currentQuantity}; reservado: ${Number(balance.quantidade_reservada || 0)}.`)
-  }
+  exigirRegra(validarSaidaEstoque({ produto: String(product.nome), fisicoAtual: currentQuantity, fisicoDepois: nextQuantity,
+    reservado: Number(balance.quantidade_reservada || 0), permiteNegativo: Boolean(product.permite_estoque_negativo) }))
 
   const inputCost = movementQuantity < 0 && !input.reverseReceipt ? currentAverage : Number(input.custoUnitario ?? currentAverage)
   const remainingValue = currentQuantity * currentAverage + movementQuantity * inputCost
@@ -349,9 +349,7 @@ export async function reserveStockForSale(client: Pick<SQLClient, 'query'>, inpu
     if (existing.rows[0]) continue
     const { product, balance } = await lockStockBalance(client, input.tenantId, produtoId, localEstoqueId)
     const available = Number(balance.quantidade_fisica || 0) - Number(balance.quantidade_reservada || 0)
-    if (available < quantidade && !product.permite_estoque_negativo) {
-      throw new ErpDomainError('STOCK_OPERATION_INVALID', `Estoque disponível insuficiente para ${String(product.nome)}. Disponível: ${available}.`)
-    }
+    exigirRegra(validarReservaEstoque({ produto: String(product.nome), disponivel: available, quantidade, permiteNegativo: Boolean(product.permite_estoque_negativo) }))
     await client.query(
       `UPDATE erp.saldos_estoque
        SET quantidade_reservada = quantidade_reservada + $4, atualizado_em = now(), versao = versao + 1
@@ -697,7 +695,7 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
     }
     if (input.resource === 'inventarios') {
       const operationDate = dateText(input.values.data)
-      if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'A contagem deve ser registrada no dia atual.', 422)
+      exigirRegra(validarDataMovimento({ data: operationDate, hoje: businessDay(), operacao: 'contagem' }))
       const localEstoqueId = requiredId(input.values.local_estoque_id, 'Local de estoque')
       await resolveStockLocation(client, { ...input, localEstoqueId })
       const items = Array.isArray(input.values.itens) ? input.values.itens as Record<string, unknown>[] : [input.values]
@@ -744,7 +742,7 @@ async function createStockOperationWithClient(client: Pick<SQLClient, 'query'>, 
     }
     if (input.resource === 'transferencias') {
       const operationDate = dateText(input.values.data)
-      if (operationDate !== businessDay()) throw new ErpDomainError('STOCK_DATE_INVALID', 'A transferência deve ser registrada no dia atual.', 422)
+      exigirRegra(validarDataMovimento({ data: operationDate, hoje: businessDay(), operacao: 'transferencia' }))
       const originId = requiredId(input.values.local_origem_id, 'Local de origem')
       const destinationId = requiredId(input.values.local_destino_id, 'Local de destino')
       if (originId === destinationId) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Origem e destino devem ser diferentes.')

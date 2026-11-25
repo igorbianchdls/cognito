@@ -16,9 +16,9 @@ Venda:      rascunho → confirmada → atendida (entregue) → [devolução par
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| VD-01 | Orçamento recusado, convertido ou cancelado está encerrado: não aceita editar, enviar, aprovar, recusar nem converter. | `erpProfessionalRepository.ts` → `runQuoteAction()`, `convertQuoteWithClient()`; `erpSalesRepository.ts` → `updateErpSaleDraft()`; `shared/quoteLifecycle.ts` → `quoteIsClosed()`; banco: `vendas → validar_conversao_proposta` | "Orçamento encerrado não pode ser alterado." / "… não pode ser convertido." / "… não pode ser editado." | 🧪 |
-| VD-02 | Orçamento vencido (validade antes de hoje, GE-01) precisa ter a validade renovada antes de enviar, aprovar ou converter. | `erpProfessionalRepository.ts` → `assertQuoteValid()`; banco: `validar_conversao_proposta` | "Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter." | ❌ |
-| VD-03 | Orçamento aprovado não volta para "enviado". | `erpProfessionalRepository.ts` → `runQuoteAction()` | "Orçamento aprovado não pode voltar para enviado." | ❌ |
+| VD-01 | Orçamento recusado, convertido ou cancelado está encerrado: não aceita editar, enviar, aprovar, recusar nem converter. | `regras/vendas.ts` → `validarAcaoOrcamento()`, `orcamentoEncerrado()` | "Orçamento encerrado não pode ser alterado." / "… não pode ser convertido." / "… não pode ser editado." | ✅ `etapas-4-5.test.ts` (VD-01) · 🧪 |
+| VD-02 | Orçamento vencido (validade antes de hoje, GE-01) precisa ter a validade renovada antes de enviar, aprovar ou converter. | `regras/vendas.ts` → `validarOrcamentoVigente()` | "Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter." | ✅ `etapas-4-5.test.ts` (VD-01/02/03) |
+| VD-03 | Orçamento aprovado não volta para "enviado". | `regras/vendas.ts` → `validarAcaoOrcamento()` | "Orçamento aprovado não pode voltar para enviado." | ✅ `etapas-4-5.test.ts` (VD-01/02/03) |
 | VD-04 | Recusar e cancelar exigem motivo. | chat: `schemas/actionContracts.ts`; tela | — | 🧪 |
 | VD-05 | "Enviar" só registra que foi enviado; não manda e-mail nem mensagem. | `erpProfessionalRepository.ts` → `runQuoteAction()` | — | 🧪 |
 | VD-06 | Editar um orçamento o reabre como "em andamento" e apaga aprovação e envio anteriores. | `erpSalesRepository.ts` → `updateErpSaleDraft()` | Aviso na prévia do chat | ❌ (editar dava erro até 2026-11-25) |
@@ -65,18 +65,18 @@ Venda:      rascunho → confirmada → atendida (entregue) → [devolução par
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | VD-40 | Cancelar é para venda confirmada (rascunho se exclui, VD-19) e libera reservas e títulos. Exige motivo. | `erpSalesRepository.ts` → `cancelErpSale()` | — | 🧪 venda confirmada e não entregue cancelada |
-| VD-41 | Não cancela venda com devolução registrada. | `erpSalesRepository.ts` → `cancelErpSale()` | "Esta venda possui devolução registrada e não pode ser cancelada diretamente. …" (`SALE_HAS_RETURNS`) | 🧪 (até 2026-11-25 o chat mostrava "ERP indisponível") |
-| VD-42 | Não cancela venda com mercadoria entregue: o caminho é a devolução. | `erpSalesRepository.ts` → `cancelErpSale()` | "Esta venda já possui mercadoria entregue. Registre a devolução …" (`SALE_HAS_DELIVERIES`) | ❌ |
-| VD-43 | Não cancela venda com nota fiscal ativa, cobrança ativa ou pagamento recebido (estorne/cancele antes). | `erpSalesRepository.ts` → `cancelErpSale()` | "Cancele ou exclua a nota fiscal antes de cancelar a venda." / "Cancele a cobrança ativa …" / "Venda com pagamento não pode ser cancelada sem estorno." | ❌ |
+| VD-41 | Não cancela venda com devolução registrada. | `regras/vendas.ts` → `validarCancelamentoVenda()` | "Esta venda possui devolução registrada e não pode ser cancelada diretamente. …" (`SALE_HAS_RETURNS`) | ✅ `etapas-4-5.test.ts` (VD-41/42/43) · 🧪 (até 2026-11-25 o chat mostrava "ERP indisponível") |
+| VD-42 | Não cancela venda com mercadoria entregue: o caminho é a devolução. | `regras/vendas.ts` → `validarCancelamentoVenda()` | "Esta venda já possui mercadoria entregue. Registre a devolução …" (`SALE_HAS_DELIVERIES`) | ✅ `etapas-4-5.test.ts` (VD-41/42/43) |
+| VD-43 | Não cancela venda com nota fiscal ativa, cobrança ativa ou pagamento recebido (estorne/cancele antes). | `regras/vendas.ts` → `validarCancelamentoVenda()` | "Cancele ou exclua a nota fiscal antes de cancelar a venda." / "Cancele a cobrança ativa …" / "Venda com pagamento não pode ser cancelada sem estorno." | ✅ `etapas-4-5.test.ts` (VD-41/42/43) |
 
 ## Devolver
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | VD-50 | Só se devolve item de venda confirmada, e o item precisa ser desta venda. | `erpReturnsRepository.ts` → `createSaleReturn()` | "Só é possível devolver itens de venda confirmada." / "Item N não pertence a esta venda." | 🧪 |
-| VD-51 | Produto: só devolve o que foi entregue e ainda não devolvido; serviço: o que foi vendido e não devolvido. O não entregue se resolve cancelando. | `erpReturnsRepository.ts` → `createSaleReturn()` | "Item N: só X unidade(s) entregue(s) ainda podem ser devolvidas. Itens não entregues: cancele a venda." | ❌ |
+| VD-51 | Produto: só devolve o que foi entregue e ainda não devolvido; serviço: o que foi vendido e não devolvido. O não entregue se resolve cancelando. | `regras/vendas.ts` → `validarQuantidadeDevolucao()` | "Item N: só X unidade(s) entregue(s) ainda podem ser devolvidas. Itens não entregues: cancele a venda." | ✅ `etapas-4-5.test.ts` (VD-51/53) |
 | VD-52 | O valor devolvido é proporcional ao preço líquido do item, sem frete, e precisa ser > 0. | `erpReturnsRepository.ts` → `createSaleReturn()` | "A devolução precisa ter valor maior que zero." | 🧪 1 de 2 unidades → R$ 349 |
-| VD-53 | Tratamento **abater**: reduz as parcelas em aberto da venda; o em aberto precisa cobrir o valor. | `erpReturnsRepository.ts` → `createSaleReturn()` | "A venda tem X em aberto, menos que a devolução (Y). Use crédito ou reembolso." | 🧪 |
+| VD-53 | Tratamento **abater**: reduz as parcelas em aberto da venda; o em aberto precisa cobrir o valor. | `regras/vendas.ts` → `validarAbatimentoDevolucao()` | "A venda tem X em aberto, menos que a devolução (Y). Use crédito ou reembolso." | ✅ `etapas-4-5.test.ts` (VD-51/53) · 🧪 |
 | VD-54 | Tratamento **crédito**: gera crédito para o cliente usar em parcelas dele. | `erpReturnsRepository.ts` → `createSaleReturn()`, `useCustomerCredit()` | ver CR-40 | ❌ |
 | VD-55 | Tratamento **reembolso**: gera conta a pagar ao cliente (ele precisa estar marcado também como fornecedor) com categoria e vencimento. Não transfere dinheiro. | `erpReturnsRepository.ts` → `createSaleReturn()` | "Para reembolsar, marque o cliente também como fornecedor …" / "Informe a categoria e o vencimento do reembolso." | ❌ |
 | VD-56 | Os produtos devolvidos voltam ao estoque, respeitando o histórico de saídas. | `erpReturnsRepository.ts` → `createSaleReturn()` | "O histórico de devoluções deste item não corresponde às saídas. …" | 🧪 |

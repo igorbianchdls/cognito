@@ -1,4 +1,5 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
+import { validarCancelamentoCompra, validarConfirmacaoCompra, validarDevolucaoCompra } from '../regras/compras'
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
@@ -779,9 +780,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
     )
     const purchase = purchaseResult.rows[0] as PurchaseRow | undefined
     if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
-    if (purchase.status === 'cancelada') throw new ErpDomainError('VALIDATION_ERROR', 'Compra cancelada não pode ser confirmada.')
-    if (!purchase.fornecedor_id) throw new ErpDomainError('VALIDATION_ERROR', 'Compra precisa ter fornecedor para ser confirmada.')
-    if (money(purchase.total) <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'Compra precisa ter total maior que zero para ser confirmada.')
+    exigirRegra(validarConfirmacaoCompra({ cancelada: purchase.status === 'cancelada', temFornecedor: Boolean(purchase.fornecedor_id), total: money(purchase.total) }))
 
     const itemResult = await client.query(
       `SELECT count(*)::int AS total,
@@ -793,9 +792,7 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
          AND itens.excluido_em IS NULL`,
       [input.tenantId, purchase.id],
     )
-    if (Number(itemResult.rows[0]?.total || 0) <= 0) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Compra precisa ter pelo menos um item para ser confirmada.')
-    }
+    exigirRegra(validarConfirmacaoCompra({ quantidadeItens: Number(itemResult.rows[0]?.total || 0) }))
 
     const existingFinancial = await fetchPayableForPurchase(client, input.tenantId, purchase.id)
     if (purchase.tipo_movimento === 'compra' && ['confirmada', 'parcialmente_recebida', 'recebida'].includes(String(purchase.status))
@@ -803,8 +800,9 @@ export async function confirmErpPurchase(input: IdActionInput): Promise<ConfirmE
       return mapConfirmPurchaseResult(purchase, existingFinancial?.payable || null, existingFinancial?.installments || [])
     }
 
-    const purchaseDate=dateText(purchase.data_compra)
-    if(!purchaseDate)throw new ErpDomainError('VALIDATION_ERROR','Compra precisa ter data valida para ser confirmada.')
+    const purchaseDateText=dateText(purchase.data_compra)
+    exigirRegra(validarConfirmacaoCompra({ dataValida: Boolean(purchaseDateText) }))
+    const purchaseDate = purchaseDateText as string
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'compras', date: purchaseDate })
     if (purchase.gera_financeiro) {
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: purchaseDate })
@@ -880,18 +878,18 @@ export async function returnErpPurchase(input: IdActionInput & { expectedVersion
     if (!purchase) throw new ErpDomainError('NOT_FOUND', 'Compra não encontrada.', 404)
     const previous = ((purchase.metadata || {}) as Record<string, unknown>).devolucao_fornecedor as { chave?: string; hash?: string } | undefined
     if (previous) {
-      if (previous.chave !== key) throw new ErpDomainError('INVALID_STATE', 'Esta compra já foi devolvida integralmente.', 409)
+      if (previous.chave !== key) exigirRegra(validarDevolucaoCompra({ jaDevolvida: true }))
       assertOperationReplay(previous.hash, hash)
       return { id: String(input.id), status: 'devolvida', repetido: true }
     }
     exigirRegra(conferirVersao({ atual: Number(purchase.versao), esperada: input.expectedVersion, documento: 'Esta compra' }))
-    if (purchase.status !== 'recebida' || purchase.tipo_compra !== 'produto') throw new ErpDomainError('INVALID_STATE', 'A devolução integral exige uma compra de produtos totalmente recebida.', 409)
+    exigirRegra(validarDevolucaoCompra({ situacao: String(purchase.status), tipoCompra: String(purchase.tipo_compra) }))
     for (const businessModule of ['compras', 'financeiro'] as const) {
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: businessModule, date: erpToday() })
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: businessModule, date: dateText(purchase.data_competencia || purchase.data_compra)! })
     }
     const adjusted = await client.query(`SELECT parcelas.id FROM erp.contas_pagar_parcelas parcelas JOIN erp.contas_pagar contas ON contas.empresa_id=parcelas.empresa_id AND contas.id=parcelas.conta_pagar_id ${financialCompositionSql('pagar')} WHERE contas.empresa_id=$1 AND contas.compra_id=$2 AND parcelas.excluido_em IS NULL AND (composicao.credito<>0 OR composicao.transferido<>0) LIMIT 1`, [input.tenantId, input.id])
-    if (adjusted.rows.length) throw new ErpDomainError('INVALID_STATE', 'Reverta créditos e renegociações vinculados antes de devolver a compra.', 409)
+    exigirRegra(validarDevolucaoCompra({ temCreditosOuRenegociacoes: adjusted.rows.length > 0 }))
     await runWithErpTransactionClient(client, () => reversePurchase(input, true))
     const event = { motivo, chave: key, hash, data: erpToday(), usuario_id: input.actorId, integral: true }
     await client.query("UPDATE erp.compras SET metadata=metadata || jsonb_build_object('devolucao_fornecedor',$3::jsonb),atualizado_por=$4 WHERE empresa_id=$1 AND id=$2", [input.tenantId, input.id, JSON.stringify(event), input.actorId])
@@ -924,7 +922,7 @@ async function reversePurchase(input: IdActionInput, supplierReturn = false) {
        LIMIT 1`,
       [input.tenantId, purchase.id],
     )
-    if (invoiceResult.rows[0] && !supplierReturn) throw new ErpDomainError('VALIDATION_ERROR', 'Desvincule ou cancele a nota fiscal antes de cancelar a compra.')
+    exigirRegra(validarCancelamentoCompra({ temNotaAtiva: Boolean(invoiceResult.rows[0]) && !supplierReturn }))
 
     const paymentResult = await client.query(
       `SELECT pagamentos.id
@@ -943,7 +941,7 @@ async function reversePurchase(input: IdActionInput, supplierReturn = false) {
        LIMIT 1`,
       [input.tenantId, purchase.id],
     )
-    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Compra com pagamento não pode ser cancelada sem estorno.')
+    exigirRegra(validarCancelamentoCompra({ temPagamento: Boolean(paymentResult.rows[0]) }))
 
     await reverseStockForPurchase(client, {
       tenantId: input.tenantId,

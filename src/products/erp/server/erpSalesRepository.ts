@@ -1,4 +1,5 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
+import { validarCancelamentoVenda } from '../regras/vendas'
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
@@ -500,9 +501,9 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
     // Devolução já tem tratamento financeiro próprio; cancelar o título de origem
     // apagaria a contrapartida de créditos e reembolsos que permanecem válidos.
     const returns = await client.query('SELECT id FROM erp.devolucoes WHERE empresa_id=$1 AND venda_id=$2 LIMIT 1', [input.tenantId, sale.id])
-    if (returns.rows.length) throw new ErpDomainError('SALE_HAS_RETURNS', 'Esta venda possui devolução registrada e não pode ser cancelada diretamente. Para encerrar o saldo, use o abatimento ou aplique o crédito nas parcelas da própria venda.', 409)
+    exigirRegra(validarCancelamentoVenda({ temDevolucao: returns.rows.length > 0 }))
     const delivered = await client.query("SELECT id FROM erp.movimentacoes_estoque WHERE empresa_id=$1 AND origem_tipo='venda' AND origem_id=$2 AND quantidade<0 LIMIT 1", [input.tenantId, sale.id])
-    if (delivered.rows.length) throw new ErpDomainError('SALE_HAS_DELIVERIES', 'Esta venda já possui mercadoria entregue. Registre a devolução e seu tratamento financeiro; o cancelamento direto não está disponível.', 409)
+    exigirRegra(validarCancelamentoVenda({ temEntrega: delivered.rows.length > 0 }))
 
 
     const invoiceResult = await client.query(
@@ -515,7 +516,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        LIMIT 1`,
       [input.tenantId, sale.id],
     )
-    if (invoiceResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cancele ou exclua a nota fiscal antes de cancelar a venda.')
+    exigirRegra(validarCancelamentoVenda({ temNotaAtiva: Boolean(invoiceResult.rows[0]) }))
 
     const chargeResult = await client.query(
       `SELECT cobrancas.id
@@ -533,7 +534,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        LIMIT 1`,
       [input.tenantId, sale.id],
     )
-    if (chargeResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Cancele a cobrança ativa antes de cancelar a venda.')
+    exigirRegra(validarCancelamentoVenda({ temCobrancaAtiva: Boolean(chargeResult.rows[0]) }))
 
     const paymentResult = await client.query(
       `SELECT pagamentos.id
@@ -552,7 +553,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
        LIMIT 1`,
       [input.tenantId, sale.id],
     )
-    if (paymentResult.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'Venda com pagamento não pode ser cancelada sem estorno.')
+    exigirRegra(validarCancelamentoVenda({ temPagamento: Boolean(paymentResult.rows[0]) }))
 
     await releaseStockForSale(client, {
       tenantId: input.tenantId,

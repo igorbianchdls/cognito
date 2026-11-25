@@ -1,4 +1,6 @@
 import { adjustSaleCommissions } from './erpCommissionAdjustments'
+import { exigirRegra } from './erpRegras'
+import { validarAbatimentoDevolucao, validarQuantidadeDevolucao } from '../regras/vendas'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
@@ -83,11 +85,7 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
       if (!item) throw new ErpDomainError('VALIDATION_ERROR', `Item ${index + 1} não pertence a esta venda.`)
       // Produto: só o que foi entregue; serviço: o que foi vendido. Sempre descontando devoluções anteriores.
       const limit = (item.produto_id ? Number(item.entregue) : Number(item.quantidade)) - Number(item.devolvido)
-      if (requested.quantidade > limit + 1e-9) {
-        throw new ErpDomainError('VALIDATION_ERROR', item.produto_id
-          ? `Item ${index + 1}: só ${limit} unidade(s) entregue(s) ainda podem ser devolvidas. Itens não entregues: cancele a venda.`
-          : `Item ${index + 1}: só ${limit} unidade(s) ainda podem ser devolvidas.`)
-      }
+      exigirRegra(validarQuantidadeDevolucao({ posicao: index + 1, quantidade: requested.quantidade, limite: limit, ehProduto: Boolean(item.produto_id) }))
       const unit = Number(item.total) / Number(item.quantidade) * factor
       items.push({ vendaItemId: Number(item.id), quantidade: requested.quantidade, valor: fromCents(cents(unit * requested.quantidade)),
         produtoId: item.produto_id && item.controla_estoque ? Number(item.produto_id) : null, custo: Number(item.custo_unitario || 0) })
@@ -185,8 +183,7 @@ export async function createSaleReturn(input: Actor & { saleId: number; idempote
            AND parcelas.status IN ('aberto', 'parcial', 'vencido') AND composicao.saldo > 0
          ORDER BY parcelas.data_vencimento DESC, parcelas.id DESC`, [input.tenantId, input.saleId])).rows
       const openTotal = open.reduce((sum, row) => sum + cents(Number(row.saldo)), 0)
-      if (openTotal < cents(total)) throw new ErpDomainError('VALIDATION_ERROR',
-        `A venda tem ${fromCents(openTotal).toFixed(2)} em aberto, menos que a devolução (${total.toFixed(2)}). Use crédito ou reembolso.`, 409)
+      exigirRegra(validarAbatimentoDevolucao({ emAbertoCentavos: openTotal, totalCentavos: cents(total) }))
       const account = await defaultAccount(client, input.tenantId, sale.conta_financeira_id)
       let remaining = cents(total)
       for (const row of open) {
