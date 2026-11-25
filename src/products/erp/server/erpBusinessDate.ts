@@ -1,9 +1,9 @@
 import { getErpDatabaseContext } from '@/lib/erpDatabaseContext'
-import { businessDay } from '@/products/erp/shared/businessDate'
+import { hojeDaEmpresa } from '@/products/erp/regras/geral'
 
-/** "Hoje" no fuso da empresa do contexto autenticado (padrão America/Sao_Paulo). */
+/** "Hoje" no fuso da empresa do contexto autenticado (GE-01, regras/geral.ts). */
 export function erpToday(now = new Date()): string {
-  return businessDay(getErpDatabaseContext()?.timeZone, now)
+  return hojeDaEmpresa(getErpDatabaseContext()?.timeZone, now)
 }
 
 /** "Hoje" no SQL, no fuso da empresa definido em app.erp_time_zone; o banco roda em UTC. */

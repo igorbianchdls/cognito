@@ -80,7 +80,7 @@ Regras repetidas ou inconsistentes encontradas ao montar o catálogo. São as pr
 | Baixa a receber × a pagar | `settleReceivableInstallment()` e `settlePayableInstallment()` são quase cópias (mesmas regras de saldo, conta, idempotência). | CR-10 a CR-17 |
 | Parcelas somam o total | Conferido em `erpSalesRepository.ts` → `validateSaleInstallments()` e de novo em `createSaleRecord()`, além do contrato do chat. | VD-12 |
 | Conflito de versão | Mesma situação com dois códigos e mensagens: `VERSION_CONFLICT` "Venda alterada; atualize antes de continuar." e `VALIDATION_ERROR` "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." | GE-04 |
-| "Hoje" | Até 2026-11-25 a emissão individual de NFS-e usava a data UTC e o lote usava a da empresa. Corrigido; toda regra de data deve usar GE-01. | GE-01, NS-15 |
+| ~~"Hoje"~~ | **Resolvido (etapa 1):** GE-01 e NS-15 migraram para `regras/geral.ts` e `regras/notas-servico.ts`; emissão individual e lote usam a mesma função. | GE-01, NS-15 |
 | Data no estoque | Movimentos de estoque só aceitam o dia atual, mas a ferramenta do chat `movimentar_estoque` aceita `data`. | ES-04 |
 | Mensagens diferentes, mesma regra | Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
 | Efetivar previsão | A pagar grava `efetivado_em`; a receber não. | CR-09 |

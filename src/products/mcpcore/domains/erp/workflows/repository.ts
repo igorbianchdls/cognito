@@ -5,6 +5,7 @@ import { classifyExpenseWithClient } from '@/products/erp/server/erpCrudReposito
 import { createServiceInvoice, actOnServiceInvoice } from '@/products/erp/server/fiscal/serviceInvoiceRepository'
 import { serviceInvoiceInputSchema, serviceInvoiceTotals } from '@/products/erp/shared/serviceInvoiceContracts'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
+import { validarCompetencia } from '@/products/erp/regras/notas-servico'
 import { PluginError } from '../../../shared/contracts'
 import type { Fields, WorkflowKind, WorkflowItem, WorkflowRow } from './contracts'
 
@@ -78,7 +79,7 @@ export async function captureWorkflowItem(client: Pick<SQLClient, 'query'>, comp
     const prepared = serviceInvoiceInputSchema.safeParse({ cliente_id: Number(sale.cliente_id), venda_id: Number(sale.id), data_competencia: dateText(sale.data_venda), codigo_municipio_prestacao: String(config.endereco_codigo_municipio), modelo_emissao: 'nfse_nacional', aliquota_iss: Number(config.aliquota_iss_padrao || 0), itens: items.map(item => ({ tipo: 'servico', item_id: Number(item.servico_id), descricao: String(item.descricao), quantidade: Number(item.quantidade), valor_unitario: Number(item.valor_unitario), desconto: Number(item.desconto || 0) })) })
     if (!prepared.success) return unavailable('Os dados da venda exigem revisão fiscal individual: ' + prepared.error.issues.slice(0, 3).map(issue => issue.message).join(' '))
     generatedInput = prepared.data
-    if (generatedInput.data_competencia > erpToday() || Math.round(serviceInvoiceTotals(generatedInput).total * 100) !== Math.round(Number(sale.total) * 100)) return unavailable('Venda com competência futura ou ajustes de total exige preparar a nota individualmente no ERP.')
+    if (!validarCompetencia({ competencia: generatedInput.data_competencia, hoje: erpToday() }).ok || Math.round(serviceInvoiceTotals(generatedInput).total * 100) !== Math.round(Number(sale.total) * 100)) return unavailable('Venda com competência futura ou ajustes de total exige preparar a nota individualmente no ERP.')
   }
   return { snapshot: { sale, items, customer, addresses, contacts, services, fiscal, notes, noteItems, noteTotals }, preview: { venda_id: Number(sale.id), registro_id: note ? Number(note.id) : null, nome: String(customer.nome), numero: String(sale.numero), data: dateText(sale.data_venda), valor: Number(note?.valor_total ?? sale.total), aviso: 'SIMULAÇÃO - SEM VALIDADE FISCAL', municipio_prestacao: generatedInput?.codigo_municipio_prestacao || note?.codigo_municipio_prestacao, aliquota_iss: generatedInput?.aliquota_iss ?? Number(noteItems[0]?.aliquota_iss || 0), modelo_emissao: generatedInput?.modelo_emissao || note?.modelo_emissao, competencia: generatedInput?.data_competencia || dateText(note?.data_competencia), retencoes: generatedInput ? 'Sem retenções aplicadas neste rascunho; confirme se esta configuração está correta.' : 'Conforme o rascunho fiscal existente #' + note?.id }, generatedInput }
 }

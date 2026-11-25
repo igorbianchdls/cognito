@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { validarCompetencia } from '../../regras/notas-servico'
 
 // DPS (Declaração de Prestação de Serviço) no formato da NFS-e Nacional. É o pedido que um provedor real recebe:
 // a simulação monta e valida exatamente este conteúdo; ligar o provedor real passa a ser só trocar o adaptador.
@@ -88,7 +89,9 @@ export function buildDps(input: DpsInput) {
   require(input.totals.total > 0, 'valores.vServPrest.vServ', 'O valor dos serviços deve ser maior que zero.')
   // ISS: 2% a 5% (LC 116, art. 8º-A); no Simples/MEI a alíquota vem da faixa do Simples, ainda nesse intervalo.
   require(input.aliquotaIss >= 2 && input.aliquotaIss <= 5, 'valores.trib.tribMun.pAliq', 'Alíquota de ISS deve estar entre 2% e 5%.')
-  require(input.competencia <= (input.hoje ?? input.emitidaEm.slice(0, 10)), 'infDPS.dCompet', 'A competência não pode ser futura.')
+  // NS-15 (regras/notas-servico.ts): "hoje" é o da empresa (GE-01), recebido em input.hoje.
+  const competencia = validarCompetencia({ competencia: input.competencia, hoje: input.hoje ?? input.emitidaEm.slice(0, 10) })
+  require(competencia.ok, 'infDPS.dCompet', competencia.ok ? '' : competencia.mensagem)
   const federal = input.retencoesFederais
   const federalTotal = money(Object.values(federal).reduce((sum: number, value) => sum + Number(value || 0), 0))
   if (federalTotal > 0) require(isCompany, 'valores.trib.tribFed', 'Retenções federais só se aplicam a tomador pessoa jurídica.')
