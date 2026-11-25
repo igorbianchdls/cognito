@@ -4,6 +4,18 @@ Catálogo das regras do ERP: o que cada uma diz, onde é aplicada hoje, a mensag
 Uma regra aparece **uma vez** aqui, mesmo que o código a repita em vários lugares — e a repetição fica anotada.
 
 Esta pasta também vai receber o código das regras, aos poucos: `vendas.md` explica, `vendas.ts` (quando existir) implementa.
+
+**Condição para o código desta pasta:** só funções **puras** — recebem os dados e respondem "pode" ou "não pode, com esta mensagem".
+Nada de banco, `server/` ou `@/lib/postgres`. Assim a mesma regra serve à tela (aviso na hora), ao servidor (a decisão) e ao chat.
+Quem precisa de dados do banco (o servidor) busca os dados e chama a regra.
+
+```ts
+// regras/vendas.ts — pura
+export function validarCredito({ limite, emAberto, valorVenda }) { … }   // VD-22
+// server/erpCommercialRules.ts — busca e chama
+validarCredito({ limite, emAberto: await buscarEmAberto(cliente), valorVenda })
+```
+
 Enquanto uma regra não migra, a coluna **Onde** aponta para o lugar atual (repositório, trigger do banco, camada do chat).
 
 ## Arquivos
