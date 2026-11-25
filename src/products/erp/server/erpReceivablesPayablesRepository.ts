@@ -660,7 +660,8 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
 
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa inválido.')
+    if (amount <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'O valor da baixa deve ser maior que zero.')
+    if (amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', `O valor (R$ ${amount.toFixed(2)}) passa do saldo em aberto da parcela (R$ ${remaining.toFixed(2)}).`)
 
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
     // Cartão pela maquininha: o recebimento entra na conta da maquininha (a taxa e os repasses vêm depois).
@@ -804,7 +805,8 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
 
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0 || amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', 'Valor da baixa inválido.')
+    if (amount <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'O valor da baixa deve ser maior que zero.')
+    if (amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', `O valor (R$ ${amount.toFixed(2)}) passa do saldo em aberto da parcela (R$ ${remaining.toFixed(2)}).`)
 
     const financialAccountId = await ensureFinancialAccountId(
       client,

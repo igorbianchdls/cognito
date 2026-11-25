@@ -5,6 +5,7 @@ import { proposalSchema, proposalPreview, type Proposal } from '../schemas/actio
 import type { PluginConfig } from '../../../shared/config'
 import { proposalReferences } from './references'
 import { operationSnapshot,type OperationSnapshot } from './operations'
+import { dryRunProposal } from './execution'
 
 export type DraftRow = { id:string;empresa_id:number;user_id:number;oauth_client_id:string;proposal:Proposal;
   status:'pending'|'saved'|'cancelled'|'expired';record_id:string|null;created_at:string;expires_at:string;decided_at:string|null;target_snapshot?:OperationSnapshot|null }
@@ -29,6 +30,8 @@ export async function prepareDraft(principal: PluginPrincipal, tenantId:number, 
   }
   await proposalReferences(tenantId,proposal)
   const snapshot=await operationSnapshot(tenantId,proposal)
+  // Same rules as the confirmation: run it for real and roll back, so a preview never promises what will fail.
+  await dryRunProposal({tenantId,sharedUserId:principal.userId,timeZone:principal.companies.find(company=>company.id===tenantId)?.timeZone},proposal)
   const rows = await pluginQuery<DraftRow & {matches:boolean}>(
     `INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,target_snapshot,integration)
      VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8)

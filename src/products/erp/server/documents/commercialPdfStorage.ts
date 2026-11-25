@@ -1,3 +1,4 @@
+import { isDryRun } from '@/lib/dryRun'
 import {createHash} from 'node:crypto'
 import {ErpDomainError} from '../../shared/erpErrors'
 import {fiscalStorageConfiguration} from '../fiscal/fiscalPdfStorage'
@@ -24,7 +25,8 @@ export async function readCommercialPdf(file:CommercialFile){const config=target
   const bytes=Buffer.concat(parts);if(size!==file.size||createHash('sha256').update(bytes).digest('hex')!==file.hash||bytes.subarray(0,5).toString()!=='%PDF-')throw new Error();return bytes;
  }catch{throw new ErpDomainError('FILE_UNAVAILABLE','Não foi possível conferir ou baixar este PDF comercial.',503)}
 }
-export async function uploadCommercialPdf(file:CommercialFile,bytes:Buffer){const config=target(file);
+export async function uploadCommercialPdf(file:CommercialFile,bytes:Buffer){if(isDryRun())return // preview dry run: the record is rolled back
+ const config=target(file);
  if(bytes.length!==file.size||createHash('sha256').update(bytes).digest('hex')!==file.hash||bytes.subarray(0,5).toString()!=='%PDF-')throw new ErpDomainError('VALIDATION_ERROR','Conteúdo do PDF inválido.',422)
  try{await config.send(`${config.origin}/storage/v1/object/${config.path}`,{method:'POST',headers:{apikey:config.key,Authorization:`Bearer ${config.key}`,'Content-Type':'application/pdf','x-upsert':'false'},body:new Uint8Array(bytes),cache:'no-store',redirect:'error',signal:AbortSignal.timeout(15000)})}catch{/* A resposta perdida é resolvida conferindo o objeto antes de registrar metadados. */}
  await readCommercialPdf(file);

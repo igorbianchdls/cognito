@@ -1,22 +1,15 @@
 import { randomUUID } from 'node:crypto'
-import { withTransaction,runWithErpTransactionClient, type SQLClient } from '@/lib/postgres'
+import { withTransaction, type SQLClient } from '@/lib/postgres'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
-import { createErpEntityWithClient } from '@/products/erp/server/erpRepository'
 import type { ErpAccessContext } from '@/products/erp/server/erpAccess'
-import { proposalSchema,proposalCapabilities,proposalEntity,proposalValues,proposalPreview } from '../schemas/actionContracts'
-import { operationSnapshot,executeOperation } from './operations'
+import { proposalSchema,proposalCapabilities,proposalPreview } from '../schemas/actionContracts'
+import { operationSnapshot } from './operations'
+import { runProposal } from './execution'
 import { PluginError } from '../../../shared/contracts'
 import { pluginQuery } from '../../../shared/database'
 import { draftView,type DraftRow } from './draftRepository'
 import { proposalReferences } from './references'
 import type { PluginConfig,PluginIntegration } from '../../../shared/config'
-import { createManualFinancialTitle } from '@/products/erp/server/erpCrudRepository'
-import {createServiceInvoice} from '@/products/erp/server/fiscal/serviceInvoiceRepository'
-import {createServiceOrder} from '@/products/erp/server/erpProfessionalRepository'
-import {serviceOrderCreateSchema} from '@/products/erp/shared/professionalContracts'
-import {createManagementOperation} from '@/products/erp/server/erpManagementRepository'
-import {createStockOperation} from '@/products/erp/server/erpStockRepository'
-import {createSalesContract} from '@/products/erp/server/erpSalesContracts'
 
 export async function loadApproval(id:string,session:ErpAccessContext,config:Pick<PluginConfig,'resource'|'integration'>) {
   const rows = await pluginQuery<DraftRow>("SELECT * FROM plugin.drafts WHERE domain='erp' AND id=$1 AND user_id=$2 AND empresa_id=$3 AND integration=$4",[id,session.sharedUserId,session.tenantId,config.integration])
@@ -71,43 +64,14 @@ export async function decideDraft(id:string,actor:DecisionActor,decision:'save'|
       if ('registro_id' in proposal.dados) {
         const snapshot=await operationSnapshot(session.tenantId,proposal,client)
         if(!snapshot||!row.target_snapshot||snapshot.hash!==row.target_snapshot.hash)throw new PluginError('STALE_PROPOSAL','O registro mudou. Prepare uma nova proposta para revisar os dados atuais.',409)
-        recordId=await runWithErpTransactionClient(client,()=>executeOperation(session.tenantId,session.sharedUserId,proposal,key(row.id)))
+        recordId=await runProposal(client,session,proposal,key(row.id))
         if(proposal.tipo.startsWith('editar_')){
           const after=await operationSnapshot(session.tenantId,proposal,client)
           if(!snapshot.edicao||!after?.edicao||Number(recordId)!==snapshot.registro_id)throw new PluginError('INVALID_STATE','Não foi possível conferir o resultado da edição.')
           const {campos,conhecidos,referencias,participante}=after.edicao
           await client.query('UPDATE plugin.drafts SET target_snapshot=$2::jsonb WHERE id=$1 AND integration=$3',[row.id,JSON.stringify({...row.target_snapshot,edicao:{...snapshot.edicao,resultado:{campos,conhecidos,referencias,participante}}}),actor.integration])
         }
-      } else if(proposal.tipo==='ordem_servico'){
-        recordId=String((await runWithErpTransactionClient(client,()=>createServiceOrder({tenantId:session.tenantId,actorId:session.sharedUserId,values:serviceOrderCreateSchema.parse(proposal.dados),idempotencyKey:key(row.id)}))).id)
-      } else if(proposal.tipo==='nota_servico'){
-        recordId=(await runWithErpTransactionClient(client,()=>createServiceInvoice(session.tenantId,session.sharedUserId,proposal.dados,key(row.id)))).record.id
-      } else if(proposal.tipo==='transferencia_financeira'){
-        const d=proposal.dados
-        const created=await runWithErpTransactionClient(client,()=>createManagementOperation({tenantId:session.tenantId,actorId:session.sharedUserId,resource:'transferencias-financeiras',
-          values:{conta_origem_id:d.conta_origem_id,conta_destino_id:d.conta_destino_id,valor:d.valor,data:d.data,descricao:d.descricao},idempotencyKey:key(row.id)}))
-        recordId=String((created as {id:string}).id)
-      } else if(proposal.tipo==='movimento_estoque'){
-        const d=proposal.dados
-        // Without a location, the company's default stock location is used.
-        const local=d.local_estoque_id??Number((await client.query("SELECT id FROM erp.locais_estoque WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, id LIMIT 1",[session.tenantId])).rows[0]?.id||0)
-        if(!local)throw new PluginError('INVALID_REFERENCE','Cadastre um local de estoque no ERP antes de movimentar.')
-        const created=await runWithErpTransactionClient(client,()=>createStockOperation({tenantId:session.tenantId,actorId:session.sharedUserId,resource:'movimentacoes',
-          values:{produto_id:d.produto_id,local_estoque_id:local,quantidade:d.quantidade,tipo:d.movimento,custo_unitario:d.custo_unitario,data:d.data,motivo:d.motivo},idempotencyKey:key(row.id)}))
-        recordId=String((created as {id:unknown}).id)
-      } else if(proposal.tipo==='contrato'){
-        const d=proposal.dados
-        const created=await runWithErpTransactionClient(client,()=>createSalesContract(client,{tenantId:session.tenantId,actorId:session.sharedUserId,idempotencyKey:key(row.id),
-          values:{cliente_id:d.cliente_id,numero:d.numero??'',descricao:d.descricao,produto_id:d.produto_id??null,servico_id:d.servico_id??null,quantidade:d.quantidade,
-            valor_unitario:d.valor_unitario,data_inicio:d.data_inicio,data_fim:d.data_fim??null,periodicidade:d.periodicidade,dia_vencimento:d.dia_vencimento}}))
-        recordId=String(created.id)
-      } else if(proposal.tipo==='conta_pagar'||proposal.tipo==='conta_receber'){
-        recordId=await createManualFinancialTitle(client,session.tenantId,session.sharedUserId,proposal.tipo==='conta_pagar'?'pagar':'receber',proposal.dados,key(row.id))
-      } else {
-        const record = await createErpEntityWithClient(client,{tenantId:session.tenantId,actorId:session.sharedUserId,
-          entityId:proposalEntity(proposal),values:proposalValues(proposal),idempotencyKey:key(row.id)})
-        recordId = String(record.id)
-      }
+      } else recordId=await runProposal(client,session,proposal,key(row.id))
     }
     const status = decision === 'save' ? 'saved' : 'cancelled'
     await client.query("UPDATE plugin.drafts SET status=$2,record_id=$3,decided_at=now() WHERE id=$1 AND integration=$4",[id,status,recordId,actor.integration])

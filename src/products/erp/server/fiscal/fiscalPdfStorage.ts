@@ -1,3 +1,4 @@
+import { isDryRun } from '@/lib/dryRun'
 import { createHash } from 'node:crypto'
 import { ErpDomainError } from '../../shared/erpErrors'
 
@@ -57,6 +58,8 @@ export async function readFiscalPdf(file: FiscalPdfFile, configuration: Configur
 
 /** Repeated or uncertain uploads are accepted only after reading and verifying identical bytes. Never upserts. */
 export async function uploadFiscalPdf(file: FiscalPdfFile, bytes: Buffer, configuration: Configuration = {}) {
+  // Preview dry run: the record of this file is rolled back, so nothing is uploaded.
+  if (isDryRun()) return
   const config = target(file, configuration)
   if (bytes.length !== file.tamanho || createHash('sha256').update(bytes).digest('hex') !== file.hash || bytes.subarray(0, 5).toString() !== '%PDF-')
     throw new ErpDomainError('VALIDATION_ERROR', 'Conteúdo do PDF fiscal inválido.', 422)
