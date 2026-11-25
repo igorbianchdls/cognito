@@ -13,7 +13,8 @@ import { createManagementOperation } from '@/products/erp/server/erpManagementRe
 import { createStockOperation } from '@/products/erp/server/erpStockRepository'
 import { createSalesContract } from '@/products/erp/server/erpSalesContracts'
 import { proposalEntity, proposalValues, type Proposal } from '../schemas/actionContracts'
-import { executeOperation } from './operations'
+import { executeOperation, operationSnapshot } from './operations'
+import { proposalReferences } from './references'
 import { PluginError } from '../../../shared/contracts'
 
 type Session = { tenantId: number; sharedUserId: number }
@@ -68,6 +69,12 @@ export async function dryRunProposal(session: Session & { timeZone?: string }, p
   await runWithErpDatabaseContext({ tenantId: session.tenantId, userId: session.sharedUserId, statementTimeoutMs: 10000, timeZone: session.timeZone }, () =>
     runDryRun(rollback => withTransaction(async client => {
       await client.query("SELECT set_config('statement_timeout','10000',true),set_config('lock_timeout','3000',true)")
+      // The company/user context (app.erp_user_id...) is applied by the first erp.* query of the transaction.
+      // Apply it now: some operations start with shared.* checks (has_erp_capability) that read it.
+      await client.query('SELECT 1 FROM erp.contas_financeiras WHERE empresa_id=$1 LIMIT 1', [session.tenantId])
+      // Same sequence as the confirmation (decideDraft): references, the record snapshot with its locks, then the operation.
+      await proposalReferences(session.tenantId, proposal, client)
+      if ('registro_id' in proposal.dados) await operationSnapshot(session.tenantId, proposal, client)
       // Every nested ERP transaction joins this one, so nothing commits on its own.
       await runWithErpTransactionClient(client, () => runProposal(client, session, proposal, `dryrun:${randomUUID()}`))
       rollback()

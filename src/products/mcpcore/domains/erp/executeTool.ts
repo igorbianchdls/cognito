@@ -33,6 +33,12 @@ function publicError(error: unknown, write: boolean): PluginError {
     // Em escritas a regra do ERP explica o que corrigir; em consultas não revela registros de outras empresas.
     return write ? new PluginError('VALIDATION_ERROR', error.message, 422) : new PluginError('NOT_FOUND', 'Registro não disponível nesta empresa.', 404)
   }
+  // Any other ERP rule in a write (SALE_HAS_RETURNS, STOCK_OPERATION_INVALID, INVALID_AMOUNT...) already carries a
+  // message written for the user; keep it instead of the generic "ERP unavailable".
+  if(write&&error instanceof ErpDomainError){
+    const denied=error.code==='FORBIDDEN'||error.code==='AUTH_REQUIRED'
+    return new PluginError(denied?'ACCESS_DENIED':error.code,error.message,denied?403:error.status)
+  }
   if ((error as { code?: string })?.code === '57014') return new PluginError('TIMEOUT', 'A consulta excedeu o tempo limite.', 504)
   // Regras do ERP aplicadas por triggers (ex.: período fechado) chegam como erro do banco com mensagem de negócio.
   const database = error as { code?: string; message?: string }
