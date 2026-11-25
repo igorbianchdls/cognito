@@ -1,4 +1,7 @@
 import { financialCompositionSql } from './erpFinancialComposition'
+import { excessoDeCredito, validarClienteLiberado, validarCredito, validarDescontoVendedor, validarPrecoTabela } from '../regras/vendas'
+import { validarCondicoesCliente } from '../regras/cadastros'
+import { exigirRegra } from './erpRegras'
 import { adjustSaleCommissions } from './erpCommissionAdjustments'
 import type { SQLClient } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
@@ -48,18 +51,9 @@ export async function tablePrice(client: Query, tenantId: number, tableId: numbe
 }
 
 // Preço líquido por unidade (após o desconto do item) contra o mínimo e o desconto máximo da tabela.
+// VD-15 (regras/vendas.ts → validarPrecoTabela).
 export function assertTablePriceRules(position: number, price: TablePrice | null, quantity: number, gross: number, discount: number) {
-  if (!price) return
-  const netUnit = (gross - discount) / quantity
-  if (price.precoMinimo !== null && netUnit + 1e-9 < price.precoMinimo) {
-    throw new ErpDomainError('VALIDATION_ERROR', `Item ${position}: preço líquido abaixo do mínimo da tabela (${price.precoMinimo.toFixed(2)}).`)
-  }
-  if (price.descontoMaximo !== null && price.preco > 0) {
-    const percent = (1 - netUnit / price.preco) * 100
-    if (percent > price.descontoMaximo + 1e-6) {
-      throw new ErpDomainError('VALIDATION_ERROR', `Item ${position}: desconto de ${percent.toFixed(2)}% acima do máximo da tabela (${price.descontoMaximo}%).`)
-    }
-  }
+  exigirRegra(validarPrecoTabela({ posicao: position, tabela: price, quantidade: quantity, bruto: gross, desconto: discount }))
 }
 
 // ---------------------------------------------------------------- transporte
@@ -107,9 +101,8 @@ export async function assertCustomerCredit(client: Query, input: {
     [input.tenantId, input.customerId],
   )).rows[0]
   if (!customer) return
-  if (customer.bloqueio_comercial) {
-    throw new ErpDomainError('CUSTOMER_BLOCKED', `Cliente bloqueado para vendas: ${String(customer.bloqueio_motivo || 'sem motivo informado')}.`, 409)
-  }
+  // VD-21 (regras/vendas.ts → validarClienteLiberado)
+  exigirRegra(validarClienteLiberado({ bloqueado: Boolean(customer.bloqueio_comercial), motivo: customer.bloqueio_motivo as string | null }))
   if (customer.limite_credito === null || customer.limite_credito === undefined) return
   const open = (await client.query(
     `SELECT coalesce(sum(greatest(composicao.saldo, 0)), 0) AS aberto
@@ -120,19 +113,15 @@ export async function assertCustomerCredit(client: Query, input: {
        AND p.status IN ('aberto', 'parcial', 'vencido') AND c.status <> 'cancelado'`,
     [input.tenantId, input.customerId],
   )).rows[0]
-  const limit = Number(customer.limite_credito), outstanding = Number(open?.aberto || 0)
-  const exposure = Number((outstanding + input.saleTotal).toFixed(2))
-  if (exposure <= limit) return
-  const motivo = input.override?.motivo?.trim()
-  const details = { limite: limit, em_aberto: outstanding, venda: input.saleTotal, excedente: Number((exposure - limit).toFixed(2)) }
-  if (!motivo) {
-    throw new ErpDomainError('CREDIT_LIMIT_EXCEEDED',
-      `Limite de crédito excedido em ${details.excedente.toFixed(2)} (limite ${limit.toFixed(2)}, em aberto ${outstanding.toFixed(2)}, venda ${input.saleTotal.toFixed(2)}). Quem gerencia o financeiro pode liberar informando o motivo.`,
-      409, details)
-  }
+  // VD-22, VD-23 (regras/vendas.ts → validarCredito). A permissão só é consultada quando há liberação a decidir.
+  const credito = { limite: Number(customer.limite_credito), emAberto: Number(open?.aberto || 0), valorVenda: input.saleTotal }
+  if (!excessoDeCredito(credito)) return
+  const motivo = input.override?.motivo?.trim() ?? ''
   // A capacidade vai como parâmetro: a consulta não toca tabelas do schema erp.
-  const allowed = (await client.query('SELECT shared.has_erp_capability($1::bigint, $2::text) AS ok', [input.tenantId, 'erp.financeiro.gerenciar'])).rows[0]
-  if (!allowed?.ok) throw new ErpDomainError('ACCESS_DENIED', 'Somente quem gerencia o financeiro pode liberar venda acima do limite de crédito.', 403, details)
+  const podeLiberar = motivo
+    ? Boolean((await client.query('SELECT shared.has_erp_capability($1::bigint, $2::text) AS ok', [input.tenantId, 'erp.financeiro.gerenciar'])).rows[0]?.ok)
+    : false
+  exigirRegra(validarCredito({ ...credito, motivoLiberacao: motivo, podeLiberar }))
   await client.query(
     `UPDATE erp.vendas SET credito_liberado_por = $3, credito_liberado_em = now(), credito_liberado_motivo = $4
      WHERE empresa_id = $1 AND id = $2`,
@@ -187,13 +176,13 @@ export async function saveCustomerCommercialTerms(client: Query, tenantId: numbe
   if ('limite_credito' in values) {
     const raw = values.limite_credito
     const limit = raw === null || raw === '' || raw === undefined ? null : Number(raw)
-    if (limit !== null && (!Number.isFinite(limit) || limit < 0)) throw new ErpDomainError('VALIDATION_ERROR', 'Limite de crédito inválido.')
+    exigirRegra(validarCondicoesCliente({ limiteCredito: limit })) // CD-04 (regras/cadastros.ts)
     set('limite_credito', limit === null ? null : Number(limit.toFixed(2)))
   }
   if ('bloqueio_comercial' in values) {
     const blocked = values.bloqueio_comercial === true || values.bloqueio_comercial === 'sim' || values.bloqueio_comercial === 'true'
     const reason = typeof values.bloqueio_motivo === 'string' ? values.bloqueio_motivo.trim() : ''
-    if (blocked && !reason) throw new ErpDomainError('VALIDATION_ERROR', 'Informe o motivo do bloqueio comercial.')
+    exigirRegra(validarCondicoesCliente({ bloqueado: blocked, motivoBloqueio: reason })) // CD-04 (regras/cadastros.ts)
     set('bloqueio_comercial', blocked); set('bloqueio_motivo', blocked ? reason.slice(0, 500) : null)
   } else if ('bloqueio_motivo' in values) set('bloqueio_motivo', typeof values.bloqueio_motivo === 'string' ? values.bloqueio_motivo.trim().slice(0, 500) || null : null)
   if ('tabela_preco_id' in values) {
@@ -227,11 +216,7 @@ export function saleSeller(rules: SellerRules | null, requested: unknown) {
 }
 
 // Desconto total (itens + venda) sobre o valor bruto não pode passar do máximo do usuário.
+// VD-16 (regras/vendas.ts → validarDescontoVendedor).
 export function assertDiscountLimit(rules: SellerRules | null, gross: number, discount: number) {
-  if (rules?.descontoMaximo == null || gross <= 0 || discount <= 0) return
-  const percent = Math.round(discount / gross * 10000) / 100
-  if (percent > rules.descontoMaximo)
-    throw new ErpDomainError('DISCOUNT_LIMIT_EXCEEDED',
-      `Desconto de ${percent.toFixed(2)}% acima do máximo permitido para você (${rules.descontoMaximo.toFixed(2)}%).`, 403,
-      { desconto_percentual: percent, desconto_maximo_percentual: rules.descontoMaximo })
+  exigirRegra(validarDescontoVendedor({ descontoMaximo: rules?.descontoMaximo, bruto: gross, desconto: discount }))
 }
