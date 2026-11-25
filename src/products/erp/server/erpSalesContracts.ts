@@ -1,4 +1,4 @@
-import { validarAcaoContrato, validarVigenciaRetomada, situacaoAposAcaoContrato } from '../regras/contratos';
+import { validarAcaoContrato, validarAtivacaoContrato, validarCicloContrato, validarEfetivacaoVersao, validarVigenciaRetomada, situacaoAposAcaoContrato } from '../regras/contratos';
 import { exigirRegra } from './erpRegras';
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
@@ -152,10 +152,17 @@ export async function createSalesContract(
       input.actorId,
     ],
   );
+  // CT-10 e CT-11 (antes no banco, BD-40): a versão vale com item e dentro do contrato; o contrato só ativa com versão valendo.
+  const firstVersionItems = Number((await client.query(
+    "SELECT count(*)::int AS n FROM erp.contratos_vendas_itens WHERE empresa_id=$1 AND contrato_versao_id=$2",
+    [input.tenantId, version.rows[0].id])).rows[0].n);
+  exigirRegra(validarEfetivacaoVersao({ quantidadeItens: firstVersionItems,
+    versao: { inicio: v.data_inicio, fim: v.data_fim || null }, contrato: { inicio: v.data_inicio, fim: v.data_fim || null } }));
   await client.query(
     "UPDATE erp.contratos_vendas_versoes SET status='efetivada',efetivada_em=now() WHERE empresa_id=$1 AND id=$2",
     [input.tenantId, version.rows[0].id],
   );
+  exigirRegra(validarAtivacaoContrato({ temVersaoEfetivada: true }));
   await client.query(
     "UPDATE erp.contratos_vendas SET status='ativo',atualizado_por=$3 WHERE empresa_id=$1 AND id=$2",
     [input.tenantId, id, input.actorId],
@@ -313,6 +320,10 @@ export async function reviseSalesContract(
         "INVALID_AMOUNT",
         "O contrato precisa ter valor positivo.",
       );
+    // CT-10 (antes no banco, BD-40)
+    exigirRegra(validarEfetivacaoVersao({ quantidadeItens: items.length,
+      versao: { inicio: input.inicio, fim: old.vigencia_fim ? day(old.vigencia_fim) : null },
+      contrato: { inicio: day(header.data_inicio), fim: header.data_fim ? day(header.data_fim) : null } }));
     await client.query(
       "UPDATE erp.contratos_vendas_versoes SET status='efetivada',efetivada_em=now() WHERE empresa_id=$1 AND id=$2",
       [input.tenantId, version.id],
@@ -368,6 +379,11 @@ export async function generateContractSales(input: Actor & { until?: string }) {
         await client.query('RELEASE SAVEPOINT contract_cycle');
         break;
       }
+      // CT-12 (antes no banco, BD-40): contrato ativo, ciclo dentro da versão e com a duração da periodicidade.
+      exigirRegra(validarCicloContrato({ contratoAtivo: c.status === 'ativo', versaoEfetivada: v.status === 'efetivada',
+        periodo: { inicio: start, fim: end }, vigencia: { inicio: day(v.vigencia_inicio), fim: v.vigencia_fim ? day(v.vigencia_fim) : null },
+        fimEsperado: previousCommercialDay(nextCommercialCycle(start, String(v.periodicidade), day(v.vigencia_inicio))),
+        clienteDaVenda: String(c.cliente_id), clienteDoContrato: String(c.cliente_id) }));
       const key = `contrato:${c.id}:${start}`;
       const existing = await client.query(
         "SELECT venda_id FROM erp.contratos_vendas_geracoes WHERE empresa_id=$1 AND contrato_id=$2 AND periodo_inicio=$3",
