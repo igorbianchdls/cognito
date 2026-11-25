@@ -3,6 +3,8 @@ import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 import { financialCompositionSql } from './erpFinancialComposition'
 import { assertErpPeriodOpen } from './erpPeriodRepository'
 import { erpToday } from './erpBusinessDate'
+import { exigirRegra } from './erpRegras'
+import { validarAjusteComissao, validarProvisaoComissaoAberta } from '../regras/contas-pagar'
 
 type Query = Pick<SQLClient, 'query'>
 type AdjustmentInput = { tenantId: number; actorId: number; saleId: number; motivo: string; cancel?: boolean; reductions?: Array<{ itemId: number; valor: number }> }
@@ -23,7 +25,7 @@ export async function adjustSaleCommissions(client: Query, input: AdjustmentInpu
   const cuts: Array<{ itemId: number; paymentId: number; titleId: number; cut: number }> = []
   if (changes.some(change => change.cut > 0)) {
     const allowed = (await client.query('SELECT shared.has_erp_capability($1::bigint,$2::text) AS ok', [input.tenantId, 'erp.financeiro.gerenciar'])).rows[0]?.ok
-    if (!allowed) throw new ErpDomainError('COMMISSION_FINANCIAL_PERMISSION', 'Esta venda possui comissão provisionada. Quem gerencia o financeiro precisa registrar esta alteração.', 403)
+    exigirRegra(validarAjusteComissao({ podeGerenciarFinanceiro: Boolean(allowed) })) // CPG-07 (o banco deixou de repetir, BD-41)
     for (const change of changes.filter(change => change.cut > 0)) {
       const links = (await client.query(
         `SELECT i.id,i.pagamento_id,p.conta_pagar_id,i.valor-i.valor_ajustado AS saldo
@@ -49,12 +51,13 @@ export async function adjustSaleCommissions(client: Query, input: AdjustmentInpu
   for (const titleId of [...new Set(cuts.map(cut => cut.titleId))].sort((a,b) => a-b)) {
     const reduction = cuts.filter(cut => cut.titleId === titleId).reduce((sum, cut) => sum + cut.cut, 0)
     const title = (await client.query('SELECT id,valor_total,status,data_competencia::text FROM erp.contas_pagar WHERE empresa_id=$1 AND id=$2 AND excluido_em IS NULL FOR UPDATE', [input.tenantId, titleId])).rows[0]
-    if (!title || !['aberto','vencido'].includes(String(title.status))) throw new ErpDomainError('COMMISSION_PROVISION_SETTLED', 'A comissão possui pagamento, renegociação ou provisão já encerrada. Trate o financeiro antes de cancelar ou devolver a venda.', 409)
+    exigirRegra(validarProvisaoComissaoAberta({ situacaoTitulo: title ? String(title.status) : null })) // CPG-07
     const parts = (await client.query(`SELECT parcelas.*,composicao.dinheiro,composicao.credito,composicao.transferido
       FROM erp.contas_pagar_parcelas parcelas ${financialCompositionSql('pagar')}
       WHERE parcelas.empresa_id=$1 AND parcelas.conta_pagar_id=$2 AND parcelas.excluido_em IS NULL AND parcelas.status<>'cancelado'
       ORDER BY parcelas.id DESC FOR UPDATE OF parcelas`, [input.tenantId, titleId])).rows
-    if (!parts.length || parts.some(part => cents(part.dinheiro) || cents(part.credito) || cents(part.transferido) || part.conciliado)) throw new ErpDomainError('COMMISSION_PROVISION_SETTLED', 'A comissão já possui baixa ou conciliação. Estorne ou compense a comissão no financeiro antes de alterar a venda.', 409)
+    exigirRegra(validarProvisaoComissaoAberta({ situacaoTitulo: String(title.status),
+      temMovimento: !parts.length || parts.some(part => cents(part.dinheiro) || cents(part.credito) || cents(part.transferido) || part.conciliado) })) // CPG-07
     if (parts.reduce((sum,part) => sum+cents(part.valor),0) !== cents(title.valor_total) || reduction > cents(title.valor_total)) throw new ErpDomainError('COMMISSION_PROVISION_INCONSISTENT', 'O valor da provisão de comissão não corresponde às parcelas. Confira o financeiro.', 409)
     await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: 'financeiro', date: String(title.data_competencia || erpToday()) })
     const nextTotal = cents(title.valor_total) - reduction

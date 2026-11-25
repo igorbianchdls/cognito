@@ -32,6 +32,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 | CP-10 | Confirmar exige fornecedor, pelo menos um item, total > 0 e data válida; compra cancelada não é confirmada. | `regras/compras.ts` → `validarConfirmacaoCompra()` | "Compra precisa ter fornecedor …" / "… total maior que zero …" / "Compra cancelada não pode ser confirmada." | ✅ `etapas-4-5.test.ts` (CP-10) · 🧪 |
 | CP-11 | Confirmar gera (ou efetiva) a conta a pagar quando "gera financeiro" está ligado. Não recebe mercadoria. | `confirmErpPurchase()`; `createOrUpdatePurchasePayable()` | — | 🧪 |
 | CP-12 | A natureza da conta a pagar (previsão/efetivo) não muda depois que ela tem pagamento. | `erpPurchasesRepository.ts` → `createOrUpdatePurchasePayable()` | "Não e possível alterar a natureza de uma conta que já possui pagamento." | ❌ |
+| CP-13 | Só compra efetiva gera conta a pagar; cotação e pedido precisam ser confirmados antes. O fornecedor do título é o da compra (garantia no banco). | **`regras/compras.ts` → `validarContaPagarDaCompra()`**, em `createOrUpdatePurchasePayable()` (antes no banco, BD-42) | "Só compra confirmada gera conta a pagar. Confirme a cotação ou o pedido antes." | ✅ `regras/etapa-9.test.ts` |
 
 ## Receber mercadoria
 

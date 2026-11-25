@@ -23,7 +23,8 @@ Venda:      rascunho → confirmada → atendida (entregue) → [devolução par
 | VD-05 | "Enviar" só registra que foi enviado; não manda e-mail nem mensagem. | `erpProfessionalRepository.ts` → `runQuoteAction()` | — | 🧪 |
 | VD-06 | Editar um orçamento o reabre como "em andamento" e apaga aprovação e envio anteriores. | `erpSalesRepository.ts` → `updateErpSaleDraft()` | Aviso na prévia do chat | ❌ (editar dava erro até 2026-11-25) |
 | VD-07 | Converter exige pelo menos um item ativo; se a OS de origem estiver cancelada, não converte. Converter de novo reaproveita a venda já gerada. | `erpProfessionalRepository.ts` → `convertQuoteWithClient()` | "O orçamento precisa de pelo menos um item ativo." / "A ordem de serviço de origem está cancelada." | 🧪 |
-| VD-08 | Não se confirma um orçamento: primeiro converte em venda, depois confirma a venda. | `erpSalesRepository.ts` → `confirmErpSale()` | "Converta o orçamento em venda antes de confirmar o financeiro." | ❌ |
+| VD-08 | Não se confirma um orçamento nem um pedido: primeiro converte em venda, depois confirma a venda. Só venda gera conta a receber. **`regras/vendas.ts` → `validarConfirmacaoFinanceira()`** (antes também no banco, BD-42; teste `etapa-9.test.ts`). | `erpSalesRepository.ts` → `confirmErpSale()` | "Converta o orçamento em venda antes de confirmar o financeiro." | ❌ |
+| VD-09 | Conversões válidas: orçamento → pedido ou venda; pedido → venda. O documento novo é do mesmo cliente da origem. | **`regras/vendas.ts` → `validarOrigemDocumento()`**, em `createSaleRecord()` para toda venda com origem (antes no banco, BD-42); o cliente igual ao da origem continua garantido no banco | "Conversão inválida: orçamento vira pedido ou venda, e pedido vira venda." | ✅ `regras/etapa-9.test.ts` |
 
 ## Criar e editar (rascunho)
 

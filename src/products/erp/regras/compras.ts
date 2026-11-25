@@ -30,3 +30,9 @@ export function validarDevolucaoCompra(fatos: { jaDevolvida?: boolean; situacao?
   if (fatos.temCreditosOuRenegociacoes) return recusa('CP-43', 'Reverta créditos e renegociações vinculados antes de devolver a compra.', { codigo: 'INVALID_STATE', status: 409 })
   return ok()
 }
+
+/** CP-13: só compra efetiva gera conta a pagar; cotação e pedido precisam ser confirmados antes. (Antes no banco, BD-42.) */
+export function validarContaPagarDaCompra(dados: { tipoMovimento: string }): Resultado {
+  return dados.tipoMovimento === 'compra' ? ok()
+    : recusa('CP-13', 'Só compra confirmada gera conta a pagar. Confirme a cotação ou o pedido antes.', { codigo: 'INVALID_STATE', status: 409 })
+}

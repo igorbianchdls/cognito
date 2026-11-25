@@ -168,3 +168,19 @@ export function validarConversaoOrcamento(dados: { situacao: unknown; cancelado?
   }
   return validarOrcamentoVigente(dados)
 }
+
+// ---------------------------------------------------------------- origem entre documentos (etapa 9, antes no banco: BD-42)
+
+/** VD-09: orçamento vira pedido ou venda; pedido vira venda. Nenhuma outra conversão vale. */
+export function validarOrigemDocumento(dados: { tipoOrigem: string; tipoNovo: string }): Resultado {
+  const valida = (dados.tipoOrigem === 'orcamento' && ['pedido', 'venda'].includes(dados.tipoNovo))
+    || (dados.tipoOrigem === 'pedido' && dados.tipoNovo === 'venda')
+  return valida ? ok() : recusa('VD-09', 'Conversão inválida: orçamento vira pedido ou venda, e pedido vira venda.', { codigo: 'INVALID_STATE', status: 409 })
+}
+
+/** VD-08: só venda gera conta a receber; orçamento e pedido precisam ser convertidos em venda antes de confirmar. */
+export function validarConfirmacaoFinanceira(dados: { tipoDocumento: string }): Resultado {
+  if (dados.tipoDocumento === 'orcamento') return recusa('VD-08', 'Converta o orçamento em venda antes de confirmar o financeiro.')
+  if (dados.tipoDocumento !== 'venda') return recusa('VD-08', 'Converta o pedido em venda antes de confirmar o financeiro.')
+  return ok()
+}

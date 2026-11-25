@@ -1,5 +1,5 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
-import { validarCancelamentoVenda, validarConversaoOrcamento } from '../regras/vendas'
+import { validarCancelamentoVenda, validarConfirmacaoFinanceira, validarConversaoOrcamento, validarOrigemDocumento } from '../regras/vendas'
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
@@ -269,9 +269,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     const sale = saleResult.rows[0] as SaleRow | undefined
     if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if(input.expectedVersion !== undefined)exigirRegra(conferirVersao({atual:Number(saleResult.rows[0].versao),esperada:input.expectedVersion,documento:'Esta venda'}))
-    if (sale.tipo_documento === 'orcamento') {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Converta o orçamento em venda antes de confirmar o financeiro.')
-    }
+    exigirRegra(validarConfirmacaoFinanceira({ tipoDocumento: String(sale.tipo_documento || 'venda') })) // VD-08 (antes também no banco, BD-42)
 
     if (sale.status === 'cancelada') {
       throw new ErpDomainError('VALIDATION_ERROR', 'Venda cancelada não pode ser confirmada.')
@@ -622,11 +620,13 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
     : 'venda'
   // VD-01/VD-02 (antes BD-30 no banco): venda com orçamento de origem só sai de orçamento aberto e vigente.
   const originId = optionalNumericId(input.values.venda_origem_id)
-  if (originId && documentType !== 'orcamento' && !input.temporary) {
+  if (originId && !input.temporary) {
     const origin = (await client.query(
       `SELECT tipo_documento, status, situacao, excluido_em, validade_em::date::text AS validade FROM erp.vendas
        WHERE empresa_id = $1 AND id = $2 FOR SHARE`, [input.tenantId, originId])).rows[0]
-    if (origin?.tipo_documento === 'orcamento') {
+    if (!origin) throw new ErpDomainError('INVALID_REFERENCE', 'Documento de origem não encontrado.')
+    exigirRegra(validarOrigemDocumento({ tipoOrigem: String(origin.tipo_documento), tipoNovo: documentType })) // VD-09 (antes no banco, BD-42)
+    if (origin.tipo_documento === 'orcamento') {
       exigirRegra(validarConversaoOrcamento({ situacao: origin.situacao, cancelado: origin.status === 'cancelada' || origin.excluido_em != null,
         validade: origin.validade ? String(origin.validade) : null, hoje: erpToday() }))
     }

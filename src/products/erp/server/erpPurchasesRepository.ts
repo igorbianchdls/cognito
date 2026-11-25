@@ -1,5 +1,5 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
-import { validarCancelamentoCompra, validarConfirmacaoCompra, validarDevolucaoCompra } from '../regras/compras'
+import { validarCancelamentoCompra, validarConfirmacaoCompra, validarContaPagarDaCompra, validarDevolucaoCompra } from '../regras/compras'
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
@@ -160,6 +160,7 @@ export async function createOrUpdatePurchasePayable(
   type: 'previsao' | 'efetivo',
 ) {
   if (!purchase.gera_financeiro || money(purchase.total) <= 0) return null
+  exigirRegra(validarContaPagarDaCompra({ tipoMovimento: String(purchase.tipo_movimento) })) // CP-13 (antes no banco, BD-42)
 
   const installments = await resolvePurchaseInstallments(client, purchase)
   const existing = await fetchPayableForPurchase(client, Number(purchase.empresa_id), purchase.id)
