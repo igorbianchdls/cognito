@@ -18,6 +18,22 @@ validarCredito({ limite, emAberto: await buscarEmAberto(cliente), valorVenda })
 
 Enquanto uma regra não migra, a coluna **Onde** aponta para o lugar atual (repositório, trigger do banco, camada do chat).
 
+## Como escrever e testar uma regra
+
+- Toda regra devolve um `Resultado` de [`resultado.ts`](resultado.ts): `ok()` ou `recusa('VD-22', 'mensagem', { codigo, status, detalhes })`.
+  O código é o do catálogo; `codigo` é o do erro do ERP (padrão `VALIDATION_ERROR`, 422).
+- O servidor usa `exigirRegra(resultado)` de `server/erpRegras.ts`, que lança o `ErpDomainError` com a mensagem da regra.
+- O teste fica ao lado: `vendas.ts` → `vendas.test.ts`, com o executor de testes do Node (`node:test`). Cada teste cita o código da regra no nome.
+- Rodar: `npm run erp:regras`. Também roda no CI, dentro de `npm run test:produtos`.
+- O lint (`eslint.config.mjs`) recusa importar banco, `server/`, Supabase, Next ou React dentro desta pasta.
+
+### Migrar uma regra
+
+1. Função pura em `regras/<area>.ts` (`// VD-22`) + teste em `regras/<area>.test.ts` com os casos "pode" e "não pode".
+2. O código antigo (servidor, chat, tela) passa a chamar a função; a cópia antiga é apagada.
+3. No catálogo, **Onde** aponta para `regras/<area>.ts` e **Teste** para o teste.
+4. Typecheck, `npm run erp:regras`, lint, publicar e testar pelo chat.
+
 ## Arquivos
 
 | Arquivo | Prefixo | Área |
