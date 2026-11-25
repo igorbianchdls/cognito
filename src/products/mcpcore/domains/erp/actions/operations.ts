@@ -31,6 +31,12 @@ const tables = {receber_compra:'compras',suspender_contrato:'contratos_vendas',r
 export type OperationSnapshot = {hash:string;registro_id:number;nome:string;status:string|null;valor:string|null;
   parcelas:{numero:unknown;vencimento:unknown;valor:unknown}[];conta_financeira:{id:string;nome:string}|null;campos?:Record<string,unknown>;
   resumo_exclusao?:{data:string|null;data_label:string;participante:{tipo:string;id:string;nome:string|null}|null};edicao?:EditSnapshot}
+// The hash must not depend on key order: the preview builds some values in one order (pricing.ts puts
+// the preserved fields first) and the confirmation re-reads them through zod, which uses the schema's order.
+function canonicalJson(value:unknown):string{
+  return JSON.stringify(value,(_key,current)=>current&&typeof current==='object'&&!Array.isArray(current)&&!(current instanceof Date)
+    ?Object.fromEntries(Object.keys(current).sort().map(key=>[key,(current as Record<string,unknown>)[key]])):current)
+}
 export async function operationSnapshot(tenantId:number,proposal:Proposal,client?:SQLClient):Promise<OperationSnapshot|null> {
   if (!('registro_id' in proposal.dados)) return null
   const table=tables[proposal.tipo as keyof typeof tables]
@@ -101,7 +107,7 @@ export async function operationSnapshot(tenantId:number,proposal:Proposal,client
     totals:table==='notas_fiscais'&&Array.isArray(related[1])?related[1][0]||{}:{},query,lock:Boolean(client)}):undefined
   if(edicao)related.push({campos:edicao.campos,referencias:edicao.referencias})
   // O modelo nunca fornece a versao: o servidor captura o estado a ser aprovado.
-  const hash=createHash('sha256').update(JSON.stringify([row,...related])).digest('hex')
+  const hash=createHash('sha256').update(canonicalJson([row,...related])).digest('hex')
   const mapping:Record<string,string>={preco:'preco_venda',custo:'custo_medio'}
   const campos=Object.fromEntries(Object.keys(proposal.dados).filter(k=>k!=='registro_id').map(k=>[k,k==='parcelas'?parcelas.map(p=>({data_vencimento:p.vencimento,valor:p.valor})):k==='itens'&&Array.isArray(related[0])?related[0].filter(i=>!i.excluido_em).map(i=>({tipo:i.servico_id?'servico':'produto',item_id:Number(i.servico_id||i.produto_id),quantidade:Number(i.quantidade),valor_unitario:Number(i.valor_unitario),desconto:Number(i.desconto||0)})):row[k]??row[mapping[k]]??null]))
   if(table==='notas_fiscais'){

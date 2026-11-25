@@ -431,6 +431,12 @@ export async function attendStockForSale(input: ActorInput & { saleId: number })
         [input.tenantId, reservation.id, input.actorId],
       )
     }
+    // Full delivery: every product item is delivered (the ERP screen's partial delivery keeps these per item).
+    await client.query(
+      `UPDATE erp.vendas_itens SET quantidade_atendida = quantidade, atualizado_por = $3
+       WHERE empresa_id = $1 AND venda_id = $2 AND produto_id IS NOT NULL AND excluido_em IS NULL AND quantidade_atendida < quantidade`,
+      [input.tenantId, input.saleId, input.actorId],
+    )
     const updated = await client.query(
       `UPDATE erp.vendas SET atendimento_status = 'atendido', atendida_em = COALESCE(atendida_em, now()),
          versao = versao + 1, atualizado_por = $3
