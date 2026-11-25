@@ -121,8 +121,11 @@ Cada etapa: regra pura + teste → servidor chama → migração reduz o gatilho
 
 ## Mensagens
 
-Mensagens do banco chegam ao usuário quando só o banco segura a regra. Hoje são técnicas e sem acento
-("Identidade imutavel", "Previsao liquida negativa", "Saldo de adiantamento excedido"). Para cada regra que fica no banco,
-o servidor deve conferir antes e dar a mensagem boa; o banco vira só rede de segurança.
-No chat, mensagens de triggers (código Postgres `P0001`/`23514`) curtas e sem termos técnicos são repassadas como `ERP_RULE`
-(`mcpcore/domains/erp/executeTool.ts` → `publicError()`); as demais viram "ERP indisponível".
+**Etapa 10 (2026-11-26), migração `20261126030000_erp_regras_etapa10_mensagens.sql`:** as mensagens das garantias que ficam
+no banco foram reescritas em português claro, terminando em ponto (181 mensagens em 69 funções; só o texto mudou).
+
+- A tela e o chat mostram a mensagem do banco quando ela termina em ponto: `shared/erpErrors.ts` → `mensagemDoBanco()`,
+  usada em `normalizeErpError()` (tela) e em `mcpcore/domains/erp/executeTool.ts` → `publicError()` (chat).
+- Mensagens **internas** (falha de programa, não algo que o usuário corrige: sessão/empresa, idempotência fiscal,
+  isolamento de transação…) ficam técnicas e **sem ponto**: viram a mensagem genérica.
+- Mensagem nova no banco: escreva para o usuário e termine em ponto; se for interna, sem ponto.

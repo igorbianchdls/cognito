@@ -1,7 +1,7 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 import type { z } from 'zod'
 import { runWithErpDatabaseContext } from '@/lib/erpDatabaseContext'
-import { ErpDomainError } from '@/products/erp/shared/erpErrors'
+import { ErpDomainError, mensagemDoBanco } from '@/products/erp/shared/erpErrors'
 import { PluginError, selectCompany, type PluginPrincipal } from '../../shared/contracts'
 import type { PluginConfig } from '../../shared/config'
 import { reserveExecution, finishExecution } from '../../audit/executionRepository'
@@ -42,8 +42,9 @@ function publicError(error: unknown, write: boolean): PluginError {
   if ((error as { code?: string })?.code === '57014') return new PluginError('TIMEOUT', 'A consulta excedeu o tempo limite.', 504)
   // Regras do ERP aplicadas por triggers (ex.: período fechado) chegam como erro do banco com mensagem de negócio.
   const database = error as { code?: string; message?: string }
-  if (write && ['P0001','23514'].includes(database?.code || '') && database.message && database.message.length <= 300
-    && !/violates|relation|constraint|column/i.test(database.message)) return new PluginError('ERP_RULE', database.message, 422)
+  // Só as mensagens revisadas das garantias do banco (terminam em ponto) chegam ao usuário; as internas viram a genérica.
+  const revisada = write && ['P0001','23514','23505'].includes(database?.code || '') ? mensagemDoBanco(database.message) : null
+  if (revisada) return new PluginError('ERP_RULE', revisada, 422)
   return new PluginError('ERP_UNAVAILABLE', 'Não foi possível concluir a consulta ao ERP.', 503)
 }
 // Perfil da conexão (openai/profile): o ID do Clerk é estável e não deriva de e-mail ou nome.
