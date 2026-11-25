@@ -104,6 +104,30 @@ export async function applyLaunchRules(input: Actor & { importId?: number; accou
   return { lancadas: launched, falhas: failures }
 }
 
+// Movimentos de dinheiro de uma conta ($1 empresa, $2 conta): pagamentos e estornos, transferências e adiantamentos.
+// Mesma conta usada na conferência do extrato e no saldo da conta.
+const MOVIMENTOS_DA_CONTA_SQL = `
+       SELECT p.data_pagamento AS data, p.valor_liquido * CASE WHEN p.estorno_de_pagamento_id IS NULL THEN 1 ELSE -1 END * CASE WHEN p.tipo = 'receber' THEN 1 ELSE -1 END AS valor
+       FROM erp.pagamentos p WHERE p.empresa_id = $1 AND p.conta_financeira_id = $2 AND p.excluido_em IS NULL
+       UNION ALL
+       SELECT t.data_transferencia, CASE WHEN t.conta_destino_id = $2 THEN t.valor ELSE -t.valor END FROM erp.transferencias_financeiras t
+       WHERE t.empresa_id = $1 AND t.status = 'concluida' AND t.excluido_em IS NULL AND (t.conta_origem_id = $2 OR t.conta_destino_id = $2)
+       UNION ALL
+       SELECT a.data_movimento, a.valor * CASE WHEN a.tipo = 'reversao' THEN CASE WHEN (o.lado = 'receber') = (o.tipo = 'constituicao') THEN -1 ELSE 1 END
+         WHEN (a.lado = 'receber') = (a.tipo = 'constituicao') THEN 1 ELSE -1 END
+       FROM erp.adiantamentos a LEFT JOIN erp.adiantamentos o ON o.empresa_id = a.empresa_id AND o.id = a.reversao_de_id
+       WHERE a.empresa_id = $1 AND a.conta_financeira_id = $2`
+
+/** Saldo do ERP numa conta hoje: saldo inicial + movimentos desde a data do saldo inicial. */
+export async function accountBalance(tenantId: number, accountId: number): Promise<number | null> {
+  const [row] = await runQuery<{ saldo: string | null }>(
+    `WITH conta AS (SELECT saldo_inicial, data_saldo_inicial FROM erp.contas_financeiras WHERE empresa_id = $1 AND id = $2 AND excluido_em IS NULL),
+     movimentos AS (${MOVIMENTOS_DA_CONTA_SQL})
+     SELECT conta.saldo_inicial + coalesce((SELECT sum(valor) FROM movimentos m
+       WHERE conta.data_saldo_inicial IS NULL OR m.data >= conta.data_saldo_inicial), 0) AS saldo FROM conta`, [tenantId, accountId])
+  return row?.saldo == null ? null : Number(row.saldo)
+}
+
 // Extrato × ERP numa conta: último saldo informado pelo banco, saldo do ERP na mesma data, diferença,
 // pendências e até que data tudo está conciliado.
 export async function bankBalanceCheck(tenantId: number, accountId: number) {
@@ -117,17 +141,7 @@ export async function bankBalanceCheck(tenantId: number, accountId: number) {
          SELECT t.saldo_apos, t.data_transacao, t.criado_em FROM erp.transacoes_bancarias t
          WHERE t.empresa_id = $1 AND t.conta_financeira_id = $2 AND t.saldo_apos IS NOT NULL AND t.excluido_em IS NULL
        ) s ORDER BY data DESC, criado_em DESC LIMIT 1),
-     movimentos AS (
-       SELECT p.data_pagamento AS data, p.valor_liquido * CASE WHEN p.estorno_de_pagamento_id IS NULL THEN 1 ELSE -1 END * CASE WHEN p.tipo = 'receber' THEN 1 ELSE -1 END AS valor
-       FROM erp.pagamentos p WHERE p.empresa_id = $1 AND p.conta_financeira_id = $2 AND p.excluido_em IS NULL
-       UNION ALL
-       SELECT t.data_transferencia, CASE WHEN t.conta_destino_id = $2 THEN t.valor ELSE -t.valor END FROM erp.transferencias_financeiras t
-       WHERE t.empresa_id = $1 AND t.status = 'concluida' AND t.excluido_em IS NULL AND (t.conta_origem_id = $2 OR t.conta_destino_id = $2)
-       UNION ALL
-       SELECT a.data_movimento, a.valor * CASE WHEN a.tipo = 'reversao' THEN CASE WHEN (o.lado = 'receber') = (o.tipo = 'constituicao') THEN -1 ELSE 1 END
-         WHEN (a.lado = 'receber') = (a.tipo = 'constituicao') THEN 1 ELSE -1 END
-       FROM erp.adiantamentos a LEFT JOIN erp.adiantamentos o ON o.empresa_id = a.empresa_id AND o.id = a.reversao_de_id
-       WHERE a.empresa_id = $1 AND a.conta_financeira_id = $2),
+     movimentos AS (${MOVIMENTOS_DA_CONTA_SQL}),
      pendentes AS (
        SELECT t.data_transacao FROM erp.transacoes_bancarias t
        WHERE t.empresa_id = $1 AND t.conta_financeira_id = $2 AND t.status = 'pendente' AND t.excluido_em IS NULL)

@@ -93,6 +93,7 @@ export const outputs = {
     etapa: z.enum(['previa','executado']),
     proposta: row.describe('Dados da operação com totais calculados pelo ERP.'),
     alvo: row.nullable().describe('Estado atual do registro alterado, para comparar antes e depois.'),
+    avisos: z.array(z.string()).optional().describe('Avisos que não impedem a operação (ex.: título parecido com venda, saldo negativo); mostre ao usuário antes de pedir a confirmação.'),
     expira_em: z.unknown().describe('Validade da prévia. Expirada ou registro alterado exige nova prévia e nova confirmação.'),
     confirmar: z.object({ tool: z.string(), argumentos: row }).optional()
       .describe('Chamada para executar, somente após confirmação explícita do usuário.'),

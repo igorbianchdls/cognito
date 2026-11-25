@@ -25,6 +25,7 @@ import { FieldInput, FieldSelect } from '@/products/erp/frontend/components/ErpF
 import type { Dispatch, SetStateAction } from 'react';
 import { Catalogs, Option, currency, money, newItem } from './salesWorkspaceModel';
 import type { SaleForm } from './useSaleForm';
+import { CustomerCreditHint } from './CustomerCreditHint';
 
 // Dialog to create or edit a sale or quote.
 export function SaleEditorDialog({ editorOpen, setEditorOpen, isQuote, editingSale, catalogs, setCatalogs, saving, saveSale, form }: {
@@ -55,6 +56,7 @@ export function SaleEditorDialog({ editorOpen, setEditorOpen, isQuote, editingSa
                   onChange={selectCustomer}
                   selectedLabel={catalogs.customers.find((item) => item.id === customerId)?.nome}
                 />
+                <div className="md:col-span-3 flex items-end"><CustomerCreditHint customerId={customerId} /></div>
                 <FieldSelect
                   label="Vendedor responsável"
                   value={sellerId}

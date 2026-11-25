@@ -917,6 +917,14 @@ async function reversePurchase(input: IdActionInput, supplierReturn = false) {
     if (!purchase) throw new ErpDomainError('VALIDATION_ERROR', 'Compra não encontrada.')
     if (purchase.status === 'cancelada') return { id: String(purchase.id), status: 'cancelada' }
 
+    // CP-31: compra com mercadoria recebida se devolve ao fornecedor (CP-40); a devolução usa este mesmo caminho.
+    if (!supplierReturn) {
+      const receipts = await client.query(
+        "SELECT 1 FROM erp.movimentacoes_estoque WHERE empresa_id=$1 AND origem_tipo='compra' AND origem_id=$2 AND quantidade>0 LIMIT 1",
+        [input.tenantId, purchase.id])
+      exigirRegra(validarCancelamentoCompra({ temRecebimento: receipts.rows.length > 0 }))
+    }
+
     const invoiceResult = await client.query(
       `SELECT id
        FROM erp.notas_fiscais

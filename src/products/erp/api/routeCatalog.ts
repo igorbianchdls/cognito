@@ -193,6 +193,22 @@ export const ERP_API_ROUTES = [
     "transportOnlyFiscal": false
   },
   {
+    "path": "/api/erp/catalogos/credito-cliente",
+    "route": "src/app/api/erp/catalogos/credito-cliente/route.ts",
+    "handler": "src/products/erp/api/handlers/catalogos/creditoCliente.ts",
+    "methods": [
+      "GET"
+    ],
+    "authentication": "session",
+    "maxBodyBytes": 1048576,
+    "capabilities": [
+      "erp.cadastros.visualizar"
+    ],
+    "permissionRule": "Capabilities vary by method; see handler.",
+    "idempotency": "Business-operation rules; see handler.",
+    "transportOnlyFiscal": false
+  },
+  {
     "path": "/api/erp/comissoes/pagar",
     "route": "src/app/api/erp/comissoes/pagar/route.ts",
     "handler": "src/products/erp/api/handlers/comissoes/pagar.ts",

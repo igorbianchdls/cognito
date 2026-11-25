@@ -38,7 +38,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CP-20 | Compra cancelada não é recebida. | `erpProfessionalRepository.ts` → `receivePurchaseItems()` | "Compra cancelada não pode ser recebida." | ❌ |
+| CP-20 | Só se recebe mercadoria de compra confirmada: rascunho (cotação ou compra não confirmada) e cancelada não. | **`regras/compras.ts` → `validarRecebimentoCompra()`**, via `erpProfessionalRepository.ts` → `receivePurchaseItems()` (bloqueio de rascunho desde 2026-11-26) | "Confirme a compra antes de receber a mercadoria." / "Compra cancelada não pode ser recebida." | ✅ `regras/etapa-9.test.ts` |
 | CP-21 | Só se recebe item que controla estoque, até o saldo pendente do item (recebimento parcial permitido). | `receivePurchaseItems()` | "Item não controla estoque." / "Quantidade excede o saldo pendente de {item}." | ❌ (ferramenta `receber_compra` publicada, ainda não testada) |
 | CP-22 | Receber dá entrada no estoque no local escolhido (ou no local da compra / padrão) e atualiza o custo médio. | `receivePurchaseItems()`; `erpStockRepository.ts` → `applyStockMovement()` | — | ❌ |
 
@@ -49,7 +49,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | CP-30 | Cancelar é para compra confirmada (rascunho se exclui, CP-08). | `erpPurchasesRepository.ts` → `cancelErpPurchase()` → `reversePurchase()` | — | 🧪 |
-| CP-31 | Não cancela compra com nota fiscal vinculada ativa nem com pagamento (estorne antes). | `regras/compras.ts` → `validarCancelamentoCompra()` | "Desvincule ou cancele a nota fiscal antes de cancelar a compra." / "Compra com pagamento não pode ser cancelada sem estorno." | ✅ `etapas-4-5.test.ts` (CP-10/31) |
+| CP-31 | Não cancela compra que já teve mercadoria recebida (o caminho é a devolução, CP-40; desde 2026-11-26), nem com nota fiscal vinculada ativa ou com pagamento (estorne antes). | `regras/compras.ts` → `validarCancelamentoCompra()` | "Esta compra já teve mercadoria recebida. Use a devolução ao fornecedor em vez de cancelar." / "Desvincule ou cancele a nota fiscal antes de cancelar a compra." / "Compra com pagamento não pode ser cancelada sem estorno." | ✅ `etapas-4-5.test.ts` (CP-10/31) |
 
 > A conferir: não há trava explícita para cancelar compra com mercadoria já recebida (a devolução, CP-40, é o caminho previsto).
 

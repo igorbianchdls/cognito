@@ -43,7 +43,7 @@ export async function runProposal(client: SQLClient, session: Session, proposal:
     const local = d.local_estoque_id ?? Number((await client.query("SELECT id FROM erp.locais_estoque WHERE empresa_id=$1 AND ativo AND excluido_em IS NULL ORDER BY padrao DESC, id LIMIT 1", [tenantId])).rows[0]?.id || 0)
     if (!local) throw new PluginError('INVALID_REFERENCE', 'Cadastre um local de estoque no ERP antes de movimentar.')
     const created = await runWithErpTransactionClient(client, () => createStockOperation({ tenantId, actorId, resource: 'movimentacoes',
-      values: { produto_id: d.produto_id, local_estoque_id: local, quantidade: d.quantidade, tipo: d.movimento, custo_unitario: d.custo_unitario, data: d.data, motivo: d.motivo }, idempotencyKey }))
+      values: { produto_id: d.produto_id, local_estoque_id: local, quantidade: d.quantidade, tipo: d.movimento, custo_unitario: d.custo_unitario, motivo: d.motivo }, idempotencyKey }))
     return String((created as { id: unknown }).id)
   }
   if (proposal.tipo === 'contrato') {

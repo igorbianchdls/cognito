@@ -1,9 +1,10 @@
 import { financialCompositionSql } from './erpFinancialComposition'
+import { ERP_TODAY_SQL } from './erpBusinessDate'
 import { excessoDeCredito, validarClienteLiberado, validarCredito, validarDescontoVendedor, validarPrecoTabela } from '../regras/vendas'
 import { validarCondicoesCliente } from '../regras/cadastros'
 import { exigirRegra } from './erpRegras'
 import { adjustSaleCommissions } from './erpCommissionAdjustments'
-import type { SQLClient } from '@/lib/postgres'
+import { runQuery, type SQLClient } from '@/lib/postgres'
 import { ErpDomainError } from '@/products/erp/shared/erpErrors'
 
 // Regras comerciais da Fase 1: tabela de preço, limite de crédito/bloqueio, transporte e comissões.
@@ -91,6 +92,36 @@ export async function saleTransport(client: Query, tenantId: number, values: Rec
 export type CreditOverride = { motivo: string }
 // Bloqueio comercial impede a confirmação. Acima do limite, só confirma quem tem erp.financeiro.gerenciar e
 // informa o motivo; a liberação fica registrada na venda.
+/**
+ * Resumo de crédito do cliente (VD-22): em aberto e vencido nas parcelas a receber, limite e disponível. Mesma conta
+ * da trava de crédito na confirmação; também mostrado ao consultar o cliente (tela e chat), sem expor os títulos.
+ */
+export async function customerCreditSummary(client: Query, tenantId: number, customerId: number) {
+  const customer = (await client.query(
+    'SELECT limite_credito, bloqueio_comercial, bloqueio_motivo FROM erp.entidades WHERE empresa_id = $1 AND id = $2 AND eh_cliente',
+    [tenantId, customerId])).rows[0]
+  if (!customer) return null
+  const totals = (await client.query(
+    `SELECT coalesce(sum(greatest(composicao.saldo, 0)), 0) AS aberto,
+       coalesce(sum(greatest(composicao.saldo, 0)) FILTER (WHERE p.data_vencimento < ${ERP_TODAY_SQL}), 0) AS vencido
+     FROM erp.contas_receber_parcelas p
+     JOIN erp.contas_receber c ON c.empresa_id = p.empresa_id AND c.id = p.conta_receber_id
+     ${financialCompositionSql('receber', 'p')}
+     WHERE p.empresa_id = $1 AND c.cliente_id = $2 AND p.excluido_em IS NULL AND c.excluido_em IS NULL
+       AND p.status IN ('aberto', 'parcial', 'vencido') AND c.status <> 'cancelado'`,
+    [tenantId, customerId])).rows[0]
+  const limite = customer.limite_credito == null ? null : Number(customer.limite_credito)
+  const aberto = Number(totals?.aberto || 0)
+  return { em_aberto: aberto, vencido: Number(totals?.vencido || 0), limite_credito: limite,
+    disponivel: limite == null ? null : Math.round((limite - aberto) * 100) / 100,
+    bloqueado: Boolean(customer.bloqueio_comercial), motivo_bloqueio: (customer.bloqueio_motivo as string | null) || null }
+}
+
+/** Resumo de crédito fora de transação (consulta do cliente na tela e no chat). */
+export async function getCustomerCreditSummary(tenantId: number, customerId: number) {
+  return customerCreditSummary({ query: async (sql: string, params?: unknown[]) => ({ rows: await runQuery(sql, params) }) } as unknown as Query, tenantId, customerId)
+}
+
 export async function assertCustomerCredit(client: Query, input: {
   tenantId: number; actorId: number; saleId: number; customerId: number; saleTotal: number; override?: CreditOverride | null
 }) {

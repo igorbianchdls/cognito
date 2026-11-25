@@ -1,4 +1,5 @@
 import { erpListOrder } from '@/products/erp/shared/readQueries'
+import { getCustomerCreditSummary } from './erpCommercialRules'
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { runQuery, type SQLClient } from '@/lib/postgres'
 import { financialCompositionSql, getErpEntityRecord } from '@/products/erp/server/erpRepository'
@@ -60,7 +61,10 @@ export async function installmentDetails(tenantId:number, side:'pagar'|'receber'
 export async function registrationDetails(tenantId:number, type:'clientes'|'fornecedores'|'vendedores'|'produtos'|'servicos'|'categorias'|'contas-financeiras', id:number) {
   const record=await getErpEntityRecord({tenantId,entityId:type,id})
   const allowed=['id','nome','tipo','status','versao','documento','email','telefone','cidade','sku','codigo','categoria','categoria_id','preco','custo','descricao','controla_estoque','estoque_minimo','permite_estoque_negativo','ponto_reposicao','banco','agencia','conta','digito','saldo_inicial','data_saldo_inicial','padrao','codigo_tributacao_nacional','codigo_servico_municipal','codigo_nbs','limite_credito','bloqueio_comercial','bloqueio_motivo','tabela_preco_id','categoria_pai_id','dre_grupo_id','dre_grupo_codigo','fora_dre']
-  return {record:Object.fromEntries(allowed.filter(k=>record[k]!==undefined).map(k=>[k,record[k]]))}
+  const selected=Object.fromEntries(allowed.filter(k=>record[k]!==undefined).map(k=>[k,record[k]]))
+  // Cliente: resumo de crédito (em aberto, vencido, limite, disponível) para quem vende, sem expor os títulos.
+  if(type==='clientes'){const credito=await getCustomerCreditSummary(tenantId,id);if(credito)Object.assign(selected,{credito})}
+  return {record:selected}
 }
 export async function financialTitle(tenantId:number,side:'pagar'|'receber',id:number,client?:Pick<SQLClient,'query'>){
   const query = client ? async (sql:string,params:unknown[]) => (await client.query(sql,params)).rows : runQuery

@@ -84,9 +84,9 @@ Regras repetidas ou inconsistentes encontradas ao montar o catálogo. São as pr
 | ~~"Hoje"~~ | **Resolvido (etapa 1):** GE-01 e NS-15 migraram para `regras/geral.ts` e `regras/notas-servico.ts`; emissão individual e lote usam a mesma função. | GE-01, NS-15 |
 | Etapas 4 e 5 | **Migradas**: ciclo do orçamento (VD-01..03), OS (OS-03), contratos (CT-02, CT-06), cancelamento e devolução de venda (VD-41..43, VD-51, VD-53), compras (CP-10, CP-31, CP-40..43) e estoque (ES-03, ES-04, ES-10). Mesmas mensagens e códigos de antes. Testes em `etapas-4-5.test.ts`. | — |
 | Gatilhos do banco | **Etapa 6 feita** para o grupo 1: BD-30 e BD-32 removidos, BD-31 reduzido ao fato. O grupo 2 (fluxos inteiros em SQL) ganha um plano por fluxo, ver `banco.md`. | BD-30..32 |
-| Data no estoque | Movimentos de estoque só aceitam o dia atual, mas a ferramenta do chat `movimentar_estoque` aceita `data`. | ES-04 |
+| ~~Data no estoque~~ | **Resolvido (2026-11-26)**: `movimentar_estoque` não aceita mais `data`; o movimento é sempre de hoje. | ES-04 |
 | ~~Mensagens diferentes, mesma regra~~ | **Resolvido (etapa 2)**, ver VD-30. Antes: Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
 | Efetivar previsão | A pagar grava `efetivado_em`; a receber não. | CR-09 |
-| Sem trava | Título manual duplicando venda (CR-03); transferência deixando conta negativa (CB-10); receber compra ainda em rascunho (CP-20); cancelar compra já recebida (CP-31). Decidir se são desejados. | CR-03, CB-10, CP-20, CP-31 |
-| Perfis | Vendas e Compras criam cadastros mas não excluem; Vendas não vê o financeiro do cliente; Compras não recebe mercadoria. | PE, CD-31 |
+| ~~Sem trava~~ | **Decidido (2026-11-26)**: receber compra em rascunho (CP-20) e cancelar compra já recebida (CP-31) **bloqueiam**; título parecido com venda (CR-03) e transferência que deixa a conta negativa (CB-10) **avisam** na prévia, sem bloquear. | CR-03, CB-10, CP-20, CP-31 |
+| ~~Perfis~~ | **Decidido (2026-11-26)**: exclusão continua só com o administrador; resumo de crédito do cliente visível a quem vê o cadastro; Compras recebe mercadoria. Ver `permissoes.md`. | PE, CD-31 |
 | Textos | Várias mensagens sem acento ("invalido", "esta paga", "esta fechado"). | — |

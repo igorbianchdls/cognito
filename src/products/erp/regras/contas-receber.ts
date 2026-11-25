@@ -41,3 +41,13 @@ export function validarPrevisao(dados: { efetivado?: boolean; deVenda?: boolean;
   if (dados.utilizado) return recusa('CR-09', 'Título já utilizado (pagamento, adiantamento ou renegociação) não pode voltar a previsão.')
   return ok()
 }
+
+/**
+ * CR-03 (aviso, não bloqueia): título a receber lançado à mão com o mesmo cliente e valor de uma venda confirmada
+ * próxima pode ser a mesma cobrança, que a venda já gerou. Há casos legítimos (frete à parte, acerto), por isso só avisa.
+ */
+export function avisoTituloParecidoComVenda(dados: { vendas: Array<{ numero: string; total: number }> }): string | null {
+  if (!dados.vendas.length) return null
+  const lista = dados.vendas.slice(0, 3).map(venda => venda.numero).join(', ')
+  return `Este cliente já tem venda confirmada com o mesmo valor (${lista}). Se for a mesma cobrança, a venda já gerou a conta a receber; confira antes de lançar de novo.`
+}

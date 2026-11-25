@@ -1,6 +1,7 @@
 import { validarAcaoOrcamento, validarConversaoOrcamento, situacaoAposAcaoOrcamento } from '../regras/vendas';
 import { proximaSituacaoOS } from '../regras/ordens-servico';
 import { validarEntrega } from '../regras/vendas';
+import { validarRecebimentoCompra } from '../regras/compras';
 import { exigirRegra } from './erpRegras';
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
@@ -483,12 +484,7 @@ export async function receivePurchaseItems(
         "Compra não encontrada.",
         404,
       );
-    if (purchase.status === "cancelada")
-      throw new ErpDomainError(
-        "INVALID_STATE",
-        "Compra cancelada não pode ser recebida.",
-        409,
-      );
+    exigirRegra(validarRecebimentoCompra({ situacao: String(purchase.status) })); // CP-20
 
     const groups = new Map<
       number,

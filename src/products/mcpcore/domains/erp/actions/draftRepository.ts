@@ -6,16 +6,18 @@ import type { PluginConfig } from '../../../shared/config'
 import { proposalReferences } from './references'
 import { operationSnapshot,type OperationSnapshot } from './operations'
 import { dryRunProposal } from './execution'
+import { proposalWarnings } from './warnings'
 
 export type DraftRow = { id:string;empresa_id:number;user_id:number;oauth_client_id:string;proposal:Proposal;
-  status:'pending'|'saved'|'cancelled'|'expired';record_id:string|null;created_at:string;expires_at:string;decided_at:string|null;target_snapshot?:OperationSnapshot|null }
+  status:'pending'|'saved'|'cancelled'|'expired';record_id:string|null;created_at:string;expires_at:string;decided_at:string|null;target_snapshot?:(OperationSnapshot&{avisos?:string[]})|null }
 export function draftView(row: DraftRow, config: Pick<PluginConfig,'resource'|'integration'>) {
   const status = row.status === 'pending' && new Date(row.expires_at).getTime() <= Date.now() ? 'expired' : row.status
   return {rascunho_id:row.id,empresa_id:Number(row.empresa_id),status,registro_id:row.record_id,
     criado_em:row.created_at,expira_em:row.expires_at,proposta:proposalPreview(proposalSchema.parse(row.proposal)),
-    alvo:row.target_snapshot ? {registro_id:row.target_snapshot.registro_id,nome:row.target_snapshot.nome,status:row.target_snapshot.status,valor:row.target_snapshot.valor,
+    alvo:row.target_snapshot?.registro_id != null ? {registro_id:row.target_snapshot.registro_id,nome:row.target_snapshot.nome,status:row.target_snapshot.status,valor:row.target_snapshot.valor,
       parcelas:row.target_snapshot.parcelas||[],conta_financeira:row.target_snapshot.conta_financeira||null,campos:row.target_snapshot.campos||{},
       ...(row.target_snapshot.resumo_exclusao?{resumo_exclusao:row.target_snapshot.resumo_exclusao}:{}),...(row.target_snapshot.edicao?{edicao:row.target_snapshot.edicao}:{})}:null,
+    avisos:row.target_snapshot?.avisos||[],
     revisao_url:new URL(`/${config.integration}plugin/approvals/${row.id}`,config.resource).href}
 }
 export async function prepareDraft(principal: PluginPrincipal, tenantId:number, key:string, proposal:Proposal, config:PluginConfig) {
@@ -30,13 +32,16 @@ export async function prepareDraft(principal: PluginPrincipal, tenantId:number, 
   }
   await proposalReferences(tenantId,proposal)
   const snapshot=await operationSnapshot(tenantId,proposal)
+  // Avisos (CR-03, CB-10): não bloqueiam; ficam guardados com a prévia para o card e o modelo mostrarem.
+  const avisos=await proposalWarnings(tenantId,proposal)
+  const stored=snapshot ? {...snapshot,avisos} : avisos.length ? {avisos} : null
   // Same rules as the confirmation: run it for real and roll back, so a preview never promises what will fail.
   await dryRunProposal({tenantId,sharedUserId:principal.userId,timeZone:principal.companies.find(company=>company.id===tenantId)?.timeZone},proposal)
   const rows = await pluginQuery<DraftRow & {matches:boolean}>(
     `INSERT INTO plugin.drafts(id,empresa_id,user_id,oauth_client_id,operation_key,proposal,target_snapshot,integration)
      VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8)
      ON CONFLICT (integration,domain,empresa_id,user_id,oauth_client_id,operation_key) DO UPDATE SET operation_key=EXCLUDED.operation_key
-     RETURNING *,proposal=$6::jsonb AS matches`, [randomUUID(),tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal),JSON.stringify(snapshot),config.integration])
+     RETURNING *,proposal=$6::jsonb AS matches`, [randomUUID(),tenantId,principal.userId,principal.clientId,key,JSON.stringify(proposal),JSON.stringify(stored),config.integration])
   if (!rows[0].matches) throw new PluginError('IDEMPOTENCY_CONFLICT','Esta chave já foi usada para outro rascunho.',409)
   return draftView(rows[0],config)
 }

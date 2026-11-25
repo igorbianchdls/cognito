@@ -174,6 +174,7 @@ Para adicionar uma operação: crie/estenda a regra em `server`, reutilize contr
 | `/api/erp/catalogos/busca` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/catalogos/categorias` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/catalogos/contas-contabeis` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
+| `/api/erp/catalogos/credito-cliente` | GET | session | 1 MiB | `erp.cadastros.visualizar` |
 | `/api/erp/comissoes/pagar` | POST | session | 1 MiB | `erp.financeiro.gerenciar` |
 | `/api/erp/comissoes/regras/[id]` | PATCH, DELETE | session | 1 MiB | `erp.vendas.gerenciar` |
 | `/api/erp/comissoes/regras` | GET, POST | session | 1 MiB | `erp.vendas.gerenciar`, `erp.vendas.visualizar` |

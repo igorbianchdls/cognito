@@ -19,7 +19,7 @@ Caminhos relativos a `src/products/erp/server/`. Legenda e camadas no [README](R
 |---|---|---|---|---|
 | CR-01 | Título manual precisa de cliente ativo, descrição, valor > 0, competência, emissão e categoria de **receita** ativa e sem subcategorias. | `erpCrudRepository.ts` → `createManualFinancialTitle()`, `validateFinancialReferences()` | "Escolha uma categoria financeira compatível desta empresa (sem subcategorias)." / "Referência financeira não disponível nesta empresa." | 🧪 (lado a pagar) |
 | CR-02 | Parcelas distribuem exatamente o valor total (GE-11), até 48 (GE-12). | `erpCrudRepository.ts` → `validateFinancialReferences()` | "Parcelas devem distribuir o valor total." | 🧪 |
-| CR-03 | Títulos de venda, compra e contrato são gerados pelo documento de origem; não se lança título manual duplicando uma venda. | regra de uso (descrições das ferramentas do chat); não há trava no servidor | — | ❌ **sem trava** |
+| CR-03 | Títulos de venda, compra e contrato são gerados pelo documento de origem; não se lança título manual duplicando uma venda. | regra de uso (descrições das ferramentas do chat); não há trava no servidor | — | ❌ **sem trava** · **Aviso na prévia do chat (2026-11-26)**: título a receber com mesmo cliente e valor de venda confirmada a até 60 dias (`regras/contas-receber.ts` → `avisoTituloParecidoComVenda()`, `mcpcore/domains/erp/actions/warnings.ts`); não bloqueia. |
 
 ## Editar e excluir título manual
 

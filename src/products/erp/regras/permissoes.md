@@ -34,7 +34,7 @@ Capacidades sem o prefixo `erp.`. Fonte: `shared.permissoes_perfil` (banco).
 | financeiro.baixar | ✅ | ✅ | | | | | |
 | financeiro.estornar | ✅ | ✅ | | | | | |
 | estoque.visualizar | ✅ | | | ✅ | ✅ | | ✅ |
-| estoque.movimentar | ✅ | | | | ✅ | | |
+| estoque.movimentar | ✅ | | | ✅ | ✅ | | |
 | estoque.ajustar | ✅ | | | | ✅ | | |
 | cadastros.visualizar | ✅ | | ✅ | ✅ | ✅ | ✅ | ✅ |
 | cadastros.gerenciar | ✅ | | ✅ | ✅ | | | |
@@ -43,6 +43,8 @@ Capacidades sem o prefixo `erp.`. Fonte: `shared.permissoes_perfil` (banco).
 
 ## Pontos de atenção
 
-- **Vendas e Compras criam cadastros, mas não conseguem excluir nenhum**: CD-31 exige consulta de vendas, compras, financeiro e estoque, e esses perfis não têm todas.
-- **Vendas não vê o financeiro**: o vendedor não consegue consultar se o cliente está devendo antes de vender; o limite de crédito (VD-22) barra na confirmação sem mostrar os títulos.
-- **Compras não recebe mercadoria**: receber compra exige `estoque.movimentar`, que o perfil Compras não tem.
+- **Vendas e Compras criam cadastros, mas não excluem** (CD-31 exige consulta de todas as áreas). **Decidido manter (2026-11-26)**: excluir é sensível; quem precisa pede ao administrador.
+- **Resumo de crédito do cliente (2026-11-26)**: quem vê o cadastro do cliente (`cadastros.visualizar`) vê em aberto, vencido, limite e disponível (VD-22), sem acesso aos títulos.
+  Tela: formulário de venda, abaixo do cliente (`frontend/modules/vendas/CustomerCreditHint.tsx`, rota `/api/erp/catalogos/credito-cliente`).
+  Chat: `obter_cadastro` de cliente traz `credito`. Fonte única: `erpCommercialRules.ts` → `customerCreditSummary()`, a mesma conta da trava de crédito.
+- **Compras recebe mercadoria (2026-11-26)**: o perfil Compras ganhou `estoque.movimentar` (migração `20261126040000_erp_perfil_compras_recebe.sql`). Ajustar estoque continua com Estoque e Administrador.

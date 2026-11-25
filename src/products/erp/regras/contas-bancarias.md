@@ -16,7 +16,7 @@ Caminhos relativos a `src/products/erp/server/`. Legenda no [README](README.md).
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CB-10 | Origem e destino diferentes, valor > 0, data válida. | `erpManagementRepository.ts` → `createManagementOperation()`; chat: `schemas/actionContracts.ts` | "Origem e destino devem ser diferentes." | ❌ (ferramenta `transferir_entre_contas` publicada, ainda não testada) |
+| CB-10 | Origem e destino diferentes, valor > 0, data válida. | `erpManagementRepository.ts` → `createManagementOperation()`; chat: `schemas/actionContracts.ts` | "Origem e destino devem ser diferentes." | ❌ (ferramenta `transferir_entre_contas` publicada, ainda não testada) · **Aviso na prévia do chat (2026-11-26)** quando a conta de origem fica negativa (`regras/contas-bancarias.ts` → `avisoSaldoNegativo()`); não bloqueia. |
 | CB-11 | Mesma identificação não grava duas vezes (GE-31). | `createManagementOperation()` | "Esta identificação já foi usada em outra transferência." | ❌ |
 | CB-12 | Transferência não entra no resultado (DRE nem "resultado pelo caixa"): só muda o dinheiro de lugar. | relatórios: `erpDreReport.ts`, `dashboards/` | — | ❌ |
 

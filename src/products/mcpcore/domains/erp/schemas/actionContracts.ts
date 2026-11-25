@@ -34,7 +34,7 @@ export const proposalSchema = z.discriminatedUnion('tipo', [
   // Entrada, saída ou ajuste manual de estoque de um produto num local.
   z.object({tipo:z.literal('movimento_estoque'),dados:z.object({produto_id:z.number().int().positive(),movimento:z.enum(['entrada','saida','ajuste_entrada','ajuste_saida']),
     quantidade:z.number().finite().positive().max(1000000).multipleOf(0.0001),local_estoque_id:z.number().int().positive().optional(),
-    custo_unitario:money.optional(),data:requiredDate.optional(),motivo:z.string().trim().min(3).max(500).optional()}).strict()
+    custo_unitario:money.optional(),motivo:z.string().trim().min(3).max(500).optional()}).strict()
     .refine(d=>!d.movimento.startsWith('ajuste')||!!d.motivo,'Ajuste de estoque exige motivo.')}).strict(),
   // Recebimento (total ou parcial) dos itens de uma compra confirmada.
   z.object({tipo:z.literal('receber_compra'),dados:z.object({registro_id:z.number().int().positive(),

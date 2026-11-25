@@ -11,8 +11,12 @@ export function validarConfirmacaoCompra(dados: { cancelada?: boolean; temFornec
   return ok()
 }
 
-/** CP-31: não cancela compra com nota fiscal vinculada ativa nem com pagamento (estorne antes). */
-export function validarCancelamentoCompra(fatos: { temNotaAtiva?: boolean; temPagamento?: boolean }): Resultado {
+/**
+ * CP-31: não cancela compra que já teve mercadoria recebida (o caminho é a devolução ao fornecedor, CP-40), nem com nota
+ * fiscal vinculada ativa ou com pagamento (estorne antes).
+ */
+export function validarCancelamentoCompra(fatos: { temRecebimento?: boolean; temNotaAtiva?: boolean; temPagamento?: boolean }): Resultado {
+  if (fatos.temRecebimento) return recusa('CP-31', 'Esta compra já teve mercadoria recebida. Use a devolução ao fornecedor em vez de cancelar.', { codigo: 'PURCHASE_HAS_RECEIPTS', status: 409 })
   if (fatos.temNotaAtiva) return recusa('CP-31', 'Desvincule ou cancele a nota fiscal antes de cancelar a compra.')
   if (fatos.temPagamento) return recusa('CP-31', 'Compra com pagamento não pode ser cancelada sem estorno.')
   return ok()
@@ -35,4 +39,11 @@ export function validarDevolucaoCompra(fatos: { jaDevolvida?: boolean; situacao?
 export function validarContaPagarDaCompra(dados: { tipoMovimento: string }): Resultado {
   return dados.tipoMovimento === 'compra' ? ok()
     : recusa('CP-13', 'Só compra confirmada gera conta a pagar. Confirme a cotação ou o pedido antes.', { codigo: 'INVALID_STATE', status: 409 })
+}
+
+/** CP-20: só se recebe mercadoria de compra confirmada; rascunho (cotação ou compra não confirmada) e cancelada não. */
+export function validarRecebimentoCompra(dados: { situacao: string }): Resultado {
+  if (dados.situacao === 'cancelada') return recusa('CP-20', 'Compra cancelada não pode ser recebida.', { codigo: 'INVALID_STATE', status: 409 })
+  if (dados.situacao === 'rascunho') return recusa('CP-20', 'Confirme a compra antes de receber a mercadoria.', { codigo: 'INVALID_STATE', status: 409 })
+  return ok()
 }
