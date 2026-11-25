@@ -14,7 +14,7 @@ Valem para todas as áreas do ERP. Quando uma regra de área depende de uma dest
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | GE-10 | Valores em reais com 2 casas, arredondando meio centavo para cima; sem separador de milhar na entrada (aceita vírgula ou ponto decimal). | `shared/erpMoney.ts` → `scaledDecimal()`, `decimalText()` | "Informe o valor sem separador de milhar." / "Informe um valor numérico válido." | ❌ |
-| GE-11 | Parcelas sempre somam exatamente o total do documento, centavo a centavo. | **`regras/geral.ts` → `validarParcelas()`**, usada por vendas (`erpSalesRepository.ts`), compras (`erpPurchasesRepository.ts`), título manual do chat (`erpCrudRepository.ts`) e despesa da tela (`createManualPayableRecord()`) | "A soma das parcelas precisa ser igual ao total {da venda / da compra / do título / da despesa}." | ✅ `regras/geral.test.ts` · 🧪 |
+| GE-11 | Parcelas sempre somam exatamente o total do documento, centavo a centavo. | **`regras/geral.ts` → `validarParcelas()`**, usada por vendas (`erpSalesRepository.ts`), compras (`erpPurchasesRepository.ts`), título manual do chat (`erpCrudRepository.ts`), despesa da tela (`createManualPayableRecord()`) e já na prévia do chat (`mcpcore/domains/erp/schemas/actionContracts.ts` → `proposalPreview()`) | "A soma das parcelas precisa ser igual ao total {da venda / da compra / do título / da despesa}." | ✅ `regras/geral.test.ts` · 🧪 |
 | GE-12 | De 1 a 48 parcelas por documento, números válidos e sem repetição. | **`regras/geral.ts` → `validarParcelas()`** (mesmos lugares de GE-11) | "A condição de pagamento aceita no máximo 48 parcelas." / "Existem parcelas com o mesmo número." | ✅ `regras/geral.test.ts` |
 
 ## Numeração

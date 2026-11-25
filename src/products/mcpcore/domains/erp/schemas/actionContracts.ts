@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { validarParcelas } from '@/products/erp/regras/geral'
 import { lineTotal, sumMoney, discountAmount } from '@/products/erp/shared/erpMoney'
 import type { ErpCapability } from '@/products/erp/shared/professionalContracts'
 import type { ErpConnectedModuleId } from '@/products/erp/shared/moduleAccess'
@@ -117,7 +118,13 @@ export function proposalPreview(proposal: Proposal) {
   if(proposal.tipo==='contrato')return {tipo:proposal.tipo,dados:proposal.dados,total:lineTotal(proposal.dados.quantidade,proposal.dados.valor_unitario,0)}
   if(proposal.tipo==='movimento_estoque'||proposal.tipo==='receber_compra')return {tipo:proposal.tipo,dados:proposal.dados}
   const raw=proposal.dados as Record<string,unknown>
-  if('valor_total' in raw && 'parcelas' in raw){try{const parts=raw.parcelas as {valor:number}[];if(sumMoney(parts.map(p=>p.valor))!==raw.valor_total)throw new Error();return {tipo:proposal.tipo,dados:proposal.dados,total:Number(raw.valor_total)}}catch{throw new PluginError('INVALID_INPUT','A soma das parcelas deve ser igual ao valor total.')}}
+  if('valor_total' in raw && 'parcelas' in raw){
+    // GE-11, GE-12 (regras/geral.ts): a mesma regra do servidor, já na prévia, com a mesma mensagem.
+    const parts=Array.isArray(raw.parcelas)?raw.parcelas as {valor:unknown}[]:[]
+    const parcelas=validarParcelas({valores:parts.map(p=>Number(p?.valor)),total:Number(raw.valor_total),documento:'do título'})
+    if(!parcelas.ok)throw new PluginError('INVALID_INPUT',parcelas.mensagem)
+    return {tipo:proposal.tipo,dados:proposal.dados,total:Number(raw.valor_total)}
+  }
   if (!('itens' in raw)) return {tipo:proposal.tipo,dados:proposal.dados}
   try {
     const itens = (raw.itens as {quantidade:number;valor_unitario:number;desconto:number}[]).map(item => ({...item,total:lineTotal(item.quantidade,item.valor_unitario,item.desconto)}))
