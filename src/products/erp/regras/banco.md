@@ -56,13 +56,13 @@ Regra para tirar algo do banco: **primeiro a regra entra no servidor e é testad
 
 ## Saem (decisões), em ordem de prioridade
 
-### Grupo 1 — já existem no servidor, com mensagem melhor (fácil)
+### Grupo 1 — já existem no servidor, com mensagem melhor — **feito na etapa 6 (2026-11-25)**, migração `20261125230000_erp_regras_etapa6_gatilhos.sql`
 
 | # | Trigger | Tabelas | O que decide hoje | No servidor | Ação |
 |---|---|---|---|---|---|
-| BD-30 | `validar_conversao_proposta` | vendas | Orçamento encerrado ou **vencido** não gera venda ("vencido" depende da data de hoje) | VD-01, VD-02 | Remover após conferir que todo caminho de conversão passa por `assertQuoteValid()` |
-| BD-31 | `efetivacao_receber`, `efetivacao_pagar` | contas_receber, contas_pagar | Efetivado/utilizado não volta a previsão; venda não gera previsão | CR-09 | Manter só "utilizado não volta a previsão" (fato); o resto vai para `regras/contas-receber.ts` |
-| BD-32 | `validar_vinculos_os` | ordens_servico | A venda da OS precisa ter o orçamento da OS como origem | OS-06 a OS-08 | Remover |
+| BD-30 | `validar_conversao_proposta` | vendas | Orçamento encerrado ou **vencido** não gera venda ("vencido" depende da data de hoje) | VD-01, VD-02 | ✅ **Removido.** Servidor: `validarConversaoOrcamento()` na conversão e em toda venda criada com orçamento de origem |
+| BD-31 | `efetivacao_receber`, `efetivacao_pagar` | contas_receber, contas_pagar | Efetivado/utilizado não volta a previsão; venda não gera previsão | CR-09 | ✅ **Reduzido**: o banco só grava `efetivado_em` e trava título utilizado; "efetivado não volta" e "venda não é previsão" estão em `validarPrevisao()` |
+| BD-32 | `validar_vinculos_os` | ordens_servico | A venda da OS precisa ter o orçamento da OS como origem | OS-06 a OS-08 | ✅ **Removido.** Garantido por `convertServiceOrder()`: a venda de OS com orçamento sai do orçamento |
 
 ### Grupo 2 — fluxos de negócio inteiros em SQL (grande; separar fato de decisão)
 

@@ -16,8 +16,8 @@ Venda:      rascunho → confirmada → atendida (entregue) → [devolução par
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| VD-01 | Orçamento recusado, convertido ou cancelado está encerrado: não aceita editar, enviar, aprovar, recusar nem converter. | `regras/vendas.ts` → `validarAcaoOrcamento()`, `orcamentoEncerrado()` | "Orçamento encerrado não pode ser alterado." / "… não pode ser convertido." / "… não pode ser editado." | ✅ `etapas-4-5.test.ts` (VD-01) · 🧪 |
-| VD-02 | Orçamento vencido (validade antes de hoje, GE-01) precisa ter a validade renovada antes de enviar, aprovar ou converter. | `regras/vendas.ts` → `validarOrcamentoVigente()` | "Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter." | ✅ `etapas-4-5.test.ts` (VD-01/02/03) |
+| VD-01 | Orçamento recusado, convertido ou cancelado está encerrado: não aceita editar, enviar, aprovar, recusar nem converter. | `regras/vendas.ts` → `validarAcaoOrcamento()`, `orcamentoEncerrado()`; na conversão `validarConversaoOrcamento()` (conversão e toda venda criada com orçamento de origem; antes no banco, BD-30) | "Orçamento encerrado não pode ser alterado." / "… não pode ser convertido." / "… não pode ser editado." | ✅ `etapas-4-5.test.ts` (VD-01) · 🧪 |
+| VD-02 | Orçamento vencido (validade antes de hoje, GE-01) precisa ter a validade renovada antes de enviar, aprovar ou converter. | `regras/vendas.ts` → `validarOrcamentoVigente()` | "Orçamento vencido. Renove a validade no orçamento antes de enviar, aprovar ou converter." | ✅ `etapas-4-5.test.ts` (VD-01/02/03), `etapa-6.test.ts` |
 | VD-03 | Orçamento aprovado não volta para "enviado". | `regras/vendas.ts` → `validarAcaoOrcamento()` | "Orçamento aprovado não pode voltar para enviado." | ✅ `etapas-4-5.test.ts` (VD-01/02/03) |
 | VD-04 | Recusar e cancelar exigem motivo. | chat: `schemas/actionContracts.ts`; tela | — | 🧪 |
 | VD-05 | "Enviar" só registra que foi enviado; não manda e-mail nem mensagem. | `erpProfessionalRepository.ts` → `runQuoteAction()` | — | 🧪 |

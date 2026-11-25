@@ -157,3 +157,14 @@ export function validarAbatimentoDevolucao(dados: { emAbertoCentavos: number; to
   return dados.emAbertoCentavos >= dados.totalCentavos ? ok()
     : recusa('VD-53', `A venda tem ${(dados.emAbertoCentavos / 100).toFixed(2)} em aberto, menos que a devolução (${(dados.totalCentavos / 100).toFixed(2)}). Use crédito ou reembolso.`, { status: 409 })
 }
+
+/**
+ * VD-01, VD-02 na conversão: orçamento encerrado (ou cancelado/excluído) não vira venda; vencido precisa renovar a validade.
+ * Antes ficava no banco (BD-30, gatilho validar_conversao_proposta).
+ */
+export function validarConversaoOrcamento(dados: { situacao: unknown; cancelado?: boolean; validade?: string | null; hoje: string }): Resultado {
+  if (dados.cancelado || orcamentoEncerrado(dados.situacao)) {
+    return recusa('VD-01', 'Orçamento encerrado não pode ser convertido.', { codigo: 'INVALID_STATE', status: 409 })
+  }
+  return validarOrcamentoVigente(dados)
+}

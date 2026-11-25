@@ -34,7 +34,7 @@ Caminhos relativos a `src/products/erp/server/`. Legenda e camadas no [README](R
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CR-09 | Previsão não aceita baixa: primeiro efetiva. Efetivar não recebe dinheiro; efetivar algo já efetivo não faz nada. | **`regras/contas-receber.ts` → `validarBaixa()`** (receber e pagar); `erpFinanceRepository.ts` → `makeReceivableEffective()`; banco: `pagamentos → exigir_efetivo` | "Efetive a previsão antes de registrar a baixa." | ✅ `regras/contas-receber.test.ts` · 🧪 |
+| CR-09 | Previsão não aceita baixa: primeiro efetiva. Efetivar não recebe dinheiro; efetivar algo já efetivo não faz nada. Título efetivado, vindo de venda ou já utilizado não volta a previsão (`regras/contas-receber.ts` → `validarPrevisao()`, `etapa-6.test.ts`; o banco mantém só a trava do título utilizado, BD-31). | **`regras/contas-receber.ts` → `validarBaixa()`** (receber e pagar); `erpFinanceRepository.ts` → `makeReceivableEffective()`; banco: `pagamentos → exigir_efetivo` | "Efetive a previsão antes de registrar a baixa." | ✅ `regras/contas-receber.test.ts` · 🧪 |
 
 > Diferença encontrada: `makePayableEffective()` grava `efetivado_em`; `makeReceivableEffective()` não. Conferir se é intencional.
 > Corrigido na etapa 2: até então a baixa **a receber** não conferia previsão no servidor (só o trigger do banco); agora as duas usam `validarBaixa()`.

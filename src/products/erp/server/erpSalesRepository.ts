@@ -1,5 +1,5 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
-import { validarCancelamentoVenda } from '../regras/vendas'
+import { validarCancelamentoVenda, validarConversaoOrcamento } from '../regras/vendas'
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
@@ -620,6 +620,17 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const documentType = ['orcamento', 'pedido', 'venda'].includes(text(input.values.tipo_documento))
     ? text(input.values.tipo_documento)
     : 'venda'
+  // VD-01/VD-02 (antes BD-30 no banco): venda com orçamento de origem só sai de orçamento aberto e vigente.
+  const originId = optionalNumericId(input.values.venda_origem_id)
+  if (originId && documentType !== 'orcamento' && !input.temporary) {
+    const origin = (await client.query(
+      `SELECT tipo_documento, status, situacao, excluido_em, validade_em::date::text AS validade FROM erp.vendas
+       WHERE empresa_id = $1 AND id = $2 FOR SHARE`, [input.tenantId, originId])).rows[0]
+    if (origin?.tipo_documento === 'orcamento') {
+      exigirRegra(validarConversaoOrcamento({ situacao: origin.situacao, cancelado: origin.status === 'cancelada' || origin.excluido_em != null,
+        validade: origin.validade ? String(origin.validade) : null, hoje: erpToday() }))
+    }
+  }
   const saleDate = dateText(input.values.data_venda) || erpToday()
   const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, documentType as 'orcamento' | 'pedido' | 'venda', saleDate)
 

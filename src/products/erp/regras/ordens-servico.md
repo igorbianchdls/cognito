@@ -20,7 +20,7 @@ Tabela de transições: `erpProfessionalRepository.ts` → `serviceOrderTransiti
 | OS-04 | Cancelar exige motivo. Concluída não se cancela. | `runServiceOrderAction()`; chat: `schemas/actionContracts.ts` | "Ação indisponível para a situação atual." | ❌ |
 | OS-05 | Mudar a situação da OS não mexe em estoque nem emite nota. | — | — | — |
 | OS-06 | Converter (em orçamento ou venda) exige OS não cancelada, com pelo menos um item ativo, e que ainda não tenha gerado venda. Converter de novo reaproveita o documento já gerado. | `erpProfessionalRepository.ts` → `convertServiceOrder()` | "Ordem cancelada não pode ser convertida." / "Esta ordem já originou uma venda." / "A ordem precisa de pelo menos um item ativo." | 🧪 OS concluída → venda |
-| OS-07 | Se a OS já tem orçamento, gerar a venda passa pelo orçamento, que precisa estar disponível (VD-01, VD-02). | `convertServiceOrder()` | "Orçamento vinculado indisponível." | ❌ |
+| OS-07 | Se a OS já tem orçamento, gerar a venda passa pelo orçamento, que precisa estar disponível (VD-01, VD-02). | `convertServiceOrder()` (a venda sai do próprio orçamento; o gatilho do banco BD-32 foi removido na etapa 6) | "Orçamento vinculado indisponível." | ❌ |
 | OS-08 | Uma OS fica vinculada a uma única venda. | `erpProfessionalRepository.ts` → `linkOrdersToSale()` | "A ordem já está vinculada a outra venda." | ❌ |
 | OS-09 | Observações internas não aparecem no PDF público da OS. | `documents/` (geração do PDF) | — | ❌ |
 | OS-10 | A OS guarda uma fotografia do cliente no rascunho; editar o cadastro depois não muda a OS sozinha. | `createServiceOrder()` (`cliente_snapshot`) | — | 🧪 |

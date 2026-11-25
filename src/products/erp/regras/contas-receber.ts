@@ -29,3 +29,15 @@ export function validarBaixa(dados: {
         { detalhes: { valor: centavos(dados.valor) / 100, saldo: centavos(dados.saldo) / 100 } }),
   )
 }
+
+/**
+ * CR-09: só é previsão o título lançado como previsão que nunca foi efetivado, não veio de venda e não foi utilizado
+ * (pagamento, adiantamento, renegociação). Vale para receber e pagar. Antes ficava no banco (BD-31); o banco mantém só
+ * a trava do título utilizado.
+ */
+export function validarPrevisao(dados: { efetivado?: boolean; deVenda?: boolean; utilizado?: boolean }): Resultado {
+  if (dados.deVenda) return recusa('CR-09', 'Título gerado por venda não pode ser previsão.')
+  if (dados.efetivado) return recusa('CR-09', 'Título efetivado não pode voltar a previsão.')
+  if (dados.utilizado) return recusa('CR-09', 'Título já utilizado (pagamento, adiantamento ou renegociação) não pode voltar a previsão.')
+  return ok()
+}

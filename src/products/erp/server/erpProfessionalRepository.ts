@@ -1,4 +1,4 @@
-import { validarAcaoOrcamento, validarOrcamentoVigente, situacaoAposAcaoOrcamento } from '../regras/vendas';
+import { validarAcaoOrcamento, validarConversaoOrcamento, situacaoAposAcaoOrcamento } from '../regras/vendas';
 import { proximaSituacaoOS } from '../regras/ordens-servico';
 import { validarEntrega } from '../regras/vendas';
 import { exigirRegra } from './erpRegras';
@@ -15,7 +15,6 @@ import { lineTotal, sumMoney } from '@/products/erp/shared/erpMoney'
 import { assertCommercialReplay } from '@/products/erp/shared/commercialContracts'
 import { commercialRequest, assertCommercialReplay as assertDeliveryReplay } from './erpCommercialIdempotency'
 import { runQuery, withTransaction, type SQLClient } from "@/lib/postgres";
-import { quoteIsClosed } from '../shared/quoteLifecycle';
 import { processDueSalesContracts } from "@/products/erp/server/erpManagementRepository";
 import {
   createSaleRecord,
@@ -251,10 +250,6 @@ export async function createServiceOrder(
 export async function lockCommercialConversion(client: SQLClient, tenantId: number) {
   await client.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [`erp:commercial-conversion:${tenantId}`]);
 }
-// VD-02 (regras/vendas.ts → validarOrcamentoVigente)
-function assertQuoteValid(quote: Record<string,unknown>) {
-  exigirRegra(validarOrcamentoVigente({ validade: quote.validade_em ? date(quote.validade_em) : null, hoje: erpToday() }));
-}
 async function convertServiceOrder(input: ActorInput & {orderId:number;documentType:'orcamento'|'venda';expectedVersion:number}) {
   return withTransaction(async client => {
     await lockCommercialConversion(client,input.tenantId);
@@ -358,9 +353,8 @@ async function convertQuoteWithClient(client:SQLClient,input:ActorInput&{quoteId
   if(Number(quote.versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','O orçamento foi alterado por outra pessoa.',409);
   const existing=(await client.query("SELECT id::text FROM erp.vendas WHERE empresa_id=$1 AND venda_origem_id=$2 AND tipo_documento='venda' AND excluido_em IS NULL",[input.tenantId,input.quoteId])).rows[0];
   if(existing){await linkOrdersToSale(client,input,orders,String(existing.id));return {sale:existing,reused:true};}
-  if(quote.status==='cancelada'||quoteIsClosed(quote.situacao))throw new ErpDomainError('INVALID_STATE','Orçamento encerrado não pode ser convertido.',409);
+  exigirRegra(validarConversaoOrcamento({situacao:quote.situacao,cancelado:quote.status==='cancelada',validade:quote.validade_em?date(quote.validade_em):null,hoje:erpToday()}));
   if(orders.some(order=>order.status==='cancelada'))throw new ErpDomainError('INVALID_STATE','A ordem de serviço de origem está cancelada.',409);
-  assertQuoteValid(quote);
   const items=(await client.query('SELECT * FROM erp.vendas_itens WHERE empresa_id=$1 AND venda_id=$2 AND excluido_em IS NULL ORDER BY id',[input.tenantId,input.quoteId])).rows;
   const installments=(await client.query('SELECT * FROM erp.vendas_recebimentos_previstos WHERE empresa_id=$1 AND venda_id=$2 AND excluido_em IS NULL ORDER BY numero_parcela',[input.tenantId,input.quoteId])).rows;
   if(!items.length)throw new ErpDomainError('INVALID_STATE','O orçamento precisa de pelo menos um item ativo.',409);

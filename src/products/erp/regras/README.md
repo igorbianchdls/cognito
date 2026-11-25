@@ -82,7 +82,7 @@ Regras repetidas ou inconsistentes encontradas ao montar o catálogo. São as pr
 | ~~Conflito de versão~~ | **Resolvido em vendas, compras e cadastros (etapa 2)**: `regras/geral.ts` → `conferirVersao()`. Antes: Mesma situação com dois códigos e mensagens: `VERSION_CONFLICT` "Venda alterada; atualize antes de continuar." e `VALIDATION_ERROR` "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." | GE-04 |
 | ~~"Hoje"~~ | **Resolvido (etapa 1):** GE-01 e NS-15 migraram para `regras/geral.ts` e `regras/notas-servico.ts`; emissão individual e lote usam a mesma função. | GE-01, NS-15 |
 | Etapas 4 e 5 | **Migradas**: ciclo do orçamento (VD-01..03), OS (OS-03), contratos (CT-02, CT-06), cancelamento e devolução de venda (VD-41..43, VD-51, VD-53), compras (CP-10, CP-31, CP-40..43) e estoque (ES-03, ES-04, ES-10). Mesmas mensagens e códigos de antes. Testes em `etapas-4-5.test.ts`. | — |
-| Gatilhos do banco | Etapa 6 (tirar BD-30..32 e o grupo 2 do banco, ver `banco.md`) fica para depois da rodada de testes: até lá o banco segue como rede de segurança. | BD-30..32 |
+| Gatilhos do banco | **Etapa 6 feita** para o grupo 1: BD-30 e BD-32 removidos, BD-31 reduzido ao fato. O grupo 2 (fluxos inteiros em SQL) ganha um plano por fluxo, ver `banco.md`. | BD-30..32 |
 | Data no estoque | Movimentos de estoque só aceitam o dia atual, mas a ferramenta do chat `movimentar_estoque` aceita `data`. | ES-04 |
 | ~~Mensagens diferentes, mesma regra~~ | **Resolvido (etapa 2)**, ver VD-30. Antes: Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
 | Efetivar previsão | A pagar grava `efetivado_em`; a receber não. | CR-09 |

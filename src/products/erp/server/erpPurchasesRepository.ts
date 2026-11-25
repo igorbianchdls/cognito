@@ -3,6 +3,7 @@ import { validarCancelamentoCompra, validarConfirmacaoCompra, validarDevolucaoCo
 import { conferirVersao, versaoMudou } from '../regras/geral'
 import { validarParcelas } from '../regras/geral'
 import { exigirRegra } from './erpRegras'
+import { validarPrevisao } from '../regras/contas-receber'
 import { runQuery, runWithErpTransactionClient, withTransaction, type SQLClient } from '@/lib/postgres'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
@@ -165,6 +166,9 @@ export async function createOrUpdatePurchasePayable(
   let payable: ReceivableRow
 
   if (existing) {
+    // CR-09 (antes BD-31 no banco): título efetivado ou utilizado não volta a previsão.
+    if (type === 'previsao') exigirRegra(validarPrevisao({ efetivado: existing.payable.tipo_lancamento === 'efetivo',
+      utilizado: existing.payable.status === 'pago' || existing.payable.status === 'parcial' }))
     if (existing.payable.status === 'pago' || existing.payable.status === 'parcial') {
       if (type !== existing.payable.tipo_lancamento) {
         throw new ErpDomainError('VALIDATION_ERROR', 'Não e possível alterar a natureza de uma conta que já possui pagamento.')
