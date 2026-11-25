@@ -4,7 +4,7 @@ import {
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconClipboardListFilled, IconCoinFilled,
   IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
   IconReceiptFilled, IconSendFilled, IconShoppingCartFilled,
-  IconBriefcase2Filled, IconCategoryFilled, IconFileImport, IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled,
+  IconBriefcase2Filled, IconCategoryFilled, IconFileImport, IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled, IconSparkles2Filled,
 } from "@tabler/icons-react"
 
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
@@ -33,6 +33,7 @@ export const sections: Section[] = [
   {
     id: "marketing", title: "Marketing", items: [
       { title: "Editor", url: "/editor", icon: IconVideoFilled },
+      { title: "Vídeos", url: "/marketing/videos", icon: IconSparkles2Filled },
       { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
       { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
@@ -137,6 +138,7 @@ export const createActions: { title: string; url: string; capability?: ErpCapabi
   { title: "Nova conta a receber", url: "/erp/financeiro/contas-a-receber", capability: "erp.financeiro.visualizar", categorias: ["gestao", "completo"] },
   { title: "Novo vídeo", url: "/editor", categorias: ["marketing", "completo"] },
   { title: "Novo post", url: "/marketing/postar", categorias: ["marketing", "completo"] },
+  { title: "Gerar vídeo com IA", url: "/marketing/videos", categorias: ["marketing", "completo"] },
 ]
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(path + "/")

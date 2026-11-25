@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/inbox/vendas/(.*)',
   '/api/inbox/sair',
   '/otto.js',
+  // Clipes do provedor de demonstração de Marketing → Vídeos: o servidor os baixa sem sessão.
+  '/marketing/videos-demo/(.*)',
   '/sign-up(.*)',
   '/sso-callback(.*)',
   '/entrando',
