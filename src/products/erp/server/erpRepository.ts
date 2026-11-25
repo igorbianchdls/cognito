@@ -1,3 +1,5 @@
+import { conferirVersao, versaoMudou } from '../regras/geral'
+import { exigirRegra } from './erpRegras'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { saveCustomerCommercialTerms } from '@/products/erp/server/erpCommercialRules'
@@ -216,9 +218,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     )
     const current = currentResult.rows[0]
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro não encontrado.')
-    if (Number(current.versao) !== input.expectedVersion) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a página.')
-    }
+    exigirRegra(conferirVersao({ atual: Number(current.versao), esperada: input.expectedVersion, documento: 'Este registro' }))
 
     let result: { rows: Record<string, unknown>[] }
     if (isEntityRoleModule(input.entityId)) {
@@ -319,7 +319,7 @@ export async function updateErpEntityRecord(input: UpdateInput): Promise<ErpEnti
     }
 
     const updated = result.rows[0]
-    if (!updated) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa. Recarregue a página.')
+    if (!updated) exigirRegra(versaoMudou('Este registro'))
     const relations = isEntityRoleModule(input.entityId)
       ? await saveRegistrationRelations(client, input.tenantId, id, input.actorId, input.values) : undefined
     if (isEntityRoleModule(input.entityId) && optionalText(input.values.categoria)) await saveEntityCategory(client, input.tenantId, input.actorId, input.entityId, id, input.values.categoria)
@@ -342,7 +342,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
     )
     const current = currentResult.rows[0]
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Registro não encontrado.')
-    if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa.')
+    exigirRegra(conferirVersao({ atual: Number(current.versao), esperada: input.expectedVersion, documento: 'Este registro' }))
     if (entityId === 'contas-contabeis') {
       const children = await client.query('SELECT id FROM erp.contas_contabeis WHERE empresa_id=$1 AND conta_pai_id=$2 AND ativo AND excluido_em IS NULL LIMIT 1', [input.tenantId, id])
       if (children.rows.length) throw new ErpDomainError('ACCOUNTING_ACTIVE_CHILDREN', 'Esta conta possui contas filhas ativas. Desative ou transfira as contas filhas antes de desativar o grupo.', 422)
@@ -353,7 +353,7 @@ export async function deactivateErpEntityRecord(input: IdActionInput & { entityI
       [input.tenantId, id, input.actorId, input.expectedVersion],
     )
     const updated = result.rows[0]
-    if (!updated) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: este registro foi alterado por outra pessoa.')
+    if (!updated) exigirRegra(versaoMudou('Este registro'))
     await appendRegistrationEvent(client, { ...input, entityId, id }, 'desativado', Number(updated.versao), current, updated)
   })
   return getErpEntityRecord({ tenantId: input.tenantId, entityId, id })

@@ -76,13 +76,13 @@ Regras repetidas ou inconsistentes encontradas ao montar o catálogo. São as pr
 
 | Onde | O que há | Regras |
 |---|---|---|
-| Entrega de venda | Duas implementações: `erpStockRepository.ts` → `attendStockForSale()` (chat, entrega total) e `erpProfessionalRepository.ts` → `attendSaleItems()` (tela, entrega parcial). A do chat não atualizava os itens até 2026-11-25. | VD-30 a VD-33 |
-| Baixa a receber × a pagar | `settleReceivableInstallment()` e `settlePayableInstallment()` são quase cópias (mesmas regras de saldo, conta, idempotência). | CR-10 a CR-17 |
-| Parcelas somam o total | Conferido em `erpSalesRepository.ts` → `validateSaleInstallments()` e de novo em `createSaleRecord()`, além do contrato do chat. | VD-12 |
-| Conflito de versão | Mesma situação com dois códigos e mensagens: `VERSION_CONFLICT` "Venda alterada; atualize antes de continuar." e `VALIDATION_ERROR` "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." | GE-04 |
+| ~~Entrega de venda~~ | **Regra unificada (etapa 2)**: `regras/vendas.ts` → `validarEntrega()`. As duas implementações da entrega continuam (total e parcial), com a mesma regra e mensagem. Antes: duas implementações: `erpStockRepository.ts` → `attendStockForSale()` (chat, entrega total) e `erpProfessionalRepository.ts` → `attendSaleItems()` (tela, entrega parcial). A do chat não atualizava os itens até 2026-11-25. | VD-30 a VD-33 |
+| ~~Baixa a receber × a pagar~~ | **Resolvido (etapa 2)**: `regras/contas-receber.ts` → `validarBaixa()` para os dois lados. Antes: `settleReceivableInstallment()` e `settlePayableInstallment()` são quase cópias (mesmas regras de saldo, conta, idempotência). | CR-10 a CR-17 |
+| ~~Parcelas somam o total~~ | **Resolvido (etapa 2)**: `regras/geral.ts` → `validarParcelas()` em vendas, compras e títulos. Antes: Conferido em `erpSalesRepository.ts` → `validateSaleInstallments()` e de novo em `createSaleRecord()`, além do contrato do chat. | VD-12 |
+| ~~Conflito de versão~~ | **Resolvido em vendas, compras e cadastros (etapa 2)**: `regras/geral.ts` → `conferirVersao()`. Antes: Mesma situação com dois códigos e mensagens: `VERSION_CONFLICT` "Venda alterada; atualize antes de continuar." e `VALIDATION_ERROR` "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." | GE-04 |
 | ~~"Hoje"~~ | **Resolvido (etapa 1):** GE-01 e NS-15 migraram para `regras/geral.ts` e `regras/notas-servico.ts`; emissão individual e lote usam a mesma função. | GE-01, NS-15 |
 | Data no estoque | Movimentos de estoque só aceitam o dia atual, mas a ferramenta do chat `movimentar_estoque` aceita `data`. | ES-04 |
-| Mensagens diferentes, mesma regra | Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
+| ~~Mensagens diferentes, mesma regra~~ | **Resolvido (etapa 2)**, ver VD-30. Antes: Entrega: "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela). | ES-11 |
 | Efetivar previsão | A pagar grava `efetivado_em`; a receber não. | CR-09 |
 | Sem trava | Título manual duplicando venda (CR-03); transferência deixando conta negativa (CB-10); receber compra ainda em rascunho (CP-20); cancelar compra já recebida (CP-31). Decidir se são desejados. | CR-03, CB-10, CP-20, CP-31 |
 | Perfis | Vendas e Compras criam cadastros mas não excluem; Vendas não vê o financeiro do cliente; Compras não recebe mercadoria. | PE, CD-31 |

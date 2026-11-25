@@ -1,4 +1,7 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
+import { conferirVersao, versaoMudou } from '../regras/geral'
+import { validarParcelas } from '../regras/geral'
+import { exigirRegra } from './erpRegras'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { assertCustomerCredit, assertDiscountLimit, assertTablePriceRules, cancelSaleCommissions, generateSaleCommissions, resolvePriceTable, saleSeller, saleTransport, sellerRules, tablePrice, type TablePrice } from '@/products/erp/server/erpCommercialRules'
@@ -17,20 +20,8 @@ import { FINANCIAL_CATEGORY_LEAF_SQL, paymentMethodId } from './erpReceivablesPa
 import { appendPagination, appendRecordStatusFilter, appendSearch, dateText, jsonObject, money, normalizedIdempotencyKey, numericId, optionalNumericId, optionalText, positiveMoney, stringArray, text, type ConfirmErpSaleResult, type ConfirmSaleInput, type CreateInput, type IdActionInput, type InstallmentRow, type ListInput, type NormalizedInstallment, type ReceivableRow, type SaleRow } from './erpRepositoryCore'
 
 function validateSaleInstallments(sale: SaleRow, installments: NormalizedInstallment[]) {
-  const numbers = new Set<number>()
-  for (const installment of installments) {
-    if (!Number.isInteger(installment.numeroParcela) || installment.numeroParcela <= 0) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Número de parcela inválido.')
-    }
-    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo número.')
-    numbers.add(installment.numeroParcela)
-  }
-
-  const installmentsTotal = Number(installments.reduce((sum, installment) => sum + installment.valor, 0).toFixed(2))
-  const saleTotal = Number(money(sale.total).toFixed(2))
-  if (installmentsTotal !== saleTotal) {
-    throw new ErpDomainError('VALIDATION_ERROR', 'A soma das parcelas precisa ser igual ao total da venda.')
-  }
+  // GE-11, GE-12 (regras/geral.ts)
+  exigirRegra(validarParcelas({ valores: installments.map(i => i.valor), numeros: installments.map(i => i.numeroParcela), total: money(sale.total), documento: 'da venda' }))
   return installments
 }
 function normalizePaymentConditionInstallments(sale: SaleRow): NormalizedInstallment[] {
@@ -276,7 +267,7 @@ export async function confirmErpSale(input: ConfirmSaleInput): Promise<ConfirmEr
     )
     const sale = saleResult.rows[0] as SaleRow | undefined
     if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
-    if(input.expectedVersion !== undefined && Number(saleResult.rows[0].versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','Venda alterada; atualize antes de continuar.',409,undefined,'refresh')
+    if(input.expectedVersion !== undefined)exigirRegra(conferirVersao({atual:Number(saleResult.rows[0].versao),esperada:input.expectedVersion,documento:'Esta venda'}))
     if (sale.tipo_documento === 'orcamento') {
       throw new ErpDomainError('VALIDATION_ERROR', 'Converta o orçamento em venda antes de confirmar o financeiro.')
     }
@@ -503,7 +494,7 @@ export async function cancelErpSale(input: IdActionInput & { reason?: string | n
     )
     const sale = saleResult.rows[0] as { id: string | number; status: string } | undefined
     if (!sale) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
-    if(input.expectedVersion !== undefined && Number(saleResult.rows[0].versao)!==input.expectedVersion)throw new ErpDomainError('VERSION_CONFLICT','Venda alterada; atualize antes de continuar.',409,undefined,'refresh')
+    if(input.expectedVersion !== undefined)exigirRegra(conferirVersao({atual:Number(saleResult.rows[0].versao),esperada:input.expectedVersion,documento:'Esta venda'}))
     if (sale.status === 'cancelada') return { id: String(sale.id), status: 'cancelada' }
 
     // Devolução já tem tratamento financeiro próprio; cancelar o título de origem
@@ -726,7 +717,6 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
   const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
     ? input.values.parcelas as Record<string, unknown>[]
     : [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: dateText(input.values.data_vencimento) || saleDate, valor: total }]
-  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condição de pagamento aceita no máximo 48 parcelas.')
   const installments = rawInstallments.map((raw, index) => {
     const value = positiveMoney(raw.valor)
     const dueDate = dateText(raw.data_vencimento)
@@ -740,8 +730,8 @@ export async function createSaleRecord(client: SQLClient, input: CreateInput) {
       metodoPagamentoId: optionalNumericId(raw.metodo_pagamento_id) || optionalNumericId(input.values.metodo_pagamento_id),
     }
   })
-  const installmentTotal = Number(installments.reduce((sum, installment) => sum + installment.valor, 0).toFixed(2))
-  if (installmentTotal !== total) throw new ErpDomainError('VALIDATION_ERROR', 'A soma das parcelas precisa ser igual ao total da venda.')
+  // GE-11, GE-12 (regras/geral.ts)
+  exigirRegra(validarParcelas({ valores: installments.map(i => i.valor), numeros: installments.map(i => i.numero), total, documento: 'da venda' }))
 
   const saleResult = await client.query(
     `INSERT INTO erp.vendas (
@@ -874,7 +864,7 @@ export async function updateErpSaleDraft(input: {
     if (!current) throw new ErpDomainError('VALIDATION_ERROR', 'Venda não encontrada.')
     if (current.status !== 'rascunho') throw new ErpDomainError('VALIDATION_ERROR', 'Somente vendas em rascunho podem ser editadas.')
     if (current.tipo_documento === 'orcamento' && quoteIsClosed(current.situacao)) throw new ErpDomainError('INVALID_STATE', 'Orçamento encerrado não pode ser editado.', 409)
-    if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta venda foi alterada por outra pessoa.')
+    exigirRegra(conferirVersao({ atual: Number(current.versao), esperada: input.expectedVersion, documento: 'Esta venda' }))
 
     const staged = await createSaleRecord(client, {
       tenantId: input.tenantId, actorId: input.actorId, entityId: 'pedidos', temporary: true,
@@ -911,7 +901,7 @@ export async function updateErpSaleDraft(input: {
        RETURNING target.versao, target.numero, target.total`,
       [input.tenantId, id, stagedId, optionalText(input.values.numero) || current.numero, input.actorId, input.expectedVersion],
     )
-    if (!updated.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta venda foi alterada por outra pessoa.')
+    if (!updated.rows[0]) exigirRegra(versaoMudou('Esta venda'))
     await client.query(`DELETE FROM erp.vendas WHERE empresa_id = $1 AND id = $2`, [input.tenantId, stagedId])
     await client.query(
       `INSERT INTO erp.vendas_eventos (empresa_id, venda_id, evento, status_anterior, status_novo, versao, dados, criado_por)

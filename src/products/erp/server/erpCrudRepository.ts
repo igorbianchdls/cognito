@@ -1,7 +1,8 @@
+import {validarParcelas} from '../regras/geral'
+import {exigirRegra} from './erpRegras'
 import type { SQLClient } from '@/lib/postgres'
 import { assertErpPeriodOpen } from './erpPeriodRepository'
 import { ErpDomainError } from '../shared/erpErrors'
-import { sumMoney } from '../shared/erpMoney'
 
 export type FinancialSide='pagar'|'receber'
 export async function classifyExpenseWithClient(client:SQLClient,tenantId:number,actorId:number,id:number,categoryId:number){
@@ -31,7 +32,8 @@ export async function validateFinancialReferences(client:Pick<SQLClient,'query'>
     if(!ref.rows[0])fail('Referência financeira não disponível nesta empresa.')
   }
   const parts=values.parcelas as {valor:number;data_vencimento:string}[]
-  if(!parts?.length||parts.length>48||sumMoney(parts.map(p=>p.valor))!==values.valor_total)fail('Parcelas devem distribuir o valor total.')
+  // GE-11, GE-12 (regras/geral.ts)
+  exigirRegra(validarParcelas({valores:(parts||[]).map(p=>Number(p.valor)),total:Number(values.valor_total),documento:'do título'}))
 }
 async function financialPeriod(client:SQLClient,tenantId:number,values:Record<string,unknown>){
   const iso=(value:unknown)=>value instanceof Date?value.toISOString().slice(0,10):String(value).slice(0,10)

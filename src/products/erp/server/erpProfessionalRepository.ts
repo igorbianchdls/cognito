@@ -1,3 +1,5 @@
+import { validarEntrega } from '../regras/vendas';
+import { exigirRegra } from './erpRegras';
 import { ERP_TODAY_SQL } from '@/products/erp/server/erpBusinessDate'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
@@ -690,12 +692,8 @@ export async function attendSaleItems(
     const sale = saleResult.rows[0];
     if (!sale)
       throw new ErpDomainError("SALE_NOT_FOUND", "Venda não encontrada.", 404);
-    if (String(sale.status) !== "confirmada" || !["pendente", "parcial"].includes(String(sale.atendimento_status)))
-      throw new ErpDomainError(
-        "INVALID_STATE",
-        "Venda precisa estar confirmada e pendente para atender.",
-        409,
-      );
+    // VD-30 (regras/vendas.ts): mesma regra e mensagem da entrega total do chat.
+    exigirRegra(validarEntrega({ situacao: String(sale.status), entrega: String(sale.atendimento_status) }));
     const groups = new Map<
       number,
       Array<{

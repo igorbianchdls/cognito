@@ -1,3 +1,5 @@
+import { validarEntrega } from '../regras/vendas'
+import { exigirRegra } from './erpRegras'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import type { ErpOperationListInput, ErpOperationPage } from '@/products/erp/server/erpManagementRepository'
 import { assertErpPeriodOpen } from '@/products/erp/server/erpPeriodRepository'
@@ -398,7 +400,8 @@ export async function attendStockForSale(input: ActorInput & { saleId: number })
     const sale = saleResult.rows[0]
     if (!sale) throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Venda não encontrada.')
     if (sale.atendimento_status === 'atendido') return { id: String(sale.id), status: 'confirmada', atendimento_status: 'atendido' }
-    if (sale.status !== 'confirmada') throw new ErpDomainError('STOCK_OPERATION_INVALID', 'Apenas venda confirmada pode ser atendida.')
+    // VD-30 (regras/vendas.ts): mesma regra e mensagem da entrega parcial da tela.
+    exigirRegra(validarEntrega({ situacao: String(sale.status), entrega: String(sale.atendimento_status) }))
 
     const reservations = await client.query(
       `SELECT * FROM erp.reservas_estoque

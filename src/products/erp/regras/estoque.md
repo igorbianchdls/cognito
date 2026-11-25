@@ -26,7 +26,7 @@ Caminhos relativos a `src/products/erp/server/`. Legenda no [README](README.md).
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | ES-10 | Confirmar venda reserva o disponível dos produtos controlados; sem disponível suficiente, não confirma. | `reserveStockForSale()` | "Estoque disponível insuficiente para X. Disponível: N." | ❌ |
-| ES-11 | Entregar consome a reserva e baixa o físico. Detalhes em VD-30 a VD-33. | `attendStockForSale()` / `erpProfessionalRepository.ts` → `attendSaleItems()` | "Apenas venda confirmada pode ser atendida." (chat) × "Venda precisa estar confirmada e pendente para atender." (tela) — **mensagens diferentes para a mesma regra** | 🧪 19 → 17 |
+| ES-11 | Entregar consome a reserva e baixa o físico. Detalhes em VD-30 a VD-33. | `attendStockForSale()` / `erpProfessionalRepository.ts` → `attendSaleItems()`; a regra de quando pode entregar é `regras/vendas.ts` → `validarEntrega()` (VD-30) | "Venda precisa estar confirmada e com entrega pendente para atender." | ✅ (VD-30) · 🧪 19 → 17 |
 | ES-12 | Cancelar venda confirmada libera a reserva; devolução devolve ao estoque (VD-56). | `erpSalesRepository.ts` → `cancelErpSale()`; `erpReturnsRepository.ts` | — | 🧪 |
 
 ## Operações manuais

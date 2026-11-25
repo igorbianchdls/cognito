@@ -21,3 +21,10 @@ test('exigirRegra() lança ErpDomainError com código, mensagem, status e a regr
     },
   )
 })
+
+test('exigirRegra() pede para atualizar a tela no conflito de versão (GE-30)', () => {
+  assert.throws(() => exigirRegra(recusa('GE-30', 'Mudou.', { codigo: 'VERSION_CONFLICT', status: 409 })),
+    (error: unknown) => error instanceof ErpDomainError && error.recovery === 'refresh')
+  assert.throws(() => exigirRegra(recusa('CR-12', 'Acima do saldo.')),
+    (error: unknown) => error instanceof ErpDomainError && error.recovery === 'none')
+})

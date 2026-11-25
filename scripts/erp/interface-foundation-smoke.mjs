@@ -181,7 +181,7 @@ async function main() {
     assert.equal(JSON.parse(updated.contatos_json)[0].nome,'Financeiro atualizado')
     const found=await repo.listErpEntityPage({tenantId:1,entityId:'clientes',query:'financeiro@example.invalid'})
     assert(found.records.some(row=>String(row.id)===String(created.id) && row.email==='financeiro@example.invalid'))
-    await assert.rejects(()=>repo.updateErpEntityRecord({tenantId:1,actorId:1,entityId:'clientes',id:created.id,expectedVersion:Number(detail.versao),values}),/CONFLITO_VERSAO/)
+    await assert.rejects(()=>repo.updateErpEntityRecord({tenantId:1,actorId:1,entityId:'clientes',id:created.id,expectedVersion:Number(detail.versao),values}),/mudou desde que você abriu/)
     await assert.rejects(()=>repo.updateErpEntityRecord({tenantId:1,actorId:1,entityId:'clientes',id:101,expectedVersion:1,values:{...values,contatos:clean(contacts)}}),/pertence/)
     detail=await repo.getErpEntityRecord({tenantId:1,entityId:'clientes',id:101});assert.equal(detail.nome,'Ficticio');assert.equal(Number(detail.versao),1)
     const removed=await repo.updateErpEntityRecord({tenantId:1,actorId:1,entityId:'clientes',id:created.id,expectedVersion:Number(updated.versao),values:{...values,contatos:[],enderecos:[]}})

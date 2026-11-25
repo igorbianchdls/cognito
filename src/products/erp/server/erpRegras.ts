@@ -6,5 +6,7 @@ import type { Resultado } from '../regras/resultado'
 /** Lança o erro do ERP quando a regra recusa; não faz nada quando aprova. */
 export function exigirRegra(resultado: Resultado): void {
   if (resultado.ok) return
-  throw new ErpDomainError(resultado.codigo, resultado.mensagem, resultado.status, { regra: resultado.regra, ...resultado.detalhes })
+  // Conflito de versão (GE-30): a tela oferece atualizar os dados, como antes.
+  const recuperacao = resultado.codigo === 'VERSION_CONFLICT' ? 'refresh' : 'none'
+  throw new ErpDomainError(resultado.codigo, resultado.mensagem, resultado.status, { regra: resultado.regra, ...resultado.detalhes }, recuperacao)
 }

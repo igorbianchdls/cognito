@@ -1,4 +1,7 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
+import { conferirVersao, versaoMudou } from '../regras/geral'
+import { validarParcelas } from '../regras/geral'
+import { exigirRegra } from './erpRegras'
 import { runQuery, runWithErpTransactionClient, withTransaction, type SQLClient } from '@/lib/postgres'
 import { erpToday } from '@/products/erp/server/erpBusinessDate'
 import { nextDocumentNumber } from '@/products/erp/server/erpDocumentNumbers'
@@ -85,26 +88,12 @@ function normalizePurchaseItems(values: Record<string, unknown>): PurchaseItemIn
   })
 }
 function validatePurchaseInstallments(purchase: PurchaseRow, installments: NormalizedInstallment[]) {
-  if (installments.length === 0 || installments.length > 48) {
-    throw new ErpDomainError('VALIDATION_ERROR', 'A compra deve ter entre 1 e 48 parcelas.')
-  }
-
-  const numbers = new Set<number>()
   for (const installment of installments) {
-    if (!Number.isInteger(installment.numeroParcela) || installment.numeroParcela <= 0 || installment.numeroParcela > 48) {
-      throw new ErpDomainError('VALIDATION_ERROR', 'Número de parcela inválido.')
-    }
-    if (numbers.has(installment.numeroParcela)) throw new ErpDomainError('VALIDATION_ERROR', 'Existem parcelas com o mesmo número.')
-    numbers.add(installment.numeroParcela)
     if (!dateText(installment.dataVencimento)) throw new ErpDomainError('VALIDATION_ERROR', `Vencimento da parcela ${installment.numeroParcela} invalido.`)
     if (money(installment.valor) <= 0) throw new ErpDomainError('VALIDATION_ERROR', `Valor da parcela ${installment.numeroParcela} invalido.`)
   }
-
-  const installmentsTotal = Number(installments.reduce((sum, installment) => sum + installment.valor, 0).toFixed(2))
-  const purchaseTotal = Number(money(purchase.total).toFixed(2))
-  if (installmentsTotal !== purchaseTotal) {
-    throw new ErpDomainError('VALIDATION_ERROR', 'A soma das parcelas precisa ser igual ao total da compra.')
-  }
+  // GE-11, GE-12 (regras/geral.ts)
+  exigirRegra(validarParcelas({ valores: installments.map(i => i.valor), numeros: installments.map(i => i.numeroParcela), total: money(purchase.total), documento: 'da compra' }))
   return installments
 }
 function normalizePurchaseInstallments(purchase: PurchaseRow): NormalizedInstallment[] {
@@ -895,7 +884,7 @@ export async function returnErpPurchase(input: IdActionInput & { expectedVersion
       assertOperationReplay(previous.hash, hash)
       return { id: String(input.id), status: 'devolvida', repetido: true }
     }
-    if (Number(purchase.versao) !== input.expectedVersion) throw new ErpDomainError('VERSION_CONFLICT', 'A compra mudou. Atualize antes de devolver.', 409)
+    exigirRegra(conferirVersao({ atual: Number(purchase.versao), esperada: input.expectedVersion, documento: 'Esta compra' }))
     if (purchase.status !== 'recebida' || purchase.tipo_compra !== 'produto') throw new ErpDomainError('INVALID_STATE', 'A devolução integral exige uma compra de produtos totalmente recebida.', 409)
     for (const businessModule of ['compras', 'financeiro'] as const) {
       await assertErpPeriodOpen(client, { tenantId: input.tenantId, module: businessModule, date: erpToday() })
@@ -1228,7 +1217,7 @@ export async function updateErpPurchaseDraft(input: {
     if (current.status !== 'rascunho' || current.tipo_movimento !== 'cotacao') {
       throw new ErpDomainError('VALIDATION_ERROR', 'Somente cotacoes em rascunho podem ser editadas.')
     }
-    if (Number(current.versao) !== input.expectedVersion) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta compra foi alterada por outra pessoa.')
+    exigirRegra(conferirVersao({ atual: Number(current.versao), esperada: input.expectedVersion, documento: 'Esta compra' }))
 
     const staged = await createPurchaseRecord(client, {
       tenantId: input.tenantId, actorId: input.actorId, entityId: 'pedidos-compra', temporary: true,
@@ -1261,7 +1250,7 @@ export async function updateErpPurchaseDraft(input: {
        RETURNING target.versao, target.numero, target.total`,
       [input.tenantId, id, stagedId, optionalText(input.values.numero) || current.numero, input.actorId, input.expectedVersion],
     )
-    if (!updated.rows[0]) throw new ErpDomainError('VALIDATION_ERROR', 'CONFLITO_VERSAO: esta compra foi alterada por outra pessoa.')
+    if (!updated.rows[0]) exigirRegra(versaoMudou('Esta compra'))
     await client.query(`DELETE FROM erp.compras WHERE empresa_id = $1 AND id = $2`, [input.tenantId, stagedId])
     await client.query(
       `INSERT INTO erp.compras_eventos (empresa_id, compra_id, evento, dados, criado_por)

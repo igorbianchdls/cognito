@@ -34,17 +34,18 @@ Caminhos relativos a `src/products/erp/server/`. Legenda e camadas no [README](R
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CR-09 | Previsão não aceita baixa: primeiro efetiva. Efetivar não recebe dinheiro; efetivar algo já efetivo não faz nada. | `erpReceivablesPayablesRepository.ts` → `settleReceivableInstallment()`; `erpFinanceRepository.ts` → `makeReceivableEffective()`; banco: `pagamentos → exigir_efetivo` | "Efetive a previsão antes de registrar o pagamento." | 🧪 (lado a pagar) |
+| CR-09 | Previsão não aceita baixa: primeiro efetiva. Efetivar não recebe dinheiro; efetivar algo já efetivo não faz nada. | **`regras/contas-receber.ts` → `validarBaixa()`** (receber e pagar); `erpFinanceRepository.ts` → `makeReceivableEffective()`; banco: `pagamentos → exigir_efetivo` | "Efetive a previsão antes de registrar a baixa." | ✅ `regras/contas-receber.test.ts` · 🧪 |
 
 > Diferença encontrada: `makePayableEffective()` grava `efetivado_em`; `makeReceivableEffective()` não. Conferir se é intencional.
+> Corrigido na etapa 2: até então a baixa **a receber** não conferia previsão no servidor (só o trigger do banco); agora as duas usam `validarBaixa()`.
 
 ## Registrar recebimento (baixa)
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | CR-10 | A baixa é da **parcela**, não do título. | `erpReceivablesPayablesRepository.ts` → `settleReceivableInstallment()` | "Parcela a receber não encontrada." | 🧪 |
-| CR-11 | Parcela cancelada ou já paga não aceita baixa. | idem | "Parcela cancelada não pode ser baixada." / "Parcela já esta paga." | ❌ |
-| CR-12 | Valor da baixa > 0 e no máximo o saldo em aberto da parcela (baixa parcial é permitida). | idem; banco: `validar_saldos` | "O valor da baixa deve ser maior que zero." / "O valor (R$ X) passa do saldo em aberto da parcela (R$ Y)." | 🧪 R$ 9.999 numa parcela de R$ 698 recusado na prévia |
+| CR-11 | Parcela cancelada ou já paga não aceita baixa. | **`regras/contas-receber.ts` → `validarBaixa()`** | "Parcela cancelada não pode ser baixada." / "Parcela já está paga." | ✅ `regras/contas-receber.test.ts` |
+| CR-12 | Valor da baixa > 0 e no máximo o saldo em aberto da parcela (baixa parcial é permitida), comparado em centavos. | **`regras/contas-receber.ts` → `validarBaixa()`**, chamada por `settleReceivableInstallment()` e `settlePayableInstallment()`; banco: `validar_saldos` | "O valor da baixa deve ser maior que zero." / "O valor (R$ X) passa do saldo em aberto da parcela (R$ Y)." | ✅ `regras/contas-receber.test.ts` · 🧪 R$ 9.999 numa parcela de R$ 698 recusado na prévia |
 | CR-13 | Toda baixa entra numa conta financeira ativa (a informada, a da parcela ou a padrão); sem nenhuma conta cadastrada, não há baixa. | `erpReceivablesPayablesRepository.ts` → `ensureFinancialAccountId()` | "Conta financeira inválida ou inativa." / "Cadastre uma conta financeira antes de registrar a baixa." | 🧪 |
 | CR-14 | Recebimento por cartão na maquininha entra na conta da maquininha; a taxa é calculada pelo ERP e não pode ser informada à mão. | `erpReceivablesPayablesRepository.ts` → `settleReceivableInstallment()` | "Com esta forma de pagamento a taxa do cartão é calculada pelo ERP; não informe a taxa." | ❌ |
 | CR-15 | Desconto e taxa não podem passar do valor recebido. | `erpReceivablesPayablesRepository.ts` → `paymentNetValue()` | "Desconto e taxa não podem superar o valor recebido." | ❌ |

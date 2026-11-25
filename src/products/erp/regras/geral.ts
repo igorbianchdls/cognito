@@ -1,4 +1,5 @@
 // Regras gerais do ERP (catálogo: geral.md). Funções puras, usadas pela tela, pelo servidor e pelo chat.
+import { ok, primeiraRecusa, recusa, type Resultado } from './resultado'
 
 /** Fuso padrão das empresas, quando não há outro configurado. */
 export const FUSO_PADRAO = 'America/Sao_Paulo'
@@ -43,4 +44,41 @@ export function limitesDoMes(dia: string, deslocamento = 0): { inicio: string; f
   const inicio = new Date(Date.UTC(ano, mes - 1 + deslocamento, 1, 12))
   const fim = new Date(Date.UTC(ano, mes + deslocamento, 0, 12))
   return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) }
+}
+
+// ---- Parcelas (GE-11, GE-12) e versão (GE-30) ----
+
+/** Máximo de parcelas por documento (GE-12). */
+export const MAXIMO_PARCELAS = 48
+
+/**
+ * GE-11, GE-12: um documento tem de 1 a 48 parcelas, sem número repetido, e elas somam exatamente o total
+ * (comparado em centavos). `documento` completa a mensagem: "da venda", "da compra", "da despesa", "do título".
+ */
+export function validarParcelas(dados: { valores: number[]; numeros?: number[]; total: number; documento: string }): Resultado {
+  const { valores, numeros = [], total, documento } = dados
+  if (valores.length === 0) return recusa('GE-12', 'Informe pelo menos uma parcela.')
+  if (valores.length > MAXIMO_PARCELAS) return recusa('GE-12', `A condição de pagamento aceita no máximo ${MAXIMO_PARCELAS} parcelas.`)
+  const vistos = new Set<number>()
+  for (const numero of numeros) {
+    if (!Number.isInteger(numero) || numero <= 0 || numero > MAXIMO_PARCELAS) return recusa('GE-12', 'Número de parcela inválido.')
+    if (vistos.has(numero)) return recusa('GE-12', 'Existem parcelas com o mesmo número.')
+    vistos.add(numero)
+  }
+  const soma = valores.reduce((acumulado, valor) => acumulado + Math.round(valor * 100), 0)
+  return primeiraRecusa(soma === Math.round(total * 100) ? ok()
+    : recusa('GE-11', `A soma das parcelas precisa ser igual ao total ${documento}.`, { detalhes: { soma: soma / 100, total: Math.round(total * 100) / 100 } }))
+}
+
+/**
+ * GE-30: quem salva precisa estar vendo a versão atual; se outra pessoa salvou antes, recusa.
+ * `documento` completa a mensagem: "Esta venda", "Este título"...
+ */
+export function conferirVersao(dados: { atual: number; esperada: number; documento: string }): Resultado {
+  return Number(dados.atual) === Number(dados.esperada) ? ok() : versaoMudou(dados.documento)
+}
+
+/** GE-30 quando a gravação não encontrou mais a versão esperada (outra pessoa salvou no meio). */
+export function versaoMudou(documento: string): Resultado {
+  return recusa('GE-30', `${documento} mudou desde que você abriu (outra pessoa salvou antes). Atualize antes de continuar.`, { codigo: 'VERSION_CONFLICT', status: 409 })
 }

@@ -1,4 +1,7 @@
 // Part of the ERP repository, split by area from erpRepository.ts. erpRepository.ts re-exports the public names.
+import { validarBaixa } from '../regras/contas-receber'
+import { validarParcelas } from '../regras/geral'
+import { exigirRegra } from './erpRegras'
 import { runQuery, withTransaction, type SQLClient } from '@/lib/postgres'
 import { ERP_TODAY_SQL, erpToday } from '@/products/erp/server/erpBusinessDate'
 import { applyCardReceipt, cancelCardReceipt, cardMethodConfig } from '@/products/erp/server/erpCardReceipts'
@@ -631,6 +634,7 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
          parcelas.status,
          parcelas.conta_financeira_id,
          parcelas.metodo_pagamento_id,
+         contas.tipo_lancamento,
          composicao.credito,
          composicao.transferido,
          composicao.saldo,
@@ -655,13 +659,10 @@ export async function settleReceivableInstallment(input: SettleInstallmentInput)
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
       installment: { id: String(installment.id), conta_receber_id: String(installment.conta_receber_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status_atual },
     }
-    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
-    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
-
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'O valor da baixa deve ser maior que zero.')
-    if (amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', `O valor (R$ ${amount.toFixed(2)}) passa do saldo em aberto da parcela (R$ ${remaining.toFixed(2)}).`)
+    // CR-09, CR-11, CR-12 (regras/contas-receber.ts): a mesma regra para receber e pagar.
+    exigirRegra(validarBaixa({ situacao: String(installment.status), tipoLancamento: installment.tipo_lancamento as string | null, saldo: remaining, valor: amount }))
 
     const methodId = paymentMethodId(input.values.metodo_pagamento_id || installment.metodo_pagamento_id)
     // Cartão pela maquininha: o recebimento entra na conta da maquininha (a taxa e os repasses vêm depois).
@@ -799,14 +800,10 @@ export async function settlePayableInstallment(input: SettleInstallmentInput) {
       payment: { id: String(existingPayment.id), valor: existingPayment.valor, valor_liquido: existingPayment.valor_liquido },
       installment: { id: String(installment.id), conta_pagar_id: String(installment.conta_pagar_id), valor: installment.valor, valor_pago: installment.valor_pago, status: installment.status_atual },
     }
-    if (installment.status === 'cancelado') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela cancelada não pode ser baixada.')
-    if (installment.status === 'pago') throw new ErpDomainError('VALIDATION_ERROR', 'Parcela já esta paga.')
-    if (installment.tipo_lancamento === 'previsao') throw new ErpDomainError('VALIDATION_ERROR', 'Efetive a previsão antes de registrar o pagamento.')
-
     const remaining = money(installment.saldo)
     const amount = requestIdentity.amount === 'remaining' ? remaining : paymentAdjustment(input.values.valor)
-    if (amount <= 0) throw new ErpDomainError('VALIDATION_ERROR', 'O valor da baixa deve ser maior que zero.')
-    if (amount > remaining) throw new ErpDomainError('VALIDATION_ERROR', `O valor (R$ ${amount.toFixed(2)}) passa do saldo em aberto da parcela (R$ ${remaining.toFixed(2)}).`)
+    // CR-09, CR-11, CR-12 (regras/contas-receber.ts): a mesma regra para receber e pagar.
+    exigirRegra(validarBaixa({ situacao: String(installment.status), tipoLancamento: installment.tipo_lancamento as string | null, saldo: remaining, valor: amount }))
 
     const financialAccountId = await ensureFinancialAccountId(
       client,
@@ -1120,7 +1117,6 @@ export async function createManualPayableRecord(client: SQLClient, input: Create
   const rawInstallments = Array.isArray(input.values.parcelas) && input.values.parcelas.length > 0
     ? input.values.parcelas
     : [{ numero_parcela: 1, descricao: 'Parcela 1', data_vencimento: firstDueDate, valor: total }]
-  if (rawInstallments.length > 48) throw new ErpDomainError('VALIDATION_ERROR', 'A condição de pagamento aceita no máximo 48 parcelas.')
   const installments = rawInstallments.map((raw, index) => {
     const row = raw as Record<string, unknown>
     const value = positiveMoney(row.valor)
@@ -1134,8 +1130,8 @@ export async function createManualPayableRecord(client: SQLClient, input: Create
       observacoes: optionalText(row.observacoes),
     }
   })
-  const installmentTotal = Number(installments.reduce((sum, installment) => sum + installment.valor, 0).toFixed(2))
-  if (installmentTotal !== Number(total.toFixed(2))) throw new ErpDomainError('VALIDATION_ERROR', 'A soma das parcelas precisa ser igual ao total da despesa.')
+  // GE-11, GE-12 (regras/geral.ts)
+  exigirRegra(validarParcelas({ valores: installments.map(i => i.valor), numeros: installments.map(i => i.numero), total, documento: 'da despesa' }))
 
   const recurrence = jsonObject(input.values.recorrencia) as Record<string, unknown>
   const repeat = booleanValue(input.values.repetir) || Object.keys(recurrence).length > 0

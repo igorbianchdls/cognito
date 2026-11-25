@@ -14,8 +14,8 @@ Valem para todas as áreas do ERP. Quando uma regra de área depende de uma dest
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
 | GE-10 | Valores em reais com 2 casas, arredondando meio centavo para cima; sem separador de milhar na entrada (aceita vírgula ou ponto decimal). | `shared/erpMoney.ts` → `scaledDecimal()`, `decimalText()` | "Informe o valor sem separador de milhar." / "Informe um valor numérico válido." | ❌ |
-| GE-11 | Parcelas sempre somam exatamente o total do documento, centavo a centavo. | Cada área repete a conferência (ver VD-12, CR-02). | "A soma das parcelas precisa ser igual ao total …" | 🧪 |
-| GE-12 | No máximo 48 parcelas por documento. | `erpSalesRepository.ts` → `createSaleRecord()`; `erpReceivablesPayablesRepository.ts` → `createManualPayableRecord()`; contratos do chat | "A condição de pagamento aceita no máximo 48 parcelas." | ❌ |
+| GE-11 | Parcelas sempre somam exatamente o total do documento, centavo a centavo. | **`regras/geral.ts` → `validarParcelas()`**, usada por vendas (`erpSalesRepository.ts`), compras (`erpPurchasesRepository.ts`), título manual do chat (`erpCrudRepository.ts`) e despesa da tela (`createManualPayableRecord()`) | "A soma das parcelas precisa ser igual ao total {da venda / da compra / do título / da despesa}." | ✅ `regras/geral.test.ts` · 🧪 |
+| GE-12 | De 1 a 48 parcelas por documento, números válidos e sem repetição. | **`regras/geral.ts` → `validarParcelas()`** (mesmos lugares de GE-11) | "A condição de pagamento aceita no máximo 48 parcelas." / "Existem parcelas com o mesmo número." | ✅ `regras/geral.test.ts` |
 
 ## Numeração
 
@@ -28,7 +28,7 @@ Valem para todas as áreas do ERP. Quando uma regra de área depende de uma dest
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| GE-30 | Quem edita um documento precisa estar vendo a versão atual. Se outra pessoa salvou antes, a gravação é recusada. | Cada repositório confere `versao` (vendas, OS, orçamentos, títulos, cadastros) | Duas variantes hoje: "Venda alterada; atualize antes de continuar." (`VERSION_CONFLICT`) e "CONFLITO_VERSAO: esta venda foi alterada por outra pessoa." — ver **ponto de atenção** no README | ❌ |
+| GE-30 | Quem edita um documento precisa estar vendo a versão atual. Se outra pessoa salvou antes, a gravação é recusada e a tela oferece atualizar. | **`regras/geral.ts` → `conferirVersao()` / `versaoMudou()`** em vendas, compras e cadastros (`erpRepository.ts`). Outras áreas (OS, orçamento, contrato, título) ainda têm a checagem própria. | "{Esta venda / Esta compra / Este registro} mudou desde que você abriu (outra pessoa salvou antes). Atualize antes de continuar." (`VERSION_CONFLICT`, 409) | ✅ `regras/geral.test.ts` |
 | GE-31 | Toda operação de escrita tem uma chave de idempotência: repetir a mesma chave devolve o resultado anterior, nunca grava duas vezes. Mesma chave com dados diferentes é recusada. | Repositórios (`chave_idempotencia` em cada tabela); chat: `actions/draftRepository.ts` → `prepareDraft()` | "Esta identificação já foi usada em outra baixa." / "Esta chave já foi usada para outro rascunho." | 🧪 chave repetida com dados diferentes → `IDEMPOTENCY_CONFLICT`; reconfirmar rascunho executado devolveu o mesmo registro |
 | GE-32 | Operações concorrentes no mesmo registro esperam ou falham com aviso; não se sobrescrevem. | `shared/erpErrors.ts` → `normalizeErpError()` (traduz bloqueio/serialização do banco) | "Outra operação está em andamento. Tente novamente mantendo a mesma solicitação." | ❌ |
 
