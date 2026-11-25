@@ -23,6 +23,7 @@ Enquanto uma regra não migra, a coluna **Onde** aponta para o lugar atual (repo
 | [contabilidade.md](contabilidade.md) | CO | Categorias financeiras, DRE, plano de contas, fechamento, orçamento anual, metas |
 | [cadastros.md](cadastros.md) | CD | Pessoas e papéis, produtos, serviços, categorias de cadastro, tabelas de preço, exclusão |
 | [permissoes.md](permissoes.md) | PE | Papéis, perfis, capacidades, tabela de perfis padrão |
+| [banco.md](banco.md) | BD | O que o banco impõe sozinho (triggers, checks, RLS): o que fica e o que deve sair para o servidor |
 
 ## Como ler uma regra
 
