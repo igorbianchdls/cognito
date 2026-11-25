@@ -1,3 +1,4 @@
+import {erpToday} from '../erpBusinessDate'
 import {createHash} from 'node:crypto'
 import {withTransaction,runQuery,runWithErpTransactionClient,type SQLClient} from '@/lib/postgres'
 import {getErpDatabaseContext} from '@/lib/erpDatabaseContext'
@@ -176,7 +177,7 @@ async function prepareDps(client:SQLClient,company:number,row:Row,detail:Awaited
   await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[`erp:dps:${company}:${serie}`])
   numero=Number((await query(client,`SELECT coalesce(max(numero_dps::bigint),0)+1 AS n FROM erp.notas_fiscais WHERE empresa_id=$1 AND tipo='nfse' AND serie_dps=$2 AND numero_dps ~ '^[0-9]+$'`,[company,serie]))[0].n)
  }
- const built=buildDps({ambiente:'homologacao',serie,numero,competencia:data.data_competencia,emitidaEm:new Date().toISOString(),
+ const built=buildDps({ambiente:'homologacao',serie,numero,competencia:data.data_competencia,emitidaEm:new Date().toISOString(),hoje:erpToday(),
   municipioPrestacao:data.codigo_municipio_prestacao,config,customer,items:totals.items.map(item=>({...item,servico:services.find(s=>Number(s.id)===item.item_id)||{}})),
   totals,aliquotaIss:data.aliquota_iss,issRetido:data.iss_retido,retencoesFederais:totals.retencoes_federais,observacoes:data.observacoes})
  if(built.issues.length)throw new ErpDomainError('VALIDATION_ERROR',`A nota tem ${built.issues.length} campo(s) que o provedor recusaria: ${built.issues.map(i=>i.mensagem).join(' ')}`,422,{campos:built.issues})

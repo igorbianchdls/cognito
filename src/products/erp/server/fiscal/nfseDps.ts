@@ -49,6 +49,8 @@ const simplesOption = (regime: unknown) => regime === 'mei' ? 2 : SIMPLES.includ
 
 export type DpsInput = {
   ambiente: 'homologacao' | 'producao'; serie: string; numero: number; competencia: string; emitidaEm: string
+  /** Today in the company's time zone (YYYY-MM-DD); emitidaEm is UTC, a day ahead in the Brazilian evening. */
+  hoje?: string
   municipioPrestacao: string; config: Row | null; customer: Row
   items: Array<{ descricao: string; quantidade: number; valor_unitario: number; desconto: number; total: number; servico: Row }>
   totals: { total: number; valor_iss: number; retencao_iss: number }; aliquotaIss: number; issRetido: boolean
@@ -86,7 +88,7 @@ export function buildDps(input: DpsInput) {
   require(input.totals.total > 0, 'valores.vServPrest.vServ', 'O valor dos serviços deve ser maior que zero.')
   // ISS: 2% a 5% (LC 116, art. 8º-A); no Simples/MEI a alíquota vem da faixa do Simples, ainda nesse intervalo.
   require(input.aliquotaIss >= 2 && input.aliquotaIss <= 5, 'valores.trib.tribMun.pAliq', 'Alíquota de ISS deve estar entre 2% e 5%.')
-  require(input.competencia <= input.emitidaEm.slice(0, 10), 'infDPS.dCompet', 'A competência não pode ser futura.')
+  require(input.competencia <= (input.hoje ?? input.emitidaEm.slice(0, 10)), 'infDPS.dCompet', 'A competência não pode ser futura.')
   const federal = input.retencoesFederais
   const federalTotal = money(Object.values(federal).reduce((sum: number, value) => sum + Number(value || 0), 0))
   if (federalTotal > 0) require(isCompany, 'valores.trib.tribFed', 'Retenções federais só se aplicam a tomador pessoa jurídica.')
