@@ -79,7 +79,38 @@ Regra para tirar algo do banco: **primeiro a regra entra no servidor e é testad
 | BD-48 | `validar_execucao_estado`, `validar_notificacao_estado`, `validar_execucao_evento`, `registrar_transicao_estado`, `preservar_evento_cobranca` | 5,3 mil | Máquinas de estado de automações e cobrança | Histórico preservado; notificação não duplica | Estados, tentativas, repetição |
 | BD-49 | `validar_importacao_diferida`, `preservar_importacao_identidade` | 3,8 mil | Fluxo de importação de dados | Linha original preservada | Contadores e conclusão da importação |
 
-Ordem sugerida dentro do grupo 2: BD-40 e BD-41 (menores e isolados) → BD-42, BD-43 → BD-44 → BD-47 → BD-45, BD-46 (os maiores, por último) → BD-48, BD-49.
+Ordem sugerida antes da leitura: BD-40 e BD-41 → BD-42, BD-43 → BD-44 → BD-47 → BD-45, BD-46 → BD-48, BD-49. **Substituída pelo plano final abaixo.**
+
+### Plano final do grupo 2 (leitura completa das 21 funções, 2026-11-25)
+
+A leitura mostrou que o grupo 2 é **quase todo integridade**, não decisão. Três tipos de coisa aparecem misturados:
+
+- **Garantia (fica no banco):** histórico imutável, saldo nunca excedido, nada duplicado, totais que fecham.
+- **Motor de estado (fica no banco):** o banco *recalcula* situação de parcela e título (pago, parcial, renegociado), o marcador
+  "conciliado" do pagamento e o status do extrato. Tirar daqui obrigaria todo caminho do código a recalcular igual; é a parte mais arriscada e não traz ganho.
+- **Decisão (sai para `regras/`):** o que o negócio permite, e que pode mudar com o tempo.
+
+| # | Decisões que saem | O que fica no banco | Situação no servidor hoje | Etapa |
+|---|---|---|---|---|
+| BD-40 contratos | Contrato ativo exige versão efetivada (CT-07); versão só efetiva com itens; vigência da versão dentro da do contrato; geração só de contrato ativo; duração do ciclo × periodicidade; condições do cabeçalho só mudam por nova versão; venda do ciclo é do mesmo cliente | Versão e itens efetivados imutáveis (só encurtar a vigência sem cortar ciclo gerado); vigências e ciclos sem sobreposição; geração e tentativas preservadas; venda não usada em dois ciclos; total do item | O servidor já cria versões e calcula ciclos; as recusas vêm do banco ("Vigencias sobrepostas", sem acento) | **7** |
+| BD-44 recorrências | Calendário (frequência, intervalo, fim por data/ocorrências); recorrência pausada/encerrada não gera | Ocorrência não duplica; identidade da ocorrência preservada; limites coerentes; encerrada imutável | **Calendário existe duas vezes**: `erpRoutineRepository` (`recurrenceOccurrenceIndex`) e o SQL. Vira uma função pura testada | **8** |
+| BD-41 comissão | Quem pode reduzir a provisão (permissão do financeiro) e quando (aberta/vencida, sem devolução) | Título de comissão/reembolso só aceita baixa e estorno; provisão = financeiro | Já decidido em `erpCommissionAdjustments.ts`; o banco repete a permissão | **9** |
+| BD-42 origem | Quais conversões valem (orçamento → pedido/venda, pedido → venda); a receber só de venda; a pagar só de compra efetiva | Identidade, cliente/fornecedor e origem do documento preservados | Conversões só existem no servidor por construção | **9** |
+| BD-43 fotografia | — | **Fica inteiro.** O banco grava a fotografia do cliente/item na efetivação; mover exigiria todo caminho que confirma venda, aprova OS ou ativa contrato gravar igual | — | — |
+| BD-45 saldos | — | **Fica inteiro**: motor de saldo e situação + equação do acordo, sem ciclo entre acordos | Servidor confere antes com mensagens próprias (CR-50, CR-51) | — |
+| BD-46 movimentos | — | **Fica inteiro**: movimento financeiro não muda, só é revertido por inteiro; acordo efetivado imutável; eventos de histórico | Idem | — |
+| BD-47 conciliação | — | **Fica inteiro**: limites e marcadores de conciliação | Servidor confere conta/sentido antes (CB-32, CB-33) | — |
+| BD-48, BD-49 | — | **Ficam inteiros**: máquinas de estado e histórico de automação, cobrança e importação (só integridade) | — | — |
+
+**Etapas:**
+
+- **7 — Contratos (BD-40, CT-07..):** funções puras em `regras/contratos.ts` (efetivar versão, gerar ciclo, mudar condições, duração do ciclo); o servidor recusa antes, com mensagem boa; o gatilho fica só com as garantias. Teste ao vivo: nova versão, suspender/retomar, geração.
+- **8 — Recorrências (BD-44):** `regras/recorrencias.ts` com o calendário (usado na geração financeira e na de compras); o SQL do calendário sai; ficam "não duplica" e "identidade preservada".
+- **9 — Comissão e conversões (BD-41, BD-42):** tirar do banco a checagem de permissão e a ordem de conversão (já estão no servidor); garantias ficam.
+- **10 — Mensagens das garantias que ficam:** reescrever com acento e em linguagem de negócio as mensagens dos gatilhos que permanecem
+  ("Saldo de adiantamento excedido", "Vigencias sobrepostas", "Pagamento efetivado imutavel"...), já que elas ainda podem chegar ao usuário.
+
+Cada etapa: regra pura + teste → servidor chama → migração reduz o gatilho → publicar → testar ao vivo.
 
 ### Grupo 3 — dívida técnica (apagar quando a causa sumir)
 
