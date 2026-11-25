@@ -56,7 +56,7 @@ Confirmar gera a conta a pagar; **receber** é que aumenta o estoque. São etapa
 
 | # | Regra | Onde | Mensagem | Teste |
 |---|---|---|---|---|
-| CP-40 | Devolução é **integral** e só de compra de produtos **totalmente recebida**; não faz devolução parcial. | `regras/compras.ts` → `validarDevolucaoCompra()` | "A devolução integral exige uma compra de produtos totalmente recebida." | ✅ `etapas-4-5.test.ts` (CP-10/31/40) · 🧪 compra não recebida recusada |
+| CP-40 | Devolução é **integral** e só de compra de produtos **totalmente recebida**; não faz devolução parcial. Compra criada sem tipo (ex.: pelo chat) e só com serviços é de serviço (corrigido em 2026-11-25; antes virava "produto"). | `regras/compras.ts` → `validarDevolucaoCompra()` | "A devolução integral exige uma compra de produtos totalmente recebida." | ✅ `etapas-4-5.test.ts` (CP-10/31/40) · 🧪 compra não recebida recusada |
 | CP-41 | Uma compra só é devolvida uma vez; exige versão atual e motivo de 3 a 1000 caracteres. | `regras/compras.ts` → `validarDevolucaoCompra()` (já devolvida) | "Esta compra já foi devolvida integralmente." / "Informe a versão atual e um motivo …" | ✅ `etapas-4-5.test.ts` (CP-10/31/40/41) |
 | CP-42 | Exige permissão de compras, financeiro e movimentação de estoque juntas. | `returnErpPurchase()` | "A devolução exige permissão de compras, financeiro e movimentação de estoque." | ❌ |
 | CP-43 | Antes de devolver, reverter créditos e renegociações vinculados; pagamentos também precisam estar estornados. A devolução tira do estoque o que entrou e cancela as contas a pagar. | `regras/compras.ts` → `validarDevolucaoCompra()` | "Reverta créditos e renegociações vinculados antes de devolver a compra." | ✅ `etapas-4-5.test.ts` (CP-10/31/40/41/43) |

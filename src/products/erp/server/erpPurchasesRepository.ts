@@ -1011,7 +1011,10 @@ export async function createPurchaseRecord(client: SQLClient, input: CreateInput
   const number = optionalText(input.values.numero) || await nextDocumentNumber(client, input.tenantId, 'compra', purchaseDate)
   const generateFinancial = booleanValue(input.values.gera_financeiro ?? true)
   const movement = purchaseMovement(input.values.tipo_movimento)
-  const type = purchaseType(input.values.tipo_compra)
+  // Sem tipo informado (ex.: chat), compra só de serviços é de serviço; antes virava "produto" e liberava a devolução ao fornecedor (CP-40).
+  const type = input.values.tipo_compra == null || input.values.tipo_compra === ''
+    ? (items.length > 0 && items.every(item => !item.produtoId) ? 'servico' : 'produto')
+    : purchaseType(input.values.tipo_compra)
   // Stock receipts are explicit: an effective purchase must remain pending until its items enter stock.
   const stockProducts = items.filter(item => item.produtoId).map(item => item.produtoId)
   const stockCheck = movement === 'compra' && stockProducts.length
