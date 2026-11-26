@@ -107,6 +107,11 @@ export const sections: Section[] = [
     ],
   },
   {
+    id: "notas", title: "Notas", items: [
+      { title: "Notas", url: "/notas", icon: IconFileTextFilled },
+    ],
+  },
+  {
     id: "drive", title: "Drive", items: [
       { title: "Início", url: "/drive", icon: IconFolderFilled, excludePaths: ["/drive/recentes", "/drive/favoritos", "/drive/lixeira"] },
       { title: "Recentes", url: "/drive/recentes", icon: IconClockFilled },

@@ -13,14 +13,14 @@ export const categoriaInfo: Record<Categoria, { nome: string; descricao: string 
 }
 
 /** Sections of the menu (their ids in nav/secoes.ts). */
-export type SecaoId = 'vendas' | 'financeiro' | 'marketing' | 'drive' | 'analytics' | 'inbox' | 'automacao' | 'crm'
+export type SecaoId = 'vendas' | 'financeiro' | 'marketing' | 'notas' | 'drive' | 'analytics' | 'inbox' | 'automacao' | 'crm'
 
 /** The sections each category shows, in the order they appear. */
 export const secoesPorCategoria: Record<Categoria, SecaoId[]> = {
-  marketing: ['marketing', 'analytics', 'automacao', 'drive'],
+  marketing: ['marketing', 'notas', 'analytics', 'automacao', 'drive'],
   gestao: ['vendas', 'financeiro'],
   atendimento: ['inbox', 'crm'],
-  completo: ['marketing', 'analytics', 'automacao', 'vendas', 'financeiro', 'drive', 'inbox', 'crm'],
+  completo: ['marketing', 'notas', 'analytics', 'automacao', 'vendas', 'financeiro', 'drive', 'inbox', 'crm'],
 }
 
 /** Where the app opens (the "/" address) for each category. */
