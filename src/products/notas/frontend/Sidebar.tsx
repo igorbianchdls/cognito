@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useOrganization } from '@clerk/nextjs'
 import {
-  ChevronRight, ChevronsLeft, Copy, FileText, House, Link2, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
+  ChevronRight, ChevronsLeft, Copy, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
 } from 'lucide-react'
 import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore } from '@/products/notas/shared/arvore'
 import { notasApi, type ItemLixeira } from './api'
@@ -90,6 +90,7 @@ function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrasta
           }}
           onBlur={e => { setRenomeando(false); if (e.currentTarget.value !== no.titulo) void renomear(no.id, e.currentTarget.value) }} />
         : <span className={x.rowTitle}>{tituloExibido(no.titulo)}</span>}
+      {no.acesso === 'restrito' && !renomeando && <Lock size={12} className={x.glyph} style={{ flexShrink: 0, marginLeft: 2 }} aria-label="Acesso restrito" />}
       <span className={x.rowActions}>
         <button type="button" className={x.rowBtn} aria-label="Mais ações" title="Excluir, duplicar e mais…"
           onClick={e => { e.stopPropagation(); setMenu(e.currentTarget) }}><MoreHorizontal size={16} /></button>
@@ -146,8 +147,12 @@ function Lixeira({ ancora, onFechar }: { ancora: HTMLElement; onFechar: () => vo
 
 /** Barra lateral das Notas: empresa, Buscar, Início, Favoritos, Equipe, Particular, Lixeira e Nova página. */
 export function Sidebar() {
-  const { arvore, erro, criar, mover, setBuscaAberta, recarregar, recolhida, setRecolhida } = useNotas()
+  const { arvore, erro, criar, mover, setBuscaAberta, recarregar, recolhida, setRecolhida, avisar } = useNotas()
   const { organization } = useOrganization()
+  const eu = arvore?.eu ?? null
+  const router = useRouter()
+  const [importando, setImportando] = useState(false)
+  const entradaArquivo = useRef<HTMLInputElement>(null)
   const params = useParams<{ id?: string }>()
   const pathname = usePathname()
   const [larguraSalva, salvarLargura] = useLocal('notas:largura', LARGURA_PADRAO)
@@ -176,7 +181,19 @@ export function Sidebar() {
   }
 
   const equipe = useMemo(() => arvore ? montarArvore(arvore.paginas, 'equipe') : [], [arvore])
-  const particular = useMemo(() => arvore ? montarArvore(arvore.paginas, 'particular') : [], [arvore])
+  // Particular: as minhas. Particulares de outras pessoas que eu enxergo foram compartilhadas comigo.
+  const minhas = useMemo(() => (arvore?.paginas ?? []).filter(p => p.espaco !== 'particular' || !eu || !p.created_by || p.created_by === eu), [arvore, eu])
+  const particular = useMemo(() => montarArvore(minhas, 'particular'), [minhas])
+  const compartilhadas = useMemo(() => {
+    if (!arvore || !eu) return []
+    const deOutros = arvore.paginas.filter(p => p.espaco === 'particular' && p.created_by && p.created_by !== eu)
+    return montarArvore(deOutros, 'particular')
+  }, [arvore, eu])
+  const importar = async (arquivo: File) => {
+    setImportando(true)
+    try { const { importarArquivo } = await import('./importar'); const id = await importarArquivo(arquivo, arvore?.pode_editar_equipe === false ? 'particular' : 'equipe'); await recarregar(); router.push(`/notas/${id}`) }
+    catch (e) { avisar((e as Error).message) } finally { setImportando(false) }
+  }
   const favoritos = useMemo(() => {
     if (!arvore) return []
     const todas = [...equipe, ...particular]
@@ -246,9 +263,18 @@ export function Sidebar() {
       {arvore && <div role="tree" aria-label="Páginas">
         {secao('Equipe', 'equipe', equipe)}
         {secao('Particular', 'particular', particular)}
+        {compartilhadas.length > 0 && <div role="group" aria-label="Compartilhadas comigo">
+          <div className={x.sectionHead}><span>Compartilhadas comigo</span></div>
+          {compartilhadas.map(no => <Linha key={`comp-${no.id}`} no={no} nivel={0} {...props} />)}
+        </div>}
       </div>}
     </div>
     <div className={x.sideFoot}>
+      <button type="button" className={x.navItem} disabled={importando} onClick={() => entradaArquivo.current?.click()}>
+        <FileUp size={16} />{importando ? 'Importando…' : 'Importar'}
+      </button>
+      <input ref={entradaArquivo} type="file" accept=".md,.markdown,.txt,.html,.htm,.csv" hidden aria-label="Arquivo para importar"
+        onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void importar(f) }} />
       <button type="button" className={x.navItem} onClick={e => setLixeira(e.currentTarget)}><Trash2 size={16} />Lixeira</button>
       <button type="button" className={x.navItem} title="Nova página (Ctrl+Alt+N)" onClick={() => void criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' })}><Plus size={16} />Nova página</button>
     </div>

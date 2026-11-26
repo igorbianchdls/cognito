@@ -3,8 +3,11 @@
 // O editor em blocos (BlockNote) fica só aqui: se um dia trocarmos de biblioteca, a troca fica contida neste arquivo.
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type PartialBlock } from '@blocknote/core'
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
+import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type Block, type PartialBlock } from '@blocknote/core'
+import { blocksToYXmlFragment, CollaborationExtension } from '@blocknote/core/yjs'
+import * as Y from 'yjs'
+import type { Awareness } from 'y-protocols/awareness'
 import { pt } from '@blocknote/core/locales'
 import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
@@ -79,26 +82,86 @@ export type EditorProps = {
   criarBase: (modelo: 'vazia' | 'tarefas', visao: TipoVisao) => Promise<{ id: string; titulo: string; icone: string | null } | null>
   /** Chamado quando o editor aparece na tela (para receber o foco pedido antes de ele carregar). */
   aoCarregar?: () => void
+  /**
+   * Edição simultânea: o documento (fragmento Yjs), a presença e quem é a pessoa. `semear`: o servidor ainda não tem o
+   * documento colaborativo; ele nasce do conteúdo salvo, sempre do mesmo jeito (id de cliente fixo), para que duas
+   * pessoas abrindo ao mesmo tempo não dupliquem o texto.
+   */
+  colaboracao?: { fragment: Y.XmlFragment; awareness: Awareness; usuario: { name: string; color: string }; semear: boolean }
+  /** Preenchido pelo editor: exportar e saber o bloco onde está o cursor. */
+  controle?: MutableRefObject<ControleEditor | null>
+  /** Ctrl+Alt+M: comentar o bloco onde está o cursor. */
+  onComentar?: (blocoId: string, trecho: string) => void
+  /** Blocos com discussão aberta (ficam marcados). */
+  destaques?: string[]
 }
 
-export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase, aoCarregar }: EditorProps) {
+export type ControleEditor = {
+  markdown: () => string
+  html: () => string
+  blocoAtual: () => { id: string; trecho: string } | null
+  irPara: (blocoId: string) => void
+}
+
+/** Texto puro de um bloco (para citar no comentário). */
+function textoDoBloco(bloco: { content?: unknown }) {
+  return Array.isArray(bloco.content) ? bloco.content.map(c => (c as { text?: string }).text ?? '').join('').slice(0, 300) : ''
+}
+
+/** Semeia o documento colaborativo a partir do conteúdo salvo (sempre igual: id de cliente 1 e um editor só de conversão). */
+function semear(fragment: Y.XmlFragment, conteudo: unknown[]) {
+  if (fragment.length || !fragment.doc) return
+  const conversor = BlockNoteEditor.create({ schema })
+  const blocos = (conteudo.length ? conteudo : [{ id: 'inicio', type: 'paragraph', props: {}, content: [], children: [] }]) as Block<typeof schema.blockSchema, typeof schema.inlineContentSchema, typeof schema.styleSchema>[]
+  const semente = new Y.Doc()
+  semente.clientID = 1
+  blocksToYXmlFragment(conversor as never, blocos as never, semente.getXmlFragment('conteudo'))
+  Y.applyUpdate(fragment.doc, Y.encodeStateAsUpdate(semente))
+}
+
+export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase, aoCarregar, colaboracao, controle, onComentar, destaques }: EditorProps) {
   const escuro = useTemaEscuro()
   const { arvore } = useNotas()
   const inicial = useMemo(() => (Array.isArray(conteudo) && conteudo.length ? conteudo as PartialBlock[] : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- o conteúdo inicial só vale quando a página (chave) muda
     [chave])
+  // O documento colaborativo precisa existir antes do editor se ligar a ele.
+  useState(() => { if (colaboracao?.semear) semear(colaboracao.fragment, Array.isArray(conteudo) ? conteudo : []); return true })
   const editor = useCreateBlockNote({
     schema,
-    initialContent: inicial as never,
+    ...(colaboracao
+      ? { extensions: [CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })] }
+      : { initialContent: inicial as never }),
     dictionary: { ...pt, placeholders: { ...pt.placeholders, default: "Digite '/' para ver os comandos" } },
     uploadFile: enviarArquivoNotas,
   }, [chave])
+
+  useEffect(() => {
+    if (!controle) return
+    controle.current = {
+      markdown: () => editor.blocksToMarkdownLossy(editor.document),
+      html: () => editor.blocksToHTMLLossy(editor.document),
+      blocoAtual: () => { try { const b = editor.getTextCursorPosition().block; return { id: b.id, trecho: textoDoBloco(b) } } catch { return null } },
+      irPara: id => {
+        const el = document.querySelector(`.bn-block[data-id="${CSS.escape(id)}"]`)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        try { editor.setTextCursorPosition(id, 'end'); editor.focus() } catch { /* bloco apagado */ }
+      },
+    }
+    return () => { controle.current = null }
+  }, [editor, controle])
 
   const carregou = useRef(aoCarregar)
   useEffect(() => { carregou.current = aoCarregar })
   useEffect(() => { const t = setTimeout(() => carregou.current?.(), 0); return () => clearTimeout(t) }, [editor])
 
-  return <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
+  return <div onKeyDown={e => {
+    if (!onComentar || !(e.ctrlKey || e.metaKey) || !e.altKey || e.code !== 'KeyM') return
+    e.preventDefault()
+    try { const b = editor.getTextCursorPosition().block; onComentar(b.id, textoDoBloco(b)) } catch { /* sem cursor */ }
+  }}>
+  {destaques && destaques.length > 0 && <style>{destaques.map(id => `.bn-block[data-id="${CSS.escape(id)}"] > .bn-block-content`).join(',') + '{background:rgba(255,212,0,.16);border-bottom:2px solid rgba(255,212,0,.6)}'}</style>}
+  <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
     onChange={() => onMudar(editor.document)}>
     <SuggestionMenuController triggerCharacter="/" getItems={async query => filterSuggestionItems([
       ...getDefaultReactSlashMenuItems(editor),
@@ -147,6 +210,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
       ]
     }} />
   </BlockNoteView>
+  </div>
 }
 
 /** Conteúdo da menção para inserir no texto. */

@@ -53,7 +53,7 @@ export function arvore(ctx: Contexto) {
       WHERE f.workspace_id = $1 AND f.user_id = editor.uid() ORDER BY f.posicao, f.created_at`, [ctx.orgId])).rows.map((r: { pagina_id: string }) => r.pagina_id)
     const recentes = (await client.query(`SELECT r.pagina_id FROM notas.recentes r JOIN notas.paginas p ON p.id = r.pagina_id AND p.arquivada_em IS NULL
       WHERE r.workspace_id = $1 AND r.user_id = editor.uid() ORDER BY r.visto_em DESC LIMIT 12`, [ctx.orgId])).rows.map((r: { pagina_id: string }) => r.pagina_id)
-    return { paginas, favoritos, recentes, pode_editar_equipe: podeEditarEquipe }
+    return { paginas, favoritos, recentes, pode_editar_equipe: podeEditarEquipe, eu: ctx.userId }
   })
 }
 

@@ -1,15 +1,24 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type ComponentProps } from 'react'
+import { useUser } from '@clerk/nextjs'
+import * as Y from 'yjs'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronsRight, Columns3, Copy, FileText, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2,
+  ChevronsRight, Columns3, Copy, Download, FileText, Globe, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, MessageSquare, Printer, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2,
   Trash2, Undo2, Unlock,
 } from 'lucide-react'
 import { caminho, textoDoConteudo, tituloExibido } from '@/products/notas/shared/arvore'
-import type { TipoVisao } from '@/products/notas/shared/bases'
+import { computar, type TipoVisao } from '@/products/notas/shared/bases'
+import { gerarCsv } from '@/products/notas/shared/csv'
+import { deBase64, ORIGEM_SERVIDOR, paraBase64 } from '@/products/notas/shared/colaboracao'
+import { type BaseCompleta } from './api'
+import { Comentarios, type Comentario } from './Comentarios'
+import { Compartilhar } from './Compartilhar'
+import { useColaboracao, type Colaboracao, type Presente } from './tempoReal'
+import type { ControleEditor } from './Editor'
 import { editadoHa, ErroNotas, notasApi, type Pagina } from './api'
 import { BaseView } from './base/BaseView'
 import { PropriedadesItem } from './base/PropriedadesItem'
@@ -34,6 +43,31 @@ function Esqueleto() {
   return <div className={x.doc}><div className={x.skeleton} aria-label="Carregando"><span /><span /><span style={{ width: '82%' }} /><span style={{ width: '64%' }} /></div></div>
 }
 
+/** Baixa um arquivo gerado na tela. */
+function baixar(nome: string, conteudo: string, tipo: string) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }))
+  const a = document.createElement('a'); a.href = url; a.download = nome; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+const nomeDeArquivo = (titulo: string) => (titulo.trim() || 'Sem título').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 80)
+
+/**
+ * O editor em edição simultânea: cria o documento colaborativo desta geração (com o estado salvo no servidor) e liga
+ * ao canal da página. Entrega o documento e a presença para a página salvar e mostrar quem está junto.
+ */
+function EditorColaborativo({ pagina, aoConectar, aoPresentes, ...props }: Omit<ComponentProps<typeof Editor>, 'colaboracao'> & {
+  pagina: Pagina; aoConectar: (c: Colaboracao | null) => void; aoPresentes: (p: Presente[]) => void
+}) {
+  const { user } = useUser()
+  const pessoa = { id: user?.id ?? 'eu', nome: user?.fullName || user?.firstName || 'Alguém' }
+  const c = useColaboracao(pagina.id, pagina.geracao_yjs, pagina.estado_yjs, pessoa)
+  useEffect(() => { aoConectar(c); return () => aoConectar(null) }, [c.sincronizador, aoConectar]) // eslint-disable-line react-hooks/exhaustive-deps -- reconecta quando o canal fica pronto
+  useEffect(() => { aoPresentes(c.presentes) }, [c.presentes, aoPresentes])
+  const [usuario] = useState(() => ({ name: pessoa.nome, color: '#2383e2' }))
+  const [semear] = useState(() => !pagina.estado_yjs)
+  return <Editor {...props} colaboracao={{ fragment: c.fragment, awareness: c.awareness, usuario, semear }} />
+}
+
 /**
  * Uma página: topo (caminho, editado, favoritar, ⋯), capa, ícone, título e o editor em blocos, salvando sozinha.
  * Se a página é uma base de dados, mostra a base no lugar do editor; se é item de uma base, mostra as propriedades.
@@ -44,7 +78,6 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const { arvore, ajustarLocal, recarregar, favoritar, duplicar, arquivar, avisar, recolhida, setRecolhida } = useNotas()
   const [pagina, setPagina] = useState<Pagina | null>(null)
   const [erro, setErro] = useState('')
-  const [chave, setChave] = useState(id)
   const [estado, setEstado] = useState<Estado>('salvo')
   const [conflito, setConflito] = useState(false)
   const [menu, setMenu] = useState<HTMLElement | null>(null)
@@ -61,13 +94,23 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const titulo = useRef<HTMLTextAreaElement>(null)
   const arrastoCapa = useRef<{ y: number; inicio: number } | null>(null)
   const focarEditor = useRef(false)
+  const colab = useRef<Colaboracao | null>(null)
+  const geracao = useRef(0)
+  const controle = useRef<ControleEditor | null>(null)
+  const [presentes, setPresentes] = useState<Presente[]>([])
+  const [comentarios, setComentarios] = useState<{ rascunho: { bloco_id: string; trecho: string } | null } | null>(null)
+  const [discussoes, setDiscussoes] = useState<Comentario[]>([])
+  const [compartilhar, setCompartilhar] = useState<HTMLElement | null>(null)
+  const [sincronizador, setSincronizador] = useState<Colaboracao['sincronizador']>(null)
+  const aoConectar = useCallback((c: Colaboracao | null) => { colab.current = c; setSincronizador(c?.sincronizador ?? null) }, [])
+  const { user } = useUser()
   useTituloDaAba(!lateral && pagina ? `${pagina.icone ? `${pagina.icone} ` : ''}${tituloExibido(pagina.titulo)} · Notas` : null)
 
   const aplicar = useCallback((nova: Pagina) => {
-    versao.current = nova.versao; pendente.current = {}
-    setPagina(nova); setChave(`${id}:${nova.versao}`); setConflito(false); setErro(''); setEstado('salvo')
+    versao.current = nova.versao; geracao.current = nova.geracao_yjs; pendente.current = {}
+    setPagina(nova); setConflito(false); setErro(''); setEstado('salvo')
     setVazia(!textoDoConteudo(nova.conteudo).trim() && !(nova.conteudo as unknown[]).some(b => (b as { type?: string }).type !== 'paragraph'))
-  }, [id])
+  }, [])
   /** Lê a página de novo (depois de um conflito, de restaurar…). */
   const carregar = useCallback(async () => {
     try { aplicar(await notasApi<Pagina>(`/paginas/${id}`)) } catch (e) { setErro((e as Error).message) }
@@ -79,6 +122,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   }, [id, aplicar])
 
   /** Grava o que está pendente (um pedido por vez; o que chegar no meio vai no próximo). */
+  const ehColaborativa = useRef(false)
   const salvar = useCallback(async () => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null }
     const campos = pendente.current
@@ -86,7 +130,11 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     pendente.current = {}
     setEstado('salvando')
     try {
-      const salva = await notasApi<Pagina>(`/paginas/${id}`, { method: 'PATCH', json: { versao: versao.current, ...campos } })
+      // Edição simultânea: manda o documento colaborativo (o servidor funde) em vez da versão.
+      const c = ehColaborativa.current ? colab.current : null
+      const json = c ? { ...campos, estado_yjs: paraBase64(Y.encodeStateAsUpdate(c.doc)), geracao_yjs: geracao.current } : { versao: versao.current, ...campos }
+      const salva = await notasApi<Pagina>(`/paginas/${id}`, { method: 'PATCH', json })
+      if (c && salva.estado_yjs) Y.applyUpdate(c.doc, deBase64(salva.estado_yjs), ORIGEM_SERVIDOR)
       versao.current = salva.versao
       setPagina(atual => atual && { ...atual, versao: salva.versao, updated_at: salva.updated_at, updated_by: salva.updated_by })
       setEstado(Object.keys(pendente.current).length ? 'pendente' : 'salvo')
@@ -107,10 +155,24 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     setPagina(atual => atual && { ...atual, ...campos })
     pendente.current = { ...pendente.current, ...campos }
     if ('titulo' in campos || 'icone' in campos) ajustarLocal(id, { ...(campos.titulo !== undefined ? { titulo: campos.titulo } : {}), ...(campos.icone !== undefined ? { icone: campos.icone } : {}) })
+    const { conteudo: _conteudo, ...meta } = campos
+    if (Object.keys(meta).length) colab.current?.sincronizador?.enviarMeta(meta)
     setEstado('pendente')
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(() => void salvar(), imediato ? 0 : ESPERA_SALVAR_MS)
   }, [id, ajustarLocal, salvar])
+
+  // Página de texto edita em conjunto; base de dados não (ela tem o próprio fluxo).
+  useEffect(() => { ehColaborativa.current = pagina?.tipo === 'pagina' }, [pagina?.tipo])
+
+  // Título, ícone, capa… mudados por quem está junto aparecem aqui na hora.
+  useEffect(() => {
+    if (!sincronizador) return
+    return sincronizador.ouvirMeta(meta => {
+      setPagina(atual => atual && { ...atual, ...meta })
+      if ('titulo' in meta || 'icone' in meta) ajustarLocal(id, meta as Partial<Pagina>)
+    })
+  }, [sincronizador, id, ajustarLocal])
 
   // Fechar a aba: grava o que faltou com keepalive (o navegador termina o pedido mesmo saindo da página).
   // Sair da página dentro do Otto: grava normalmente.
@@ -118,7 +180,8 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     const antesDeSair = (e: BeforeUnloadEvent) => {
       const campos = pendente.current
       if (!Object.keys(campos).length || conflito) return
-      const corpo = JSON.stringify({ versao: versao.current, ...campos })
+      const c = ehColaborativa.current ? colab.current : null
+      const corpo = JSON.stringify(c ? { ...campos, estado_yjs: paraBase64(Y.encodeStateAsUpdate(c.doc)), geracao_yjs: geracao.current } : { versao: versao.current, ...campos })
       if (corpo.length < 60_000) {
         void fetch(`/api/notas/paginas/${id}`, { method: 'PATCH', keepalive: true, headers: { 'content-type': 'application/json' }, body: corpo }).catch(() => undefined)
         pendente.current = {}
@@ -174,11 +237,15 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   }, [id, recarregar, avisar])
 
   /** Página vazia → um modelo pronto (título se estiver vazio, ícone e conteúdo). O editor recomeça com o conteúdo novo. */
-  const aplicarModelo = (modelo: ModeloPagina) => {
+  const aplicarModelo = async (modelo: ModeloPagina) => {
     if (!pagina) return
     setMenuModelos(null)
-    mudar({ conteudo: modelo.conteudo, ...(pagina.titulo ? {} : { titulo: modelo.titulo }), ...(pagina.icone ? {} : { icone: modelo.icone }) }, true)
-    setChave(`${id}:modelo:${modelo.id}`); setVazia(false)
+    await salvar()
+    try {
+      await notasApi(`/paginas/${id}`, { method: 'PATCH', json: { versao: versao.current, conteudo: modelo.conteudo,
+        ...(pagina.titulo ? {} : { titulo: modelo.titulo }), ...(pagina.icone ? {} : { icone: modelo.icone }) } })
+      await Promise.all([carregar(), recarregar()])
+    } catch (e) { avisar((e as Error).message) }
   }
 
   /** Página vazia → base ("Comece com: Tabela, Quadro, Lista, Tarefas"). */
@@ -196,6 +263,24 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const ehBase = pagina.tipo === 'base'
   const classes = [x.doc, pagina.largura_total || (ehBase && !lateral) ? x.docWide : '', pagina.capa ? x.withCover : '',
     pagina.fonte === 'serifa' ? x.serif : pagina.fonte === 'mono' ? x.mono : '', pagina.texto_pequeno ? x.small : ''].join(' ')
+
+  const exportar = async (formato: 'md' | 'html' | 'csv') => {
+    setMenu(null)
+    const nome = nomeDeArquivo(pagina.titulo)
+    if (formato === 'csv') {
+      try {
+        const d = await notasApi<BaseCompleta>(`/bases/${id}`)
+        const itens = computar(d.itens.filter(i => !i.e_modelo), d.base.esquema, d.ligadas)
+        baixar(`${nome}.csv`, gerarCsv(itens, d.base.esquema, d.base.visoes[0]?.visiveis ?? d.base.esquema.map(p => p.id)), 'text/csv;charset=utf-8')
+      } catch (e) { avisar((e as Error).message) }
+      return
+    }
+    const ctrl = controle.current
+    if (!ctrl) return
+    if (formato === 'md') baixar(`${nome}.md`, `# ${pagina.titulo || 'Sem título'}\n\n${ctrl.markdown()}`, 'text/markdown;charset=utf-8')
+    else baixar(`${nome}.html`, `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>${nome}</title><body><h1>${nome}</h1>${ctrl.html()}</body></html>`, 'text/html;charset=utf-8')
+  }
+  const abertas = discussoes.filter(c => !c.discussao_id && !c.resolvido)
 
   const restaurar = async () => {
     try { await notasApi(`/paginas/${id}/restaurar`, { method: 'POST' }); await Promise.all([carregar(), recarregar()]) } catch (e) { avisar((e as Error).message) }
@@ -238,7 +323,14 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
         </>}
       <span className={x.saving} aria-live="polite">{estado === 'salvando' || estado === 'pendente' ? 'Salvando…' : estado === 'erro' && !conflito ? 'Não salvo' : ''}</span>
       <span className={x.edited}>{editadoHa(pagina.updated_at)}</span>
-      {!lateral && <button type="button" className={x.topBtn} onClick={() => void navigator.clipboard.writeText(location.href).then(() => avisar('Link copiado.'))}>Compartilhar</button>}
+      {presentes.length > 0 && <span className={x.presence} aria-label={`Também aqui: ${presentes.map(p => p.nome).join(', ')}`}>
+        {presentes.slice(0, 5).map(p => <span key={p.clientId} title={p.nome} style={{ background: p.cor }}>{p.nome.slice(0, 1).toUpperCase()}</span>)}
+      </span>}
+      {(pagina.acesso === 'restrito' || pagina.restricao_id) && <span className={x.topBtn} title="Acesso restrito"><Lock size={14} /></span>}
+      {pagina.publica && <span className={x.topBtn} title="Publicada na web"><Globe size={14} /></span>}
+      {!lateral && <button type="button" className={x.topBtn} onClick={e => setCompartilhar(e.currentTarget)}>Compartilhar</button>}
+      {!ehBase && <button type="button" className={x.topBtn} aria-label="Comentários" title="Comentários (Ctrl+Alt+M comenta o bloco)"
+        onClick={() => setComentarios(comentarios ? null : { rascunho: null })}><MessageSquare size={17} />{abertas.length > 0 && <small>{abertas.length}</small>}</button>}
       <button type="button" className={`${x.topBtn} ${pagina.favorita ? x.starOn : ''}`} aria-label={pagina.favorita ? 'Remover dos favoritos' : 'Favoritar'}
         onClick={() => { setPagina({ ...pagina, favorita: !pagina.favorita }); void favoritar(id, !pagina.favorita) }}>
         <Star size={18} fill={pagina.favorita ? 'currentColor' : 'none'} />
@@ -264,6 +356,12 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       <ItemMenu icone={Link2} onClick={() => { setMenu(null); void navigator.clipboard.writeText(`${location.origin}/notas/${id}`).then(() => avisar('Link copiado.')) }}>Copiar link</ItemMenu>
       {!pagina.base_id && <ItemMenu icone={Copy} onClick={() => { setMenu(null); void salvar().then(() => duplicar(id)) }}>Duplicar</ItemMenu>}
       {!ehBase && <ItemMenu icone={History} onClick={() => { setMenu(null); void salvar().then(() => setHistorico(true)) }}>Histórico de versões</ItemMenu>}
+      <div className={x.menuSep} />
+      {ehBase
+        ? <ItemMenu icone={Download} onClick={() => void exportar('csv')}>Exportar CSV</ItemMenu>
+        : <><ItemMenu icone={Download} onClick={() => void exportar('md')}>Exportar Markdown</ItemMenu>
+          <ItemMenu icone={Download} onClick={() => void exportar('html')}>Exportar HTML</ItemMenu></>}
+      <ItemMenu icone={Printer} onClick={() => { setMenu(null); setTimeout(() => window.print(), 50) }}>Imprimir ou salvar em PDF</ItemMenu>
       {pagina.pode_editar && !pagina.arquivada_em && <ItemMenu icone={Trash2} perigo onClick={mandarParaLixeira}>Mover para a lixeira</ItemMenu>}
     </Menu>}
 
@@ -329,7 +427,10 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
         {ehBase
           ? <BaseView key={id} id={id} />
           : <div className={x.editor}>
-            <Editor chave={chave} conteudo={pagina.conteudo} editavel={editavel} paginaId={id}
+            <EditorColaborativo key={`${id}:${pagina.geracao_yjs}`} pagina={pagina} aoConectar={aoConectar} aoPresentes={setPresentes}
+              chave={`${id}:${pagina.geracao_yjs}`} conteudo={pagina.conteudo} editavel={editavel} paginaId={id} controle={controle}
+              destaques={abertas.map(c => c.bloco_id).filter((b): b is string => Boolean(b))}
+              onComentar={(bloco_id, trecho) => setComentarios({ rascunho: { bloco_id, trecho } })}
               aoCarregar={() => { if (focarEditor.current) { focarEditor.current = false; (titulo.current?.closest(`.${x.doc}`)?.querySelector('.bn-editor') as HTMLElement | null)?.focus() } }} criarSubpagina={criarSubpagina} criarBase={criarBaseDentro}
               onMudar={blocos => { setVazia(false); mudar({ conteudo: blocos }) }} />
           </div>}
@@ -338,10 +439,14 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
 
     {menuModelos && <Menu ancora={menuModelos} onFechar={() => setMenuModelos(null)} className={x.menuWide}>
       <div className={x.menuLabel}>Modelos</div>
-      {MODELOS_PAGINA.map(m => <ItemMenu key={m.id} onClick={() => aplicarModelo(m)}>
+      {MODELOS_PAGINA.map(m => <ItemMenu key={m.id} onClick={() => void aplicarModelo(m)}>
         <span style={{ display: 'grid' }}><span>{m.icone} {m.nome}</span><small style={{ marginLeft: 0, color: 'var(--n-faint)' }}>{m.descricao}</small></span>
       </ItemMenu>)}
     </Menu>}
+    {comentarios && !ehBase && <Comentarios paginaId={id} euId={user?.id ?? null} rascunho={comentarios.rascunho} onFechar={() => setComentarios(null)}
+      onIrPara={b => controle.current?.irPara(b)} onMudou={setDiscussoes} />}
+    {compartilhar && <Compartilhar ancora={compartilhar} paginaId={id} espaco={pagina.espaco} onFechar={() => setCompartilhar(null)}
+      onMudou={c => setPagina(atual => atual && { ...atual, acesso: c.acesso, publica: c.publica })} />}
     {historico && <Historico pagina={pagina} podeRestaurar={editavel} onFechar={() => setHistorico(false)}
       onRestaurada={nova => { setHistorico(false); aplicar(nova); void recarregar(); avisar('Versão restaurada.') }} />}
     {seletorIcone && <SeletorIcone ancora={seletorIcone} onFechar={() => setSeletorIcone(null)} onEscolher={icone => mudar({ icone }, true)} />}

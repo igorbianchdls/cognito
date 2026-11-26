@@ -6,10 +6,11 @@ export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown[]; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
-  tipo: 'pagina' | 'base'; base_id: string | null; e_modelo?: boolean; esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>
+  tipo: 'pagina' | 'base'; base_id: string | null; e_modelo?: boolean; geracao_yjs: number; estado_yjs?: string | null
+  acesso: 'empresa' | 'restrito'; restricao_id: string | null; publica: boolean; esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>
 }
 export type BaseCompleta = { base: Pagina; itens: Item[]; ligadas: BaseLigada[] }
-export type Arvore = { paginas: PaginaResumo[]; favoritos: string[]; recentes: string[]; pode_editar_equipe: boolean }
+export type Arvore = { paginas: PaginaResumo[]; favoritos: string[]; recentes: string[]; pode_editar_equipe: boolean; eu?: string }
 export type ItemLixeira = { id: string; titulo: string; icone: string | null; espaco: Espaco; arquivada_em: string; mae: string | null }
 export type ResultadoBusca = { id: string; titulo: string; icone: string | null; espaco: Espaco; parent_id: string | null; trecho: string; updated_at: string }
 

@@ -5,6 +5,8 @@ export type PaginaResumo = {
   id: string; parent_id: string | null; espaco: Espaco; titulo: string; icone: string | null; posicao: number
   /** 'base' = base de dados; itens de base têm base_id e não aparecem na árvore da barra lateral. */
   tipo?: 'pagina' | 'base'; base_id?: string | null
+  /** Quem criou e o acesso (página restrita aparece com cadeado; particular de outra pessoa = compartilhada comigo). */
+  created_by?: string; acesso?: 'empresa' | 'restrito'
 }
 export type NoArvore = PaginaResumo & { filhos: NoArvore[] }
 
