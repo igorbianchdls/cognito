@@ -1,7 +1,11 @@
 // Notas: regras puras da árvore de páginas e do conteúdo (usadas pela tela e pelo servidor).
 
 export type Espaco = 'equipe' | 'particular'
-export type PaginaResumo = { id: string; parent_id: string | null; espaco: Espaco; titulo: string; icone: string | null; posicao: number }
+export type PaginaResumo = {
+  id: string; parent_id: string | null; espaco: Espaco; titulo: string; icone: string | null; posicao: number
+  /** 'base' = base de dados; itens de base têm base_id e não aparecem na árvore da barra lateral. */
+  tipo?: 'pagina' | 'base'; base_id?: string | null
+}
 export type NoArvore = PaginaResumo & { filhos: NoArvore[] }
 
 export const SEM_TITULO = 'Sem título'
@@ -9,7 +13,7 @@ export const tituloExibido = (titulo: string | null | undefined) => (titulo ?? '
 
 /** Árvore de um espaço, ordenada pela posição (empate: título). Páginas cuja mãe não está na lista vão para a raiz. */
 export function montarArvore(paginas: PaginaResumo[], espaco: Espaco): NoArvore[] {
-  const doEspaco = paginas.filter(p => p.espaco === espaco)
+  const doEspaco = paginas.filter(p => p.espaco === espaco && !p.base_id)
   const ids = new Set(doEspaco.map(p => p.id))
   const porPai = new Map<string | null, PaginaResumo[]>()
   for (const p of doEspaco) {

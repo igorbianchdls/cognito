@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useOrganization } from '@clerk/nextjs'
 import {
-  ChevronRight, ChevronsLeft, Copy, FileText, House, Link2, MoreHorizontal, Plus, Search, Star, StarOff, Trash2, Undo2,
+  ChevronRight, ChevronsLeft, Copy, FileText, House, Link2, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
 } from 'lucide-react'
 import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore } from '@/products/notas/shared/arvore'
 import { notasApi, type ItemLixeira } from './api'
@@ -18,24 +18,54 @@ const LARGURA_PADRAO = 248, LARGURA_MIN = 200, LARGURA_MAX = 480
 
 type Soltar = { id: string; onde: 'antes' | 'dentro' | 'depois' } | null
 
+/** No celular a barra é uma gaveta: abrir uma página fecha a gaveta. */
+const ehCelular = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches
+
+/** Setas na árvore (como no Notion): ↑/↓ andam entre as linhas visíveis, → expande, ← recolhe ou vai para a mãe. */
+function navegarComSetas(e: React.KeyboardEvent<HTMLElement>, aberta: boolean, temFilhas: boolean, alternar: () => void) {
+  const linhas = [...document.querySelectorAll<HTMLElement>('[data-notas-linha]')]
+  const i = linhas.indexOf(e.currentTarget)
+  if (e.key === 'ArrowDown') { e.preventDefault(); linhas[i + 1]?.focus() }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); linhas[i - 1]?.focus() }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); if (!aberta) alternar(); else if (temFilhas) linhas[i + 1]?.focus() }
+  else if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    if (aberta) { alternar(); return }
+    const nivel = Number(e.currentTarget.dataset.nivel)
+    for (let j = i - 1; j >= 0; j--) if (Number(linhas[j].dataset.nivel) < nivel) { linhas[j].focus(); break }
+  }
+}
+
 /** Uma linha da árvore com as filhas (recuo de 12px por nível, como no Notion). */
 function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrastando, setArrastando, onSoltar }: {
   no: NoArvore; nivel: number; abertas: Set<string>; alternar: (id: string) => void; atual: string | undefined
   soltar: Soltar; setSoltar: (s: Soltar) => void; arrastando: string | null; setArrastando: (id: string | null) => void
   onSoltar: (alvo: NoArvore, onde: 'antes' | 'dentro' | 'depois') => void
 }) {
-  const { criar, arquivar, duplicar, favoritar, arvore, avisar } = useNotas()
+  const { criar, arquivar, duplicar, favoritar, arvore, avisar, renomear, setRecolhida } = useNotas()
   const router = useRouter()
   const [menu, setMenu] = useState<HTMLElement | null>(null)
+  const [renomeando, setRenomeando] = useState(false)
+  const abrir = () => { router.push(`/notas/${no.id}`); if (ehCelular()) setRecolhida(true) }
+  const ehBase = no.tipo === 'base'
   const aberta = abertas.has(no.id)
   const favorita = arvore?.favoritos.includes(no.id) ?? false
   const marca = soltar?.id === no.id ? soltar.onde : null
 
   return <>
-    <div role="treeitem" aria-expanded={no.filhos.length ? aberta : undefined} aria-selected={atual === no.id} tabIndex={0}
+    <div role="treeitem" aria-expanded={no.filhos.length ? aberta : undefined} aria-selected={atual === no.id} tabIndex={0} data-notas-linha data-nivel={nivel}
       className={`${x.row} ${atual === no.id ? x.rowOn : ''} ${menu ? x.rowMenuOpen : ''} ${marca === 'dentro' ? x.dropInside : marca === 'antes' ? x.dropBefore : marca === 'depois' ? x.dropAfter : ''}`}
-      style={{ paddingLeft: 4 + nivel * 12 }} draggable
-      onClick={() => router.push(`/notas/${no.id}`)} onKeyDown={e => { if (e.key === 'Enter') router.push(`/notas/${no.id}`) }}
+      style={{ paddingLeft: 4 + nivel * 12 }} draggable={!renomeando}
+      onClick={() => { if (!renomeando) abrir() }} onDoubleClick={e => { e.preventDefault(); setRenomeando(true) }}
+      onKeyDown={e => {
+        if (renomeando || e.target !== e.currentTarget) return
+        const ctrl = e.ctrlKey || e.metaKey
+        if (e.key === 'Enter') abrir()
+        else if (e.key === 'F2') { e.preventDefault(); setRenomeando(true) }
+        else if (ctrl && e.key.toLowerCase() === 'd') { e.preventDefault(); void duplicar(no.id) }
+        else if (e.key === 'Delete' || (ctrl && e.key === 'Backspace')) { e.preventDefault(); void arquivar(no.id) }
+        else navegarComSetas(e, aberta, no.filhos.length > 0, () => alternar(no.id))
+      }}
       onDragStart={e => { setArrastando(no.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', no.id) }}
       onDragEnd={() => { setArrastando(null); setSoltar(null) }}
       onDragOver={e => {
@@ -46,26 +76,36 @@ function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrasta
       }}
       onDrop={e => { e.preventDefault(); if (marca) onSoltar(no, marca); setSoltar(null) }}>
       <span className={x.rowIcon}>
-        {no.icone ? <span className={x.emoji}>{no.icone}</span> : <FileText size={16} className={x.glyph} />}
+        {no.icone ? <span className={x.emoji}>{no.icone}</span> : ehBase ? <Table2 size={16} className={x.glyph} /> : <FileText size={16} className={x.glyph} />}
         <button type="button" className={`${x.toggle} ${aberta ? x.toggleOpen : ''}`} aria-label={aberta ? 'Recolher' : 'Expandir'}
           onClick={e => { e.stopPropagation(); alternar(no.id) }}><ChevronRight size={14} /></button>
       </span>
-      <span className={x.rowTitle}>{tituloExibido(no.titulo)}</span>
+      {renomeando
+        ? <input autoFocus className={x.rowRename} defaultValue={no.titulo} aria-label="Novo título" maxLength={500}
+          onClick={e => e.stopPropagation()} onFocus={e => e.currentTarget.select()}
+          onKeyDown={e => {
+            e.stopPropagation()
+            if (e.key === 'Escape') setRenomeando(false)
+            if (e.key === 'Enter') { setRenomeando(false); if (e.currentTarget.value !== no.titulo) void renomear(no.id, e.currentTarget.value) }
+          }}
+          onBlur={e => { setRenomeando(false); if (e.currentTarget.value !== no.titulo) void renomear(no.id, e.currentTarget.value) }} />
+        : <span className={x.rowTitle}>{tituloExibido(no.titulo)}</span>}
       <span className={x.rowActions}>
         <button type="button" className={x.rowBtn} aria-label="Mais ações" title="Excluir, duplicar e mais…"
           onClick={e => { e.stopPropagation(); setMenu(e.currentTarget) }}><MoreHorizontal size={16} /></button>
-        <button type="button" className={x.rowBtn} aria-label="Adicionar página dentro" title="Adicionar uma página dentro"
+        <button type="button" className={x.rowBtn} aria-label={ehBase ? 'Novo item' : 'Adicionar página dentro'} title={ehBase ? 'Adicionar um item à base' : 'Adicionar uma página dentro'}
           onClick={e => { e.stopPropagation(); if (!aberta) alternar(no.id); void criar({ parent_id: no.id }) }}><Plus size={16} /></button>
       </span>
     </div>
     {menu && <Menu ancora={menu} onFechar={() => setMenu(null)}>
       <ItemMenu icone={favorita ? StarOff : Star} onClick={() => { setMenu(null); void favoritar(no.id, !favorita) }}>{favorita ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}</ItemMenu>
       <div className={x.menuSep} />
+      <ItemMenu icone={PenLine} atalho="F2" onClick={() => { setMenu(null); setRenomeando(true) }}>Renomear</ItemMenu>
       <ItemMenu icone={Link2} onClick={() => { setMenu(null); void navigator.clipboard.writeText(`${location.origin}/notas/${no.id}`).then(() => avisar('Link copiado.')) }}>Copiar link</ItemMenu>
       <ItemMenu icone={Copy} atalho="Ctrl+D" onClick={() => { setMenu(null); void duplicar(no.id) }}>Duplicar</ItemMenu>
-      <ItemMenu icone={Trash2} perigo onClick={() => { setMenu(null); void arquivar(no.id) }}>Mover para a lixeira</ItemMenu>
+      <ItemMenu icone={Trash2} perigo atalho="Del" onClick={() => { setMenu(null); void arquivar(no.id) }}>Mover para a lixeira</ItemMenu>
     </Menu>}
-    {aberta && (no.filhos.length
+    {aberta && !ehBase && (no.filhos.length
       ? no.filhos.map(filho => <Linha key={filho.id} no={filho} nivel={nivel + 1} abertas={abertas} alternar={alternar} atual={atual}
         soltar={soltar} setSoltar={setSoltar} arrastando={arrastando} setArrastando={setArrastando} onSoltar={onSoltar} />)
       : <div className={x.empty} style={{ paddingLeft: 30 + (nivel + 1) * 12 }}>Nenhuma página dentro</div>)}
@@ -119,6 +159,7 @@ export function Sidebar() {
   const [lixeira, setLixeira] = useState<HTMLElement | null>(null)
   const [redimensionando, setRedimensionando] = useState(false)
   const inicio = useRef<{ x: number; largura: number } | null>(null)
+  const [espiando, setEspiando] = useState(false)
 
   // A página aberta fica visível: as mães dela aparecem expandidas.
   const abertas = useMemo(() => {
@@ -181,17 +222,19 @@ export function Sidebar() {
       : <div className={x.empty} style={{ paddingLeft: 12 }}>{espaco === 'particular' ? 'Só você vê as páginas daqui.' : 'Nenhuma página ainda.'}</div>}
   </div>
 
-  if (recolhida) return null
+  if (recolhida && !espiando) return <div className={x.peekZone} onMouseEnter={() => setEspiando(true)} aria-hidden />
 
-  return <aside className={x.side} style={{ width: largura }} aria-label="Notas">
+  return <>{!recolhida && <div className={x.sideBackdrop} onClick={() => setRecolhida(true)} aria-hidden />}
+  <aside className={`${x.side} ${recolhida ? x.sidePeek : ''}`} style={{ width: largura }} aria-label="Notas" onMouseLeave={() => { if (recolhida) setEspiando(false) }}>
     <div className={x.sideScroll}>
       <div className={x.workspace}>
         <span className={x.workspaceMark}>{(organization?.name ?? 'O').slice(0, 1).toUpperCase()}</span>
         <span className={x.workspaceName}>{organization?.name ?? 'Notas'}</span>
-        <button type="button" className={x.collapse} aria-label="Recolher a barra lateral" title="Recolher a barra lateral" onClick={() => setRecolhida(true)}><ChevronsLeft size={18} /></button>
+        <button type="button" className={x.collapse} aria-label={recolhida ? 'Fixar a barra lateral' : 'Recolher a barra lateral'} title={recolhida ? 'Fixar a barra lateral (Ctrl+\\)' : 'Recolher a barra lateral (Ctrl+\\)'}
+          onClick={() => { setEspiando(false); setRecolhida(!recolhida) }}>{recolhida ? <ChevronsLeft size={18} style={{ transform: 'scaleX(-1)' }} /> : <ChevronsLeft size={18} />}</button>
       </div>
       <button type="button" className={x.navItem} onClick={() => setBuscaAberta(true)}><Search size={16} />Buscar<kbd>Ctrl+K</kbd></button>
-      <Link href="/notas" className={`${x.navItem} ${pathname === '/notas' ? x.navOn : ''}`}><House size={16} />Início</Link>
+      <Link href="/notas" className={`${x.navItem} ${pathname === '/notas' ? x.navOn : ''}`} onClick={() => { if (ehCelular()) setRecolhida(true) }}><House size={16} />Início</Link>
 
       {erro && <div className={x.empty} style={{ padding: '0 16px', height: 'auto' }}>
         <span>{erro} <button type="button" onClick={() => void recarregar()} style={{ textDecoration: 'underline' }}>Tentar de novo</button></span>
@@ -207,12 +250,12 @@ export function Sidebar() {
     </div>
     <div className={x.sideFoot}>
       <button type="button" className={x.navItem} onClick={e => setLixeira(e.currentTarget)}><Trash2 size={16} />Lixeira</button>
-      <button type="button" className={x.navItem} onClick={() => void criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' })}><Plus size={16} />Nova página</button>
+      <button type="button" className={x.navItem} title="Nova página (Ctrl+Alt+N)" onClick={() => void criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' })}><Plus size={16} />Nova página</button>
     </div>
     {lixeira && <Lixeira ancora={lixeira} onFechar={() => setLixeira(null)} />}
     <div className={`${x.resizer} ${redimensionando ? x.resizing : ''}`} role="separator" aria-orientation="vertical" aria-label="Largura da barra lateral"
       onMouseDown={e => { e.preventDefault(); inicio.current = { x: e.clientX, largura }; setRedimensionando(true) }}
       onDoubleClick={() => salvarLargura(LARGURA_PADRAO)} />
-  </aside>
+  </aside></>
 }
 

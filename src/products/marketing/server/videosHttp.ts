@@ -15,6 +15,8 @@ export async function contexto(request: Request): Promise<Contexto | Response> {
 
 export function falha(error: unknown, codigo: string) {
   if (error instanceof VideoError) return respostaJson(error.status, { erro: error.message })
+  // Banco ainda sem as tabelas de Vídeos (migração não aplicada).
+  if (['42P01', '3F000', '42704'].includes((error as { code?: string }).code ?? '')) return respostaJson(503, { erro: 'Os vídeos com IA estão em preparação. Volte em breve.' })
   console.error(JSON.stringify({ scope: 'marketing', code: codigo, message: (error as Error).message }))
   return respostaJson(500, { erro: 'Não foi possível concluir. Tente de novo em instantes.' })
 }

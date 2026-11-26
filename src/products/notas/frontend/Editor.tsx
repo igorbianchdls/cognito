@@ -4,12 +4,15 @@
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import { useEffect, useMemo, useState } from 'react'
-import { BlockNoteSchema, defaultInlineContentSpecs, filterSuggestionItems, type PartialBlock } from '@blocknote/core'
+import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type PartialBlock } from '@blocknote/core'
 import { pt } from '@blocknote/core/locales'
-import { createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
+import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
-import { FileText, Plus } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Columns3, FileText, ListChecks, Plus, Table2 } from 'lucide-react'
+import type { TipoVisao } from '@/products/notas/shared/bases'
+import { BaseView } from './base/BaseView'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
 import { enviarArquivoNotas } from './api'
 import { useNotas } from './NotasProvider'
@@ -21,10 +24,14 @@ import x from './notas.module.css'
  */
 function MencaoView({ paginaId, titulo, icone }: { paginaId: string; titulo: string; icone: string }) {
   const { arvore } = useNotas()
+  const router = useRouter()
   const pagina = arvore?.paginas.find(p => p.id === paginaId)
   const sumiu = arvore != null && !pagina
+  // Dentro do texto editável o clique vira seleção; por isso a navegação é feita aqui (Ctrl/Cmd abre em outra aba).
   return <Link href={`/notas/${paginaId}`} className={`${x.mencao} ${sumiu ? x.mencaoSumiu : ''}`} contentEditable={false}
-    title={sumiu ? 'Página na lixeira ou sem acesso' : undefined}>
+    title={sumiu ? 'Página na lixeira ou sem acesso' : undefined}
+    onMouseDown={e => e.stopPropagation()}
+    onClick={e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); e.stopPropagation(); router.push(`/notas/${paginaId}`) }}>
     <span className={x.mencaoIcone}>{pagina?.icone ?? (icone || '📄')}</span>
     <span className={x.mencaoTitulo}>{tituloExibido(pagina?.titulo ?? titulo)}</span>
   </Link>
@@ -34,7 +41,15 @@ const MencaoPagina = createReactInlineContentSpec(
   { type: 'mencao', propSchema: { paginaId: { default: '' }, titulo: { default: '' }, icone: { default: '' } }, content: 'none' },
   { render: ({ inlineContent }) => <MencaoView {...inlineContent.props} /> },
 )
-const schema = BlockNoteSchema.create({ inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: MencaoPagina } })
+/** Base de dados dentro da página (bloco "/tabela", "/quadro"…): a base é uma subpágina; o bloco só mostra ela. */
+const BaseBloco = createReactBlockSpec(
+  { type: 'base', propSchema: { baseId: { default: '' } }, content: 'none' },
+  { render: ({ block }) => block.props.baseId ? <div style={{ width: '100%' }}><BaseView id={block.props.baseId} embutida /></div> : null },
+)
+const schema = BlockNoteSchema.create({
+  blockSpecs: { ...defaultBlockSpecs, base: BaseBloco() },
+  inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: MencaoPagina },
+})
 const MAX_MENCOES = 10
 
 /** Segue o tema do Otto (classe .dark no html). */
@@ -60,9 +75,11 @@ export type EditorProps = {
   criarSubpagina: (titulo?: string) => Promise<{ id: string; titulo: string; icone: string | null } | null>
   /** Página aberta (não aparece no @ dela mesma). */
   paginaId: string
+  /** "/tabela", "/quadro", "/lista", "/tarefas": cria a base como subpágina e devolve o id para o bloco. */
+  criarBase: (modelo: 'vazia' | 'tarefas', visao: TipoVisao) => Promise<{ id: string; titulo: string; icone: string | null } | null>
 }
 
-export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId }: EditorProps) {
+export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase }: EditorProps) {
   const escuro = useTemaEscuro()
   const { arvore } = useNotas()
   const inicial = useMemo(() => (Array.isArray(conteudo) && conteudo.length ? conteudo as PartialBlock[] : undefined),
@@ -90,6 +107,17 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
           })
         },
       },
+      ...([
+        ['Tabela', 'Base de dados em tabela, dentro desta página', 'vazia', 'tabela', Table2, ['tabela', 'table', 'base', 'database']],
+        ['Quadro', 'Base de dados em quadro (kanban)', 'vazia', 'quadro', Columns3, ['quadro', 'kanban', 'board']],
+        ['Lista de tarefas', 'Base com status, responsável, prazo e prioridade', 'tarefas', 'quadro', ListChecks, ['tarefas', 'tasks', 'todo']],
+      ] as const).map(([title, subtext, modelo, visao, Icone, aliases]) => ({
+        title, subtext, group: 'Bases de dados', aliases: [...aliases], icon: <Icone size={18} />,
+        onItemClick: () => {
+          const atual = editor.getTextCursorPosition().block
+          void criarBase(modelo, visao).then(nova => { if (nova) editor.insertBlocks([{ type: 'base', props: { baseId: nova.id } }, { type: 'paragraph' }], atual, 'after') })
+        },
+      })),
     ], query)} />
     <SuggestionMenuController triggerCharacter="@" getItems={async query => {
       // Páginas que a pessoa vê, recentes primeiro; o texto filtra pelo título.

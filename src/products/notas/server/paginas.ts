@@ -5,35 +5,36 @@ import { randomUUID } from 'node:crypto'
 import { moverCriaCiclo, posicaoEntre, textoDoConteudo, type Espaco, type PaginaResumo } from '../shared/arvore'
 import { comoPessoa, gravarArquivo, NotasError, type Client, type Contexto } from './db'
 
-const RESUMO = 'id, parent_id, espaco, titulo, icone, posicao'
+const RESUMO = 'id, parent_id, espaco, titulo, icone, posicao, tipo, base_id'
 export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
+  esquema: unknown[]; visoes: unknown[]; propriedades: Record<string, unknown>
 }
-const COMPLETA = `p.id, p.parent_id, p.espaco, p.titulo, p.icone, p.posicao, p.capa, p.capa_posicao, p.conteudo, p.largura_total, p.texto_pequeno,
+export const COMPLETA = `p.id, p.parent_id, p.espaco, p.titulo, p.icone, p.posicao, p.tipo, p.base_id, p.esquema, p.visoes, p.propriedades, p.capa, p.capa_posicao, p.conteudo, p.largura_total, p.texto_pequeno,
   p.fonte, p.bloqueada, p.versao, p.created_by, p.updated_by, p.created_at, p.updated_at, p.arquivada_em,
   notas.pode_editar(p.workspace_id, p.espaco, p.created_by) AS pode_editar,
   EXISTS (SELECT 1 FROM notas.favoritos f WHERE f.pagina_id = p.id AND f.user_id = editor.uid()) AS favorita`
 
 /** A política do banco recusou (42501): a pessoa só visualiza a empresa. */
-function semPermissao(erro: unknown): never {
+export function semPermissao(erro: unknown): never {
   throw (erro as { code?: string }).code === '42501' ? new NotasError(403, 'Seu acesso a esta empresa é só de visualização.') : erro
 }
 
-async function exigirLeitura(client: Client, ctx: Contexto) {
+export async function exigirLeitura(client: Client, ctx: Contexto) {
   const { rows } = await client.query('SELECT editor.can_read($1) AS ler, editor.can_write($1) AS gravar', [ctx.orgId])
   if (!rows[0]?.ler) throw new NotasError(403, 'Você não tem acesso às notas desta empresa.')
   return { podeEditarEquipe: Boolean(rows[0].gravar) }
 }
 
-async function lerPagina(client: Client, ctx: Contexto, id: string, incluirLixeira = false): Promise<Pagina> {
+export async function lerPagina(client: Client, ctx: Contexto, id: string, incluirLixeira = false): Promise<Pagina> {
   const { rows } = await client.query(`SELECT ${COMPLETA} FROM notas.paginas p WHERE p.id = $1 AND p.workspace_id = $2${incluirLixeira ? '' : ' AND p.arquivada_em IS NULL'}`, [id, ctx.orgId])
   if (!rows[0]) throw new NotasError(404, 'Página não encontrada.')
   return rows[0] as Pagina
 }
 
-async function exigirEdicao(client: Client, ctx: Contexto, id: string, incluirLixeira = false) {
+export async function exigirEdicao(client: Client, ctx: Contexto, id: string, incluirLixeira = false) {
   const pagina = await lerPagina(client, ctx, id, incluirLixeira)
   if (!pagina.pode_editar) throw new NotasError(403, 'Você não pode editar esta página.')
   return pagina
@@ -63,7 +64,7 @@ export function obterPagina(ctx: Contexto, id: string) {
   })
 }
 
-async function proximaPosicao(client: Client, ctx: Contexto, parentId: string | null, espaco: Espaco) {
+export async function proximaPosicao(client: Client, ctx: Contexto, parentId: string | null, espaco: Espaco) {
   const { rows } = await client.query(`SELECT max(posicao) AS fim FROM notas.paginas WHERE workspace_id = $1 AND espaco = $2
     AND parent_id IS NOT DISTINCT FROM $3 AND arquivada_em IS NULL`, [ctx.orgId, espaco, parentId])
   return posicaoEntre(rows[0]?.fim ?? null, null)
@@ -75,10 +76,17 @@ export function criarPagina(ctx: Contexto, dados: { parent_id?: string | null; e
     await exigirLeitura(client, ctx)
     let espaco: Espaco = dados.espaco === 'particular' ? 'particular' : 'equipe'
     const parentId = dados.parent_id || null
-    if (parentId) espaco = (await exigirEdicao(client, ctx, parentId)).espaco
+    let baseId: string | null = null
+    if (parentId) {
+      const mae = await exigirEdicao(client, ctx, parentId)
+      espaco = mae.espaco
+      // Página criada "dentro" de uma base é um item dela (o "+" da barra lateral numa base).
+      if (mae.tipo === 'base') baseId = mae.id
+      else if (mae.base_id) throw new NotasError(409, 'Itens de uma base não têm subpáginas nesta versão. Escreva no conteúdo do item.')
+    }
     const posicao = await proximaPosicao(client, ctx, parentId, espaco)
-    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, posicao, titulo, icone)
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, [ctx.orgId, espaco, parentId, posicao, (dados.titulo ?? '').slice(0, 500), dados.icone ?? null])
+    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, icone)
+      VALUES ($1, $2, $3, $7, $4, $5, $6) RETURNING id`, [ctx.orgId, espaco, parentId, posicao, (dados.titulo ?? '').slice(0, 500), dados.icone ?? null, baseId])
       .catch(semPermissao)
     return lerPagina(client, ctx, rows[0].id)
   })
@@ -92,10 +100,11 @@ const CAMPOS_DO_TEXTO: (keyof Alteracao)[] = ['titulo', 'icone', 'capa', 'capa_p
  * Grava só os campos enviados, se a página ainda estiver na versão que a pessoa abriu. Se outra pessoa salvou antes,
  * recusa com a página atual (a tela mostra o aviso e oferece recarregar), em vez de sobrescrever.
  */
-export function atualizarPagina(ctx: Contexto, id: string, versao: number, alteracao: Alteracao) {
+export function atualizarPagina(ctx: Contexto, id: string, versaoPedida: number | null, alteracao: Alteracao) {
   return comoPessoa(ctx, async client => {
     await exigirLeitura(client, ctx)
     const atual = await exigirEdicao(client, ctx, id)
+    const versao = versaoPedida ?? atual.versao
     if (atual.versao !== versao) throw new NotasError(409, 'Esta página foi alterada em outro lugar. Recarregue para ver a versão atual.', atual)
     const mexeNoTexto = CAMPOS_DO_TEXTO.some(c => alteracao[c] !== undefined)
     if (atual.bloqueada && mexeNoTexto && alteracao.bloqueada !== false) throw new NotasError(409, 'A página está bloqueada. Desbloqueie para editar.')
@@ -137,9 +146,11 @@ export function moverPagina(ctx: Contexto, id: string, destino: { parent_id: str
     await exigirLeitura(client, ctx)
     const pagina = await exigirEdicao(client, ctx, id)
     if (!Number.isFinite(destino.posicao)) throw new NotasError(400, 'Posição inválida.')
+    if (pagina.base_id) throw new NotasError(409, 'Itens ficam dentro da base. Para mudar a ordem, arraste na própria base.')
     let espaco = destino.espaco
     if (destino.parent_id) {
       const mae = await exigirEdicao(client, ctx, destino.parent_id)
+      if (mae.tipo === 'base' || mae.base_id) throw new NotasError(409, 'Uma página não pode ir para dentro de uma base. Crie um item nela.')
       espaco = mae.espaco
     }
     const todas = await arvoreDaEmpresa(client, ctx)
@@ -167,12 +178,15 @@ export function duplicarPagina(ctx: Contexto, id: string) {
     const grupo = subarvore(todas, id)
     const novosIds = new Map(grupo.map(p => [p.id, randomUUID()]))
     for (const [indice, p] of grupo.entries()) {
-      await client.query(`INSERT INTO notas.paginas (id, workspace_id, espaco, parent_id, posicao, titulo, icone, capa, capa_posicao, conteudo, conteudo_texto,
-          largura_total, texto_pequeno, fonte)
-        SELECT $1, workspace_id, espaco, $2, $3, $4, icone, capa, capa_posicao, conteudo, conteudo_texto, largura_total, texto_pequeno, fonte
+      const mae = indice === 0 ? original.parent_id : novosIds.get(p.parent_id!)
+      // Item duplicado continua na mesma base; itens de uma base duplicada vão para a base nova.
+      const base = p.base_id ? (indice === 0 ? p.base_id : novosIds.get(p.base_id) ?? null) : null
+      await client.query(`INSERT INTO notas.paginas (id, workspace_id, espaco, parent_id, base_id, posicao, titulo, icone, capa, capa_posicao, conteudo, conteudo_texto,
+          largura_total, texto_pequeno, fonte, tipo, esquema, visoes, propriedades)
+        SELECT $1, workspace_id, espaco, $2, $6, $3, $4, icone, capa, capa_posicao, conteudo, conteudo_texto, largura_total, texto_pequeno, fonte, tipo, esquema, visoes, propriedades
         FROM notas.paginas WHERE id = $5`,
-      [novosIds.get(p.id), indice === 0 ? original.parent_id : novosIds.get(p.parent_id!), indice === 0 ? posicaoEntre(original.posicao, vizinhas[0]?.posicao ?? null) : p.posicao,
-        indice === 0 ? `${original.titulo || 'Sem título'} (cópia)`.slice(0, 500) : p.titulo, p.id]).catch(semPermissao)
+      [novosIds.get(p.id), mae, indice === 0 ? posicaoEntre(original.posicao, vizinhas[0]?.posicao ?? null) : p.posicao,
+        indice === 0 ? `${original.titulo || 'Sem título'} (cópia)`.slice(0, 500) : p.titulo, p.id, base]).catch(semPermissao)
     }
     return lerPagina(client, ctx, novosIds.get(id)!)
   })
@@ -199,7 +213,7 @@ export function restaurarPagina(ctx: Contexto, id: string) {
       [grupo.map(p => p.id), pagina.arquivada_em])
     if (pagina.parent_id) {
       const mae = (await client.query('SELECT arquivada_em FROM notas.paginas WHERE id = $1', [pagina.parent_id])).rows[0]
-      if (!mae || mae.arquivada_em) await client.query('UPDATE notas.paginas SET parent_id = NULL, posicao = $2 WHERE id = $1', [id, await proximaPosicao(client, ctx, null, pagina.espaco)])
+      if (!mae || mae.arquivada_em) await client.query('UPDATE notas.paginas SET parent_id = NULL, base_id = NULL, posicao = $2 WHERE id = $1', [id, await proximaPosicao(client, ctx, null, pagina.espaco)])
     }
     return lerPagina(client, ctx, id)
   })

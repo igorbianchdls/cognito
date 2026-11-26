@@ -18,6 +18,8 @@ export async function responder(codigo: string, acao: () => Promise<unknown>, st
     return json(status, await acao() ?? { ok: true })
   } catch (error) {
     if (error instanceof NotasError) return json(error.status, { erro: error.message, atual: error.dados })
+    // Banco ainda sem as tabelas das Notas (migração não aplicada): a tela mostra "em preparação" em vez de erro.
+    if (['42P01', '3F000'].includes((error as { code?: string }).code ?? '')) return json(503, { erro: 'As Notas estão em preparação. Volte em breve.', preparacao: true })
     console.error(JSON.stringify({ scope: 'notas', code: codigo, message: (error as Error).message }))
     return json(500, { erro: 'Não foi possível concluir. Tente de novo em instantes.' })
   }

@@ -30,14 +30,16 @@ export async function PATCH(request: Request, { params }: Params) {
   if (ctx instanceof Response) return ctx
   const { id } = await params
   const body = await corpo<Record<string, unknown>>(request)
-  if (!UUID.test(id) || !body || !Number.isSafeInteger(body.versao)) return json(400, { erro: 'Parâmetros inválidos.' })
+  // Sem versão só dá para trocar o título ou o ícone (renomear pela barra lateral): vale o último que gravar.
+  const soNome = body && Object.keys(body).every(c => c === 'titulo' || c === 'icone')
+  if (!UUID.test(id) || !body || (!Number.isSafeInteger(body.versao) && !soNome)) return json(400, { erro: 'Parâmetros inválidos.' })
   const alteracao: Record<string, unknown> = {}
   for (const [campo, valor] of Object.entries(body)) {
     if (campo === 'versao') continue
     if (!TIPOS[campo]?.(valor)) return json(400, { erro: `Campo inválido: ${campo}.` })
     alteracao[campo] = valor
   }
-  return responder('NOTAS_UPDATE_FAILED', () => atualizarPagina(ctx, id, body.versao as number, alteracao as Alteracao))
+  return responder('NOTAS_UPDATE_FAILED', () => atualizarPagina(ctx, id, (body.versao as number | undefined) ?? null, alteracao as Alteracao))
 }
 
 /** DELETE — manda para a lixeira; ?definitivo=1 apaga de vez (só da lixeira). */

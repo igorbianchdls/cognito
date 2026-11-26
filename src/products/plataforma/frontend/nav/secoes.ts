@@ -9,6 +9,7 @@ import {
 
 import type { ErpCapability } from "@/products/erp/shared/professionalContracts"
 import type { Categoria, SecaoId } from "../../shared/categorias"
+import { RECURSOS } from "../../shared/recursos"
 
 export type IconComponent = React.ComponentType<{ className?: string; style?: React.CSSProperties }>
 export type NavigationItem = {
@@ -33,7 +34,7 @@ export const sections: Section[] = [
   {
     id: "marketing", title: "Marketing", items: [
       { title: "Editor", url: "/editor", icon: IconVideoFilled },
-      { title: "Vídeos", url: "/marketing/videos", icon: IconSparkles2Filled },
+      ...(RECURSOS.videos ? [{ title: "Vídeos", url: "/marketing/videos", icon: IconSparkles2Filled }] : []),
       { title: "Postar", url: "/marketing/postar", icon: IconSendFilled },
       { title: "Agendados", url: "/marketing/posts", icon: IconCalendarFilled },
       { title: "Sound effects", url: "/marketing/sound-effects", icon: IconHeadphonesFilled },
@@ -106,11 +107,11 @@ export const sections: Section[] = [
       },
     ],
   },
-  {
-    id: "notas", title: "Notas", items: [
+  ...(RECURSOS.notas ? [{
+    id: "notas" as const, title: "Notas", items: [
       { title: "Notas", url: "/notas", icon: IconFileTextFilled },
     ],
-  },
+  }] : []),
   {
     id: "drive", title: "Drive", items: [
       { title: "Início", url: "/drive", icon: IconFolderFilled, excludePaths: ["/drive/recentes", "/drive/favoritos", "/drive/lixeira"] },
@@ -143,7 +144,7 @@ export const createActions: { title: string; url: string; capability?: ErpCapabi
   { title: "Nova conta a receber", url: "/erp/financeiro/contas-a-receber", capability: "erp.financeiro.visualizar", categorias: ["gestao", "completo"] },
   { title: "Novo vídeo", url: "/editor", categorias: ["marketing", "completo"] },
   { title: "Novo post", url: "/marketing/postar", categorias: ["marketing", "completo"] },
-  { title: "Gerar vídeo com IA", url: "/marketing/videos", categorias: ["marketing", "completo"] },
+  ...(RECURSOS.videos ? [{ title: "Gerar vídeo com IA", url: "/marketing/videos", categorias: ["marketing", "completo"] as Categoria[] }] : []),
 ]
 
 const matches = (pathname: string, path: string) => pathname === path || pathname.startsWith(path + "/")

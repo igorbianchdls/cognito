@@ -1,17 +1,20 @@
 // Chamadas da tela de Notas ao servidor do Otto.
 import type { Espaco, PaginaResumo } from '@/products/notas/shared/arvore'
+import type { Item, Propriedade, Visao } from '@/products/notas/shared/bases'
 
 export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown[]; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
+  tipo: 'pagina' | 'base'; base_id: string | null; esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>
 }
+export type BaseCompleta = { base: Pagina; itens: Item[] }
 export type Arvore = { paginas: PaginaResumo[]; favoritos: string[]; recentes: string[]; pode_editar_equipe: boolean }
 export type ItemLixeira = { id: string; titulo: string; icone: string | null; espaco: Espaco; arquivada_em: string; mae: string | null }
 export type ResultadoBusca = { id: string; titulo: string; icone: string | null; espaco: Espaco; parent_id: string | null; trecho: string; updated_at: string }
 
 export class ErroNotas extends Error {
-  constructor(public status: number, message: string, public atual?: Pagina) { super(message) }
+  constructor(public status: number, message: string, public atual?: Pagina, public preparacao = false) { super(message) }
 }
 
 export async function notasApi<T>(url: string, init?: RequestInit & { json?: unknown }): Promise<T> {
@@ -20,8 +23,8 @@ export async function notasApi<T>(url: string, init?: RequestInit & { json?: unk
     cache: 'no-store', ...rest,
     ...(json !== undefined ? { body: JSON.stringify(json), headers: { 'content-type': 'application/json', ...rest.headers } } : {}),
   })
-  const body = await response.json().catch(() => ({})) as T & { erro?: string; atual?: Pagina }
-  if (!response.ok) throw new ErroNotas(response.status, body.erro ?? `HTTP ${response.status}`, body.atual)
+  const body = await response.json().catch(() => ({})) as T & { erro?: string; atual?: Pagina; preparacao?: boolean }
+  if (!response.ok) throw new ErroNotas(response.status, body.erro ?? (response.status >= 500 ? 'Não foi possível concluir. Tente de novo em instantes.' : `Erro ${response.status}`), body.atual, Boolean(body.preparacao))
   return body
 }
 
