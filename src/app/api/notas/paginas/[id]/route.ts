@@ -13,6 +13,8 @@ const TIPOS: Record<string, (v: unknown) => boolean> = {
   conteudo: v => Array.isArray(v) && JSON.stringify(v).length <= 5_000_000,
   largura_total: v => typeof v === 'boolean', texto_pequeno: v => typeof v === 'boolean', bloqueada: v => typeof v === 'boolean',
   fonte: v => v === 'padrao' || v === 'serifa' || v === 'mono',
+  estado_yjs: v => typeof v === 'string' && v.length <= 20_000_000 && /^[A-Za-z0-9+/]*={0,2}$/.test(v),
+  geracao_yjs: v => Number.isSafeInteger(v),
 }
 
 /** GET — a página inteira (e registra nos recentes). */
@@ -30,8 +32,8 @@ export async function PATCH(request: Request, { params }: Params) {
   if (ctx instanceof Response) return ctx
   const { id } = await params
   const body = await corpo<Record<string, unknown>>(request)
-  // Sem versão só dá para trocar o título ou o ícone (renomear pela barra lateral): vale o último que gravar.
-  const soNome = body && Object.keys(body).every(c => c === 'titulo' || c === 'icone')
+  // Sem versão: renomear pela barra lateral (título/ícone, vale o último) ou o editor colaborativo (documento Yjs + geração).
+  const soNome = body && (Object.keys(body).every(c => c === 'titulo' || c === 'icone') || body.estado_yjs !== undefined)
   if (!UUID.test(id) || !body || (!Number.isSafeInteger(body.versao) && !soNome)) return json(400, { erro: 'Parâmetros inválidos.' })
   const alteracao: Record<string, unknown> = {}
   for (const [campo, valor] of Object.entries(body)) {

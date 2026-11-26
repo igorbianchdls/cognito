@@ -2,6 +2,7 @@
 // como cada pessoa, para conferir SQL, gatilhos e as permissões do banco. Sem NOTAS_TEST_DB_URL, são pulados.
 import { after, before, describe, test } from 'node:test'
 import assert from 'node:assert/strict'
+import * as Y from 'yjs'
 
 const url = process.env.NOTAS_TEST_DB_URL
 const pular = !url
@@ -13,6 +14,7 @@ const vic = { userId: 'vic', orgId: 'org_a' }   // só visualiza
 const edu = { userId: 'edu', orgId: 'org_b' }   // outra empresa
 
 type Modulos = typeof import('./paginas') & typeof import('./bases') & typeof import('./db') & typeof import('./versoes')
+  & typeof import('./compartilhamento') & typeof import('./comentarios') & typeof import('./publico')
 let m: Modulos
 
 const rejeita = async (promessa: Promise<unknown>, status: number) => {
@@ -20,7 +22,7 @@ const rejeita = async (promessa: Promise<unknown>, status: number) => {
 }
 
 describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_URL (scripts/notas/banco-local.sh)' : false }, () => {
-  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db'), ...await import('./versoes') } as Modulos })
+  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db'), ...await import('./versoes'), ...await import('./compartilhamento'), ...await import('./comentarios'), ...await import('./publico') } as Modulos })
   after(async () => { await m.encerrarConexoes?.() })
 
   test('criar, ler, editar com versão e conflito', async () => {
@@ -155,5 +157,84 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
     assert.equal((await m.listarVersoes(ana, p.id)).length, 3)
     await rejeita(m.restaurarVersao(vic, p.id, versoes[0].id), 403)
     await rejeita(m.listarVersoes(edu, p.id), 404)
+  })
+
+  test('etapa 4: edição simultânea funde os documentos de duas pessoas; geração antiga é recusada', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Juntos' })
+    const docA = new Y.Doc(), docB = new Y.Doc()
+    docA.getText('t').insert(0, 'da Ana. ')
+    docB.getText('t').insert(0, 'da Bia. ')
+    const b64 = (d: Y.Doc) => Buffer.from(Y.encodeStateAsUpdate(d)).toString('base64')
+    await m.atualizarPagina(ana, p.id, null, { estado_yjs: b64(docA), geracao_yjs: p.geracao_yjs, conteudo: [] })
+    const salva = await m.atualizarPagina(bia, p.id, null, { estado_yjs: b64(docB), geracao_yjs: p.geracao_yjs, conteudo: [] })
+    const junto = new Y.Doc(); Y.applyUpdate(junto, Buffer.from(salva.estado_yjs!, 'base64'))
+    assert.match(junto.getText('t').toString(), /da Ana/); assert.match(junto.getText('t').toString(), /da Bia/)
+    // Conteúdo trocado por fora (restaurar versão, modelo): nova geração; quem estava na antiga recebe 409.
+    const trocada = await m.atualizarPagina(ana, p.id, null, { titulo: 'Juntos 2' })
+    const comConteudo = await m.atualizarPagina(ana, p.id, trocada.versao, { conteudo: [] })
+    assert.equal(comConteudo.geracao_yjs, p.geracao_yjs + 1)
+    await rejeita(m.atualizarPagina(bia, p.id, null, { estado_yjs: b64(docB), geracao_yjs: p.geracao_yjs }), 409)
+  })
+
+  test('etapa 4: comentários — discutir, responder, resolver, só o autor edita e apaga', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Proposta' })
+    const d = await m.comentar(vic, p.id, { texto: 'Pode revisar o preço?', bloco_id: 'bloco-1', trecho: 'R$ 100' })
+    const r = await m.comentar(ana, p.id, { texto: 'Revisado.', discussao_id: d.id })
+    await rejeita(m.comentar(ana, p.id, { texto: 'x', discussao_id: r.id }), 404)
+    await rejeita(m.alterarComentario(ana, d.id, { texto: 'mudei' }), 403)
+    assert.equal((await m.alterarComentario(ana, d.id, { resolvido: true })).resolvido, true)
+    await rejeita(m.apagarComentario(ana, d.id), 404)
+    await m.apagarComentario(vic, d.id)
+    assert.equal((await m.listarComentarios(ana, p.id)).length, 0, 'a resposta vai junto')
+    await rejeita(m.listarComentarios(edu, p.id), 404)
+  })
+
+  test('etapa 5: página restrita — só convidados veem, inclusive as subpáginas; nível ver/editar', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Salários' })
+    const sub = await m.criarPagina(ana, { parent_id: p.id, titulo: 'Detalhe' })
+    await m.alterarCompartilhamento(ana, p.id, { acesso: 'restrito' })
+    await rejeita(m.obterPagina(bia, p.id), 404)
+    await rejeita(m.obterPagina(bia, sub.id), 404)
+    assert.ok(!(await m.arvore(bia)).paginas.some(x => x.id === sub.id))
+    await rejeita(m.alterarCompartilhamento(bia, p.id, { acesso: 'empresa' }), 404)
+    await m.alterarCompartilhamento(ana, p.id, { convidados: [{ user_id: 'bia', nivel: 'ver' }] })
+    assert.equal((await m.obterPagina(bia, sub.id)).pode_editar, false)
+    await rejeita(m.atualizarPagina(bia, sub.id, null, { titulo: 'x' }), 403)
+    await m.alterarCompartilhamento(ana, p.id, { convidados: [{ user_id: 'bia', nivel: 'editar' }] })
+    assert.equal((await m.atualizarPagina(bia, sub.id, null, { titulo: 'Detalhe 2' })).titulo, 'Detalhe 2')
+    const neta = await m.criarPagina(bia, { parent_id: sub.id, titulo: 'Da Bia' })
+    assert.equal(neta.restricao_id, p.id)
+    await rejeita(m.obterPagina(vic, neta.id), 404)
+    // Mover para fora da página restrita volta a ser da empresa.
+    const solta = await m.moverPagina(ana, sub.id, { parent_id: null, espaco: 'equipe', posicao: 99 })
+    assert.equal(solta.restricao_id, null)
+    assert.equal((await m.obterPagina(vic, neta.id)).titulo, 'Da Bia')
+    await rejeita(m.alterarCompartilhamento(ana, p.id, { convidados: [{ user_id: 'edu', nivel: 'ver' }] }), 400)
+  })
+
+  test('etapa 5: link público lê só páginas publicadas; arquivos só os usados na página', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Política de trocas' })
+    const c = await m.alterarCompartilhamento(ana, p.id, { publica: true })
+    assert.ok(c.token)
+    assert.equal((await m.lerPaginaPublica(c.token!)).titulo, 'Política de trocas')
+    await rejeita(m.lerPaginaPublica('token-que-nao-existe-1234'), 404)
+    await rejeita(m.arquivoPublico(c.token!, 'org_a/x/foto.png'), 404)
+    await rejeita(m.arquivoPublico(c.token!, 'org_b/../org_a/x.png'), 404)
+    await m.alterarCompartilhamento(ana, p.id, { publica: false })
+    await rejeita(m.lerPaginaPublica(c.token!), 404)
+    const { base } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'tabela' })
+    const cb = await m.alterarCompartilhamento(ana, base.id, { publica: true })
+    const publica = await m.lerPaginaPublica(cb.token!)
+    assert.equal(publica.base?.itens.length, 3)
+    assert.ok(!publica.base?.esquema.some(x => x.tipo === 'pessoa'), 'pessoas não aparecem')
+  })
+
+  test('etapa 4: importar CSV cria a base com os valores conferidos', async () => {
+    const esquema = [{ id: 'preco', nome: 'Preço', tipo: 'numero' }, { id: 'cat', nome: 'Categoria', tipo: 'selecao', opcoes: [{ id: 'a', nome: 'Bebida', cor: 'azul' }] }]
+    const { base, itens } = await m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', titulo: 'Produtos', importacao: { esquema, itens: [
+      { titulo: 'Café', propriedades: { preco: 5.5, cat: 'a' } }, { titulo: 'Bolo', propriedades: { preco: 12 } }] } })
+    assert.equal(base.titulo, 'Produtos'); assert.equal(itens.length, 2)
+    assert.equal(itens.find(i => i.titulo === 'Café')?.propriedades.preco, 5.5)
+    await rejeita(m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', importacao: { esquema, itens: [{ titulo: 'x', propriedades: { cat: 'zzz' } }] } }), 400)
   })
 })

@@ -35,6 +35,9 @@ const isPublicRoute = createRouteMatcher([
   '/ottogestao(.*)',
   '/emissor-nota-fiscal(.*)',
   '/p/(.*)',
+  // Notas publicadas na web: o token do link é a credencial (conferido no servidor).
+  '/n/(.*)',
+  '/api/notas/publico/(.*)',
   '/__clerk/:path*',
   '/api/clerk/webhooks(.*)',
 ])

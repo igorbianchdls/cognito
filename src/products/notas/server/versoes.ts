@@ -33,7 +33,8 @@ export function restaurarVersao(ctx: Contexto, paginaId: string, versaoId: strin
     const { rows } = await client.query('SELECT titulo, icone, conteudo FROM notas.versoes WHERE id = $1 AND pagina_id = $2', [versaoId, paginaId])
     if (!rows[0]) throw new NotasError(404, 'Versão não encontrada.')
     await fotografar(client, ctx, atual, true)
-    await client.query(`UPDATE notas.paginas SET titulo = $2, icone = $3, conteudo = $4::jsonb, conteudo_texto = $5, versao = versao + 1, updated_by = editor.uid()
+    await client.query(`UPDATE notas.paginas SET titulo = $2, icone = $3, conteudo = $4::jsonb, conteudo_texto = $5, versao = versao + 1, updated_by = editor.uid(),
+      estado_yjs = NULL, geracao_yjs = geracao_yjs + 1
       WHERE id = $1`, [paginaId, rows[0].titulo, rows[0].icone, JSON.stringify(rows[0].conteudo), textoDoConteudo(rows[0].conteudo)]).catch(semPermissao)
     return lerPagina(client, ctx, paginaId)
   })

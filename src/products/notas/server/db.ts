@@ -14,6 +14,14 @@ function getPool() {
   pool ??= new Pool({ ...buildPostgresPoolConfig(process.env.SUPABASE_DB_URL), max: 4, connectionTimeoutMillis: 5000 })
   return pool
 }
+/**
+ * Consulta como o servidor (sem a pessoa): só para a leitura pública por token, que confere o token na própria
+ * consulta. Nada mais deve usar isto.
+ */
+export async function consultaDoServidor<T = Record<string, unknown>>(sql: string, params: unknown[]) {
+  return (await getPool().query(sql, params)).rows as T[]
+}
+
 /** Fecha as conexões (testes). */
 export async function encerrarConexoes() { await pool?.end(); pool = undefined }
 export type Client = Awaited<ReturnType<InstanceType<typeof Pool>['connect']>>

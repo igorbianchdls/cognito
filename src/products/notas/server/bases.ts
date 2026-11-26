@@ -64,8 +64,8 @@ async function inserirItens(client: Client, ctx: Contexto, base: Pagina, itens: 
   let posicao = depoisDe
   for (const item of itens) {
     posicao = posicaoEntre(posicao, null)
-    await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades)
-      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb)`, [ctx.orgId, base.espaco, base.id, posicao, item.titulo, JSON.stringify(item.propriedades)]).catch(semPermissao)
+    await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades, restricao_id)
+      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb, $7)`, [ctx.orgId, base.espaco, base.id, posicao, item.titulo, JSON.stringify(item.propriedades), base.restricao_id]).catch(semPermissao)
   }
 }
 
@@ -73,32 +73,46 @@ async function inserirItens(client: Client, ctx: Contexto, base: Pagina, itens: 
  * Cria uma base (página nova, ou transforma uma página vazia em base — "Comece com: Tabela/Quadro/Lista"). O modelo
  * "tarefas" já vem com Status, Responsável, Prazo, Prioridade, as visões Tabela e Quadro e três tarefas de exemplo.
  */
-export function criarBase(ctx: Contexto, dados: { parent_id?: string | null; espaco?: Espaco; titulo?: string; modelo: 'vazia' | 'tarefas'; visao: TipoVisao; converter?: string }) {
+export function criarBase(ctx: Contexto, dados: {
+  parent_id?: string | null; espaco?: Espaco; titulo?: string; modelo: 'vazia' | 'tarefas'; visao: TipoVisao; converter?: string
+  /** Importar CSV: esquema e itens já montados pela tela (conferidos aqui). */
+  importacao?: { esquema: unknown; itens: { titulo: string; propriedades: Record<string, unknown> }[] }
+}) {
   return comoPessoa(ctx, async client => {
     await exigirLeitura(client, ctx)
     const modelo = modeloDeBase(dados.modelo, dados.visao)
+    if (dados.importacao) {
+      const esquema = validarEsquema(dados.importacao.esquema)
+      if (!esquema.ok) throw new NotasError(400, esquema.erro)
+      if (!Array.isArray(dados.importacao.itens) || dados.importacao.itens.length > 2000) throw new NotasError(400, 'O arquivo pode ter até 2.000 linhas.')
+      modelo.esquema = esquema.valor
+      modelo.visoes = [{ ...modelo.visoes[0], visiveis: esquema.valor.map(p => p.id).slice(0, 20) }]
+      modelo.itens = dados.importacao.itens.map(i => ({ titulo: String(i?.titulo ?? '').slice(0, 500), propriedades: semVazios(conferirValores(esquema.valor, i?.propriedades ?? {})) }))
+    }
     let id: string
     if (dados.converter) {
       const pagina = await exigirEdicao(client, ctx, dados.converter)
       if (pagina.tipo === 'base' || pagina.base_id) throw new NotasError(409, 'Esta página já é uma base ou um item de base.')
       if (textoDoConteudo(pagina.conteudo).trim()) throw new NotasError(409, 'A página já tem conteúdo. Crie a base numa página nova.')
       if ((await client.query('SELECT 1 FROM notas.paginas WHERE parent_id = $1 LIMIT 1', [pagina.id])).rowCount) throw new NotasError(409, 'A página tem subpáginas. Crie a base numa página nova.')
-      await client.query(`UPDATE notas.paginas SET tipo = 'base', esquema = $2::jsonb, visoes = $3::jsonb, conteudo = '[]'::jsonb, conteudo_texto = '',
+      await client.query(`UPDATE notas.paginas SET tipo = 'base', esquema = $2::jsonb, visoes = $3::jsonb, conteudo = '[]'::jsonb, conteudo_texto = '', estado_yjs = NULL, geracao_yjs = geracao_yjs + 1,
         titulo = CASE WHEN titulo = '' THEN $4 ELSE titulo END, versao = versao + 1, updated_by = editor.uid() WHERE id = $1`,
       [pagina.id, JSON.stringify(modelo.esquema), JSON.stringify(modelo.visoes), dados.modelo === 'tarefas' ? 'Tarefas' : '']).catch(semPermissao)
       id = pagina.id
     } else {
       let espaco: Espaco = dados.espaco === 'particular' ? 'particular' : 'equipe'
       const parentId = dados.parent_id || null
+      let restricao: string | null = null
       if (parentId) {
         const mae = await exigirEdicao(client, ctx, parentId)
         if (mae.tipo === 'base' || mae.base_id) throw new NotasError(409, 'Não dá para criar uma base dentro de outra base.')
         espaco = mae.espaco
+        restricao = mae.restricao_id
       }
-      const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, posicao, titulo, tipo, esquema, visoes)
-        VALUES ($1, $2, $3, $4, $5, 'base', $6::jsonb, $7::jsonb) RETURNING id`,
+      const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, posicao, titulo, tipo, esquema, visoes, restricao_id)
+        VALUES ($1, $2, $3, $4, $5, 'base', $6::jsonb, $7::jsonb, $8) RETURNING id`,
       [ctx.orgId, espaco, parentId, await proximaPosicao(client, ctx, parentId, espaco), (dados.titulo ?? (dados.modelo === 'tarefas' ? 'Tarefas' : '')).slice(0, 500),
-        JSON.stringify(modelo.esquema), JSON.stringify(modelo.visoes)]).catch(semPermissao)
+        JSON.stringify(modelo.esquema), JSON.stringify(modelo.visoes), restricao]).catch(semPermissao)
       id = rows[0].id
     }
     const base = await exigirBase(client, ctx, id)
@@ -182,10 +196,10 @@ export function criarItem(ctx: Contexto, baseId: string, dados: { titulo?: strin
     await conferirRelacoes(client, base.esquema, valores)
     const posicao = Number.isFinite(dados.posicao) ? dados.posicao! : await proximaPosicao(client, ctx, baseId, base.espaco)
     const titulo = (dados.titulo || (modelo && !dados.e_modelo ? '' : dados.e_modelo ? 'Novo modelo' : '')).slice(0, 500)
-    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades, icone, conteudo, conteudo_texto, e_modelo)
-      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10) RETURNING ${ITEM}`,
+    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades, icone, conteudo, conteudo_texto, e_modelo, restricao_id)
+      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10, $11) RETURNING ${ITEM}`,
     [ctx.orgId, base.espaco, baseId, posicao, titulo, JSON.stringify(valores), modelo?.icone ?? null, JSON.stringify(modelo?.conteudo ?? []),
-      modelo?.conteudo_texto ?? '', Boolean(dados.e_modelo)]).catch(semPermissao)
+      modelo?.conteudo_texto ?? '', Boolean(dados.e_modelo), base.restricao_id]).catch(semPermissao)
     return rows[0] as Item
   })
 }

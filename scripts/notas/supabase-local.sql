@@ -53,3 +53,12 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA editor TO authenticated, service_role;
 INSERT INTO shared.empresas (clerk_organization_id) VALUES ('org_a'), ('org_b');
 INSERT INTO shared.usuarios (clerk_user_id) VALUES ('ana'), ('bia'), ('vic'), ('edu');
 INSERT INTO shared.usuarios_empresas (usuario_id, empresa_id, role) VALUES (1, 1, 'owner'), (2, 1, 'member'), (3, 1, 'viewer'), (4, 2, 'owner');
+
+-- Realtime: a tabela de mensagens e realtime.topic() (o tópico do canal que está sendo autorizado).
+CREATE SCHEMA realtime;
+CREATE TABLE realtime.messages (id bigserial PRIMARY KEY, topic text NOT NULL, extension text, payload jsonb, event text, private boolean, inserted_at timestamptz DEFAULT now());
+ALTER TABLE realtime.messages ENABLE ROW LEVEL SECURITY;
+CREATE FUNCTION realtime.topic() RETURNS text LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('realtime.topic', true), '') $$;
+GRANT USAGE ON SCHEMA realtime TO authenticated;
+GRANT SELECT, INSERT ON realtime.messages TO authenticated;
+GRANT USAGE ON SEQUENCE realtime.messages_id_seq TO authenticated;
