@@ -14,6 +14,8 @@ function getPool() {
   pool ??= new Pool({ ...buildPostgresPoolConfig(process.env.SUPABASE_DB_URL), max: 4, connectionTimeoutMillis: 5000 })
   return pool
 }
+/** Fecha as conexões (testes). */
+export async function encerrarConexoes() { await pool?.end(); pool = undefined }
 export type Client = Awaited<ReturnType<InstanceType<typeof Pool>['connect']>>
 
 /** Uma transação como a pessoa: tudo o que ela não pode ver ou alterar simplesmente não aparece ou não muda. */

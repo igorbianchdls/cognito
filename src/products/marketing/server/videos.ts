@@ -39,6 +39,8 @@ function getPool() {
   pool ??= new Pool({ ...buildPostgresPoolConfig(process.env.SUPABASE_DB_URL), max: 3, connectionTimeoutMillis: 5000 })
   return pool
 }
+/** Fecha as conexões (testes). */
+export async function encerrarConexoes() { await pool?.end(); pool = undefined }
 type Client = Awaited<ReturnType<InstanceType<typeof Pool>['connect']>>
 
 async function inTransaction<T>(run: (client: Client) => Promise<T>) {
