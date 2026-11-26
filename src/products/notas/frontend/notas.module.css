@@ -128,9 +128,10 @@
 .docWide { max-width: none; padding-left: 96px; padding-right: 96px; }
 .head { position: relative; padding-top: 80px; }
 .withCover .head { padding-top: 0; }
-.icon { display: inline-flex; height: 78px; width: 78px; align-items: center; justify-content: center; border-radius: 6px; font-size: 72px; line-height: 1; margin-bottom: 4px; }
-.icon:hover { background: var(--n-hover); }
+.app .icon { display: inline-flex; height: 78px; width: 78px; align-items: center; justify-content: center; border-radius: 6px; font-size: 72px; line-height: 1; margin-bottom: 4px; }
+.app .icon:hover { background: var(--n-hover); }
 .withCover .icon { margin-top: -42px; position: relative; z-index: 1; }
+.withCover .addRow { margin-top: 10px; }
 .addRow { display: flex; gap: 4px; height: 28px; margin-bottom: 4px; opacity: 0; transition: opacity .15s; }
 .head:hover .addRow, .addRow:focus-within { opacity: 1; }
 .addBtn { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 6px; color: var(--n-faint) !important; font-size: 14px; }
@@ -149,6 +150,14 @@
 .mencaoIcone { font-size: .95em; }
 .mencaoTitulo { font-weight: 500; border-bottom: 1px solid var(--n-line); line-height: 1.3; }
 .mencaoSumiu .mencaoTitulo { text-decoration: line-through; color: var(--n-faint); }
+.editor :global(.bn-block-content[data-content-type='heading']) { --level: 1.875em; font-weight: 600 !important; }
+.editor :global(.bn-block-content[data-content-type='heading'][data-level='2']) { --level: 1.5em; }
+.editor :global(.bn-block-content[data-content-type='heading'][data-level='3']) { --level: 1.25em; }
+.editor :global([data-content-type='codeBlock']) { background: #f7f6f3 !important; color: #37352f !important; border-radius: 4px; }
+:global(.dark) .editor :global([data-content-type='codeBlock']) { background: rgba(255, 255, 255, .03) !important; color: rgba(255, 255, 255, .81) !important; }
+.editor :global([data-content-type='codeBlock']) :global(code) { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; }
+.editor :global([data-content-type='checkListItem'] input[type='checkbox']) { width: 16px; height: 16px; accent-color: var(--n-blue); cursor: pointer; }
+.editor :global([data-content-type='quote']) { border-left: 3px solid currentColor; }
 .saving { color: var(--n-faint); font-size: 13px; padding: 0 6px; white-space: nowrap; }
 
 .picker { width: 380px; }
