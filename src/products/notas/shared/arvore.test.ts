@@ -43,8 +43,9 @@ test('texto dos blocos para a busca', () => {
     { type: 'paragraph', content: [{ type: 'text', text: 'Meta de ' }, { type: 'link', content: [{ type: 'text', text: 'dezembro' }] }],
       children: [{ type: 'paragraph', content: [{ type: 'text', text: 'detalhe' }] }] },
     { type: 'image', props: { caption: 'Gráfico' } },
+    { type: 'paragraph', content: [{ type: 'text', text: 'Ver' }, { type: 'mencao', props: { paginaId: 'x', titulo: 'Metas 2027', icone: '🎯' } }] },
     { type: 'table', content: { type: 'tableContent', rows: [{ cells: [[{ type: 'text', text: 'célula' }]] }] } },
   ]
-  assert.equal(textoDoConteudo(blocos), 'Plano de vendas Meta de dezembro detalhe Gráfico célula')
+  assert.equal(textoDoConteudo(blocos), 'Plano de vendas Meta de dezembro detalhe Gráfico Ver Metas 2027 célula')
   assert.equal(tituloExibido('  '), 'Sem título')
 })

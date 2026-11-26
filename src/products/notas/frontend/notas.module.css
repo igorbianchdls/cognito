@@ -144,6 +144,11 @@
 .small .editor :global(.bn-editor) { font-size: 14px; }
 .editor :global(.bn-container) { --bn-colors-editor-background: transparent; --bn-font-family: var(--n-font); }
 .editor :global(.bn-editor) { padding-inline: 54px; color: var(--n-text); font-size: 16px; }
+.mencao { display: inline-flex; align-items: baseline; gap: 3px; padding: 0 2px; border-radius: 3px; color: inherit; text-decoration: none; cursor: pointer; white-space: nowrap; }
+.mencao:hover { background: var(--n-hover); }
+.mencaoIcone { font-size: .95em; }
+.mencaoTitulo { font-weight: 500; border-bottom: 1px solid var(--n-line); line-height: 1.3; }
+.mencaoSumiu .mencaoTitulo { text-decoration: line-through; color: var(--n-faint); }
 .saving { color: var(--n-faint); font-size: 13px; padding: 0 6px; white-space: nowrap; }
 
 .picker { width: 380px; }

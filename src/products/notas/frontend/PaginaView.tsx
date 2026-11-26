@@ -95,11 +95,11 @@ export function PaginaView({ id }: { id: string }) {
     if (t) { t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px` }
   }, [pagina?.titulo])
 
-  const criarSubpagina = useCallback(async () => {
+  const criarSubpagina = useCallback(async (tituloNovo?: string) => {
     try {
-      const nova = await notasApi<Pagina>('/paginas', { method: 'POST', json: { parent_id: id } })
+      const nova = await notasApi<Pagina>('/paginas', { method: 'POST', json: { parent_id: id, ...(tituloNovo ? { titulo: tituloNovo } : {}) } })
       await recarregar()
-      return { id: nova.id, titulo: nova.titulo }
+      return { id: nova.id, titulo: nova.titulo, icone: nova.icone }
     } catch (e) { avisar((e as Error).message); return null }
   }, [id, recarregar, avisar])
 
@@ -194,7 +194,7 @@ export function PaginaView({ id }: { id: string }) {
             }} />
         </div>
         <div className={x.editor}>
-          <Editor chave={chave} conteudo={pagina.conteudo} editavel={editavel} onMudar={blocos => mudar({ conteudo: blocos })} criarSubpagina={criarSubpagina} />
+          <Editor chave={chave} conteudo={pagina.conteudo} editavel={editavel} onMudar={blocos => mudar({ conteudo: blocos })} criarSubpagina={criarSubpagina} paginaId={id} />
         </div>
       </div>
     </div>

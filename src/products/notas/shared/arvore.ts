@@ -75,6 +75,7 @@ export function textoDoConteudo(blocos: unknown, limite = 100_000): string {
     const obj = no as Bloco & { text?: unknown; type?: string; rows?: unknown; cells?: unknown }
     if (typeof obj.text === 'string') partes.push(obj.text)
     if (obj.props && typeof obj.props.caption === 'string') partes.push(obj.props.caption)
+    if (obj.type === 'mencao' && obj.props && typeof obj.props.titulo === 'string') partes.push(obj.props.titulo)
     if (obj.content !== undefined) visitar(obj.content)
     if (obj.rows !== undefined) visitar(obj.rows)
     if (obj.cells !== undefined) visitar(obj.cells)
