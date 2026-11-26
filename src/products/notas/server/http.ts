@@ -5,7 +5,17 @@ import { NotasError, type Contexto } from './db'
 export const json = (status: number, body: unknown) => Response.json(body, { status, headers: { 'cache-control': 'private, no-store' } })
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/** Pessoa fixa dos testes de tela ("usuario:empresa"), nunca em produção. */
+export function pessoaDeTeste(): Contexto | null {
+  const teste = process.env.NODE_ENV !== 'production' ? process.env.NOTAS_TESTE_USUARIO : undefined
+  if (!teste) return null
+  const [userId, orgId] = teste.split(':')
+  return userId && orgId ? { userId, orgId } : null
+}
+
 export async function contexto(): Promise<Contexto | Response> {
+  const teste = pessoaDeTeste()
+  if (teste) return teste
   const { userId, orgId } = await auth()
   if (!userId) return json(401, { erro: 'Entre para ver as notas.' })
   if (!orgId) return json(403, { erro: 'Escolha uma empresa para ver as notas.' })

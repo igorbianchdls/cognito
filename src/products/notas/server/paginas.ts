@@ -2,6 +2,7 @@
 // altera (espaço equipe x particular, perfil só de visualização). Aqui ficam as regras do fluxo: versão (uma gravação
 // não sobrescreve a outra), árvore sem ciclos, lixeira junto com as subpáginas, duplicar com as subpáginas.
 import { randomUUID } from 'node:crypto'
+import type { Propriedade, Visao } from '../shared/bases'
 import { moverCriaCiclo, posicaoEntre, textoDoConteudo, type Espaco, type PaginaResumo } from '../shared/arvore'
 import { comoPessoa, gravarArquivo, NotasError, type Client, type Contexto } from './db'
 
@@ -10,9 +11,9 @@ export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
-  esquema: unknown[]; visoes: unknown[]; propriedades: Record<string, unknown>
+  esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>; e_modelo: boolean
 }
-export const COMPLETA = `p.id, p.parent_id, p.espaco, p.titulo, p.icone, p.posicao, p.tipo, p.base_id, p.esquema, p.visoes, p.propriedades, p.capa, p.capa_posicao, p.conteudo, p.largura_total, p.texto_pequeno,
+export const COMPLETA = `p.id, p.parent_id, p.espaco, p.titulo, p.icone, p.posicao, p.tipo, p.base_id, p.e_modelo, p.esquema, p.visoes, p.propriedades, p.capa, p.capa_posicao, p.conteudo, p.largura_total, p.texto_pequeno,
   p.fonte, p.bloqueada, p.versao, p.created_by, p.updated_by, p.created_at, p.updated_at, p.arquivada_em,
   notas.pode_editar(p.workspace_id, p.espaco, p.created_by) AS pode_editar,
   EXISTS (SELECT 1 FROM notas.favoritos f WHERE f.pagina_id = p.id AND f.user_id = editor.uid()) AS favorita`
@@ -44,7 +45,7 @@ export async function exigirEdicao(client: Client, ctx: Contexto, id: string, in
 export function arvore(ctx: Contexto) {
   return comoPessoa(ctx, async client => {
     const { podeEditarEquipe } = await exigirLeitura(client, ctx)
-    const paginas = (await client.query(`SELECT ${RESUMO} FROM notas.paginas WHERE workspace_id = $1 AND arquivada_em IS NULL ORDER BY posicao LIMIT 5000`, [ctx.orgId])).rows as PaginaResumo[]
+    const paginas = (await client.query(`SELECT ${RESUMO} FROM notas.paginas WHERE workspace_id = $1 AND arquivada_em IS NULL AND NOT e_modelo ORDER BY posicao LIMIT 5000`, [ctx.orgId])).rows as PaginaResumo[]
     const favoritos = (await client.query(`SELECT f.pagina_id FROM notas.favoritos f JOIN notas.paginas p ON p.id = f.pagina_id AND p.arquivada_em IS NULL
       WHERE f.workspace_id = $1 AND f.user_id = editor.uid() ORDER BY f.posicao, f.created_at`, [ctx.orgId])).rows.map((r: { pagina_id: string }) => r.pagina_id)
     const recentes = (await client.query(`SELECT r.pagina_id FROM notas.recentes r JOIN notas.paginas p ON p.id = r.pagina_id AND p.arquivada_em IS NULL
@@ -115,11 +116,33 @@ export function atualizarPagina(ctx: Contexto, id: string, versaoPedida: number 
     }
     if (alteracao.conteudo !== undefined) sets.push(`conteudo_texto = $${params.push(textoDoConteudo(alteracao.conteudo))}`)
     if (!sets.length) return atual
+    if (alteracao.conteudo !== undefined || alteracao.titulo !== undefined || alteracao.icone !== undefined) await fotografar(client, ctx, atual)
     const { rowCount } = await client.query(`UPDATE notas.paginas SET ${sets.join(', ')}, versao = versao + 1, updated_by = editor.uid()
       WHERE id = $1 AND versao = $2 AND arquivada_em IS NULL`, params)
     if (!rowCount) throw new NotasError(409, 'Esta página foi alterada em outro lugar. Recarregue para ver a versão atual.', await lerPagina(client, ctx, id))
     return lerPagina(client, ctx, id)
   })
+}
+
+const INTERVALO_FOTOS_MIN = 10, FOTOS_POR_PAGINA = 100, DIAS_DE_HISTORICO = 30
+
+/**
+ * Histórico: guarda como a página estava antes de gravar, no máximo uma foto a cada 10 minutos por pessoa (ou sempre,
+ * com `forcar`, antes de restaurar uma versão). Página nova e vazia não gera foto.
+ */
+export async function fotografar(client: Client, ctx: Contexto, pagina: Pagina, forcar = false) {
+  if (!pagina.titulo && !textoDoConteudo(pagina.conteudo).trim() && !(pagina.conteudo as unknown[]).length) return
+  if (!forcar) {
+    const { rows } = await client.query(`SELECT created_by, created_at > now() - make_interval(mins => $2) AS recente FROM notas.versoes
+      WHERE pagina_id = $1 ORDER BY created_at DESC LIMIT 1`, [pagina.id, INTERVALO_FOTOS_MIN])
+    if (rows[0]?.recente && rows[0].created_by === ctx.userId) return
+  }
+  await client.query(`INSERT INTO notas.versoes (pagina_id, workspace_id, titulo, icone, conteudo, propriedades, versao, autor)
+    VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
+  [pagina.id, ctx.orgId, pagina.titulo, pagina.icone, JSON.stringify(pagina.conteudo ?? []), JSON.stringify(pagina.propriedades ?? {}), pagina.versao, pagina.updated_by ?? pagina.created_by])
+    .catch(semPermissao)
+  await client.query(`DELETE FROM notas.versoes WHERE pagina_id = $1 AND (created_at < now() - make_interval(days => $2)
+    OR id NOT IN (SELECT id FROM notas.versoes WHERE pagina_id = $1 ORDER BY created_at DESC LIMIT $3))`, [pagina.id, DIAS_DE_HISTORICO, FOTOS_POR_PAGINA])
 }
 
 async function arvoreDaEmpresa(client: Client, ctx: Contexto) {

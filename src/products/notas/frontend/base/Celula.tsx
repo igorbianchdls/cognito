@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react'
 import {
-  AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, Phone, Tags, Type, User, UserPlus, X,
+  ArrowUpRight, AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, Phone, Sigma, SquareFunction, Tags, Type, User, UserPlus, X,
   type LucideIcon,
 } from 'lucide-react'
 import {
@@ -10,6 +10,7 @@ import {
 } from '@/products/notas/shared/bases'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { Menu } from '../Menu'
+import { useLigadas } from './ligadas'
 import { useNotas } from '../NotasProvider'
 import type { Pessoa } from './pessoas'
 import x from '../notas.module.css'
@@ -17,6 +18,27 @@ import x from '../notas.module.css'
 export const ICONE_TIPO: Record<TipoPropriedade | 'titulo', LucideIcon> = {
   titulo: Type, texto: List, numero: Hash, selecao: Tags, multisselecao: Tags, status: Loader, data: Calendar, pessoa: User,
   checkbox: CheckSquare, url: Link2, email: AtSign, telefone: Phone, criado_em: Clock, editado_em: Clock, criado_por: UserPlus, editado_por: UserPlus,
+  relacao: ArrowUpRight, agregacao: Sigma, formula: SquareFunction,
+}
+
+/** Itens ligados numa relação: chips com o título (clicar abre o item). */
+function ItensLigados({ prop, ids }: { prop: Propriedade; ids: string[] }) {
+  const ligadas = useLigadas()
+  const outra = prop.baseRelacionada ? ligadas.get(prop.baseRelacionada) : undefined
+  return <span className={x.tags}>{ids.map(id => {
+    const item = outra?.itens.find(i => i.id === id)
+    return <a key={id} href={`/notas/${id}`} className={x.relChip} onClick={e => e.stopPropagation()}>
+      <span>{item?.icone ?? '📄'}</span><span className={x.cellText}>{item ? tituloExibido(item.titulo) : 'Item sem acesso'}</span>
+    </a>
+  })}</span>
+}
+
+/** Resultado de fórmula ou agregação: número formatado, sim/não, data ou texto. */
+function Calculado({ prop, valor }: { prop: Propriedade; valor: unknown }) {
+  if (typeof valor === 'boolean') return <span className={`${x.check} ${valor ? x.checkOn : ''}`}>{valor ? '✓' : ''}</span>
+  if (typeof valor === 'number') return <span className={x.cellText} style={{ marginLeft: 'auto' }}>{formatarNumero(valor, prop.formato)}</span>
+  if (typeof valor === 'string' && /^\d{4}-\d{2}-\d{2}(T|$)/.test(valor)) return <span className={x.cellText}>{formatarData(valor)}</span>
+  return <span className={x.cellText}>{String(valor)}</span>
 }
 
 export function Etiqueta({ opcao, status }: { opcao: Opcao; status?: boolean }) {
@@ -41,6 +63,8 @@ export function Valor({ prop, valor, pessoas, quebrar }: { prop: Propriedade; va
     return prop.tipo === 'checkbox' ? <span className={x.check} /> : null
   }
   switch (prop.tipo) {
+    case 'relacao': return <ItensLigados prop={prop} ids={valor as string[]} />
+    case 'formula': case 'agregacao': return <Calculado prop={prop} valor={valor} />
     case 'numero': return <span className={x.cellText} style={{ marginLeft: 'auto' }}>{formatarNumero(valor as number, prop.formato)}</span>
     case 'checkbox': return <span className={`${x.check} ${valor ? x.checkOn : ''}`}>{valor ? '✓' : ''}</span>
     case 'selecao': case 'status': {
@@ -96,6 +120,28 @@ function EditorOpcoes({ prop, valor, ancora, onFechar, onMudar, criarOpcao }: {
 
 /** Data de hoje no fuso de quem usa (AAAA-MM-DD). */
 const hojeLocal = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
+
+/** Relação: buscar e ligar itens da outra base. */
+function EditorRelacao({ prop, valor, ancora, onFechar, onMudar }: { prop: Propriedade; valor: unknown; ancora: HTMLElement; onFechar: () => void; onMudar: (v: unknown) => void }) {
+  const ligadas = useLigadas()
+  const [busca, setBusca] = useState('')
+  const outra = prop.baseRelacionada ? ligadas.get(prop.baseRelacionada) : undefined
+  const marcados = (valor as string[] | null) ?? []
+  const termo = busca.trim().toLowerCase()
+  const lista = (outra?.itens ?? []).filter(i => tituloExibido(i.titulo).toLowerCase().includes(termo)).slice(0, 50)
+  return <Menu ancora={ancora} onFechar={onFechar} className={x.menuWide}>
+    <div className={x.menuLabel}>Ligar a itens de {outra ? tituloExibido(outra.titulo) : 'outra base'}</div>
+    <input autoFocus className={x.menuInput} value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar itens…" aria-label="Buscar itens" />
+    <div className={x.optList}>
+      {!outra && <div className={x.menuLabel}>A base ligada não está disponível.</div>}
+      {outra && !lista.length && <div className={x.menuLabel}>Nenhum item encontrado.</div>}
+      {lista.map(i => <button key={i.id} type="button" className={`${x.optRow} ${marcados.includes(i.id) ? x.optRowOn : ''}`}
+        onClick={() => onMudar(marcados.includes(i.id) ? marcados.filter(m => m !== i.id) : [...marcados, i.id])}>
+        <span>{i.icone ?? '📄'}</span><span className={x.cellText}>{tituloExibido(i.titulo)}</span>{marcados.includes(i.id) && <span className={x.grip}>✓</span>}
+      </button>)}
+    </div>
+  </Menu>
+}
 
 function EditorData({ valor, ancora, onFechar, onMudar }: { valor: unknown; ancora: HTMLElement; onFechar: () => void; onMudar: (v: unknown) => void }) {
   return <Menu ancora={ancora} onFechar={onFechar} className={x.menuWide}>
@@ -172,6 +218,7 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
     {editando instanceof HTMLElement && prop && (prop.tipo === 'selecao' || prop.tipo === 'multisselecao' || prop.tipo === 'status')
       && <EditorOpcoes prop={prop} valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} criarOpcao={criarOpcao} />}
     {editando instanceof HTMLElement && prop?.tipo === 'data' && <EditorData valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}
+    {editando instanceof HTMLElement && prop?.tipo === 'relacao' && <EditorRelacao prop={prop} valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}
     {editando instanceof HTMLElement && prop?.tipo === 'pessoa' && <EditorPessoas valor={valor} pessoas={pessoas} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}
   </div>
 }

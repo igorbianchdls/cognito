@@ -89,7 +89,23 @@ export function MenuPropriedades({ ancora, visao, esquema, onFechar, onMudar }: 
         : <div className={x.menuLabel}>Crie uma propriedade de seleção ou status para agrupar.</div>}
       <div className={x.menuSep} />
     </>}
-    <div className={x.menuLabel}>Propriedades {visao.tipo === 'quadro' ? 'nos cartões' : 'visíveis'}</div>
+    {visao.tipo === 'calendario' && <>
+      <div className={x.menuLabel}>Mostrar no calendário por</div>
+      {esquema.filter(p => ['data', 'criado_em', 'editado_em'].includes(p.tipo)).map(p => <ItemMenu key={p.id} icone={ICONE_TIPO[p.tipo]} onClick={() => onMudar({ dataPor: p.id })}
+        direita={visao.dataPor === p.id ? <span style={{ marginLeft: 'auto' }}>✓</span> : undefined}>{p.nome}</ItemMenu>)}
+      <div className={x.menuSep} />
+    </>}
+    {visao.tipo === 'galeria' && <>
+      <div className={x.menuLabel}>Cartões</div>
+      <div className={x.filterRow}>
+        <select value={visao.tamanhoCartao ?? 'medio'} aria-label="Tamanho do cartão" style={{ flex: 1 }} onChange={e => onMudar({ tamanhoCartao: e.target.value as 'medio' })}>
+          <option value="pequeno">Pequenos</option><option value="medio">Médios</option><option value="grande">Grandes</option>
+        </select>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}><input type="checkbox" checked={visao.capaCartao !== false} onChange={e => onMudar({ capaCartao: e.target.checked })} />Capa</label>
+      </div>
+      <div className={x.menuSep} />
+    </>}
+    <div className={x.menuLabel}>Propriedades {visao.tipo === 'quadro' || visao.tipo === 'galeria' ? 'nos cartões' : 'visíveis'}</div>
     {esquema.map(p => {
       const visivel = visao.visiveis.includes(p.id)
       return <ItemMenu key={p.id} icone={ICONE_TIPO[p.tipo]} direita={<span style={{ marginLeft: 'auto', display: 'inline-flex' }}>{visivel ? <Eye size={14} /> : <EyeOff size={14} />}</span>}

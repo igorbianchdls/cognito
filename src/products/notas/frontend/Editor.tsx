@@ -3,7 +3,7 @@
 // O editor em blocos (BlockNote) fica só aqui: se um dia trocarmos de biblioteca, a troca fica contida neste arquivo.
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type PartialBlock } from '@blocknote/core'
 import { pt } from '@blocknote/core/locales'
 import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
@@ -77,9 +77,11 @@ export type EditorProps = {
   paginaId: string
   /** "/tabela", "/quadro", "/lista", "/tarefas": cria a base como subpágina e devolve o id para o bloco. */
   criarBase: (modelo: 'vazia' | 'tarefas', visao: TipoVisao) => Promise<{ id: string; titulo: string; icone: string | null } | null>
+  /** Chamado quando o editor aparece na tela (para receber o foco pedido antes de ele carregar). */
+  aoCarregar?: () => void
 }
 
-export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase }: EditorProps) {
+export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase, aoCarregar }: EditorProps) {
   const escuro = useTemaEscuro()
   const { arvore } = useNotas()
   const inicial = useMemo(() => (Array.isArray(conteudo) && conteudo.length ? conteudo as PartialBlock[] : undefined),
@@ -91,6 +93,10 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     dictionary: { ...pt, placeholders: { ...pt.placeholders, default: "Digite '/' para ver os comandos" } },
     uploadFile: enviarArquivoNotas,
   }, [chave])
+
+  const carregou = useRef(aoCarregar)
+  useEffect(() => { carregou.current = aoCarregar })
+  useEffect(() => { const t = setTimeout(() => carregou.current?.(), 0); return () => clearTimeout(t) }, [editor])
 
   return <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
     onChange={() => onMudar(editor.document)}>

@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { ChevronsRight, Clock, Plus } from 'lucide-react'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { useNotas } from './NotasProvider'
+import { useTituloDaAba } from './local'
 import x from './notas.module.css'
 
 /** Início das Notas: saudação, páginas visitadas recentemente e criar uma nova. */
 export function Inicio() {
   const { arvore, criar, recolhida, setRecolhida } = useNotas()
+  useTituloDaAba('Notas · Otto')
   const hora = new Date().getHours()
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
   const recentes = (arvore?.recentes ?? []).map(id => arvore?.paginas.find(p => p.id === id)).filter(Boolean)

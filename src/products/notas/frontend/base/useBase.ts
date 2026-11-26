@@ -69,9 +69,9 @@ export function useBase(id: string) {
     return opcao.id
   }, [salvarBase])
 
-  const novoItem = useCallback(async (valores: Record<string, unknown> = {}, posicao?: number, titulo = '') => {
+  const novoItem = useCallback(async (valores: Record<string, unknown> = {}, posicao?: number, titulo = '', extra: { modelo_id?: string; e_modelo?: boolean } = {}) => {
     try {
-      const item = await notasApi<Item>(`/bases/${id}/itens`, { method: 'POST', json: { propriedades: valores, ...(posicao !== undefined ? { posicao } : {}), titulo } })
+      const item = await notasApi<Item>(`/bases/${id}/itens`, { method: 'POST', json: { propriedades: valores, ...(posicao !== undefined ? { posicao } : {}), titulo, ...extra } })
       setDados(d => d && { ...d, itens: [...d.itens, item] })
       return item
     } catch (e) { avisar((e as Error).message); return null }

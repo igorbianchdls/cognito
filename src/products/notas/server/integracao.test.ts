@@ -12,7 +12,7 @@ const bia = { userId: 'bia', orgId: 'org_a' }   // membro
 const vic = { userId: 'vic', orgId: 'org_a' }   // só visualiza
 const edu = { userId: 'edu', orgId: 'org_b' }   // outra empresa
 
-type Modulos = typeof import('./paginas') & typeof import('./bases') & typeof import('./db')
+type Modulos = typeof import('./paginas') & typeof import('./bases') & typeof import('./db') & typeof import('./versoes')
 let m: Modulos
 
 const rejeita = async (promessa: Promise<unknown>, status: number) => {
@@ -20,7 +20,7 @@ const rejeita = async (promessa: Promise<unknown>, status: number) => {
 }
 
 describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_URL (scripts/notas/banco-local.sh)' : false }, () => {
-  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db') } as Modulos })
+  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db'), ...await import('./versoes') } as Modulos })
   after(async () => { await m.encerrarConexoes?.() })
 
   test('criar, ler, editar com versão e conflito', async () => {
@@ -65,7 +65,8 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
   })
 
   test('base: modelo tarefas, item, células validadas, conversão de tipo e exclusão de propriedade', async () => {
-    const { base, itens } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'quadro' })
+    const { base: criada, itens } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'quadro' })
+    const base = criada
     assert.equal(base.tipo, 'base'); assert.equal(itens.length, 3)
     const item = await m.criarItem(bia, base.id, { titulo: 'Gravar vídeo', propriedades: { status: 'em-andamento', prazo: '2026-12-10' } })
     assert.equal(item.propriedades.status, 'em-andamento')
@@ -110,5 +111,49 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
     await m.atualizarPagina(ana, cheia.id, null, { titulo: 'x' })
     const comTexto = await m.atualizarPagina(ana, cheia.id, (await m.obterPagina(ana, cheia.id)).versao, { conteudo: [{ type: 'paragraph', content: [{ type: 'text', text: 'texto', styles: {} }] }] })
     await rejeita(m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', converter: comTexto.id }), 409)
+  })
+
+  test('etapa 3: relação entre bases, ids de fora recusados, bases ligadas devolvidas', async () => {
+    const { base: clientes } = await m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', titulo: 'Clientes' })
+    const cli = await m.criarItem(ana, clientes.id, { titulo: 'Padaria Sol' })
+    const { base: projetos } = await m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', titulo: 'Projetos' })
+    const esquema = [...projetos.esquema, { id: 'cliente', nome: 'Cliente', tipo: 'relacao' as const, baseRelacionada: clientes.id },
+      { id: 'qtd', nome: 'Qtd clientes', tipo: 'agregacao' as const, relacao: 'cliente', alvo: 'titulo', calculo: 'contar' as const },
+      { id: 'f', nome: 'Rótulo', tipo: 'formula' as const, expressao: 'concat(prop("Nome"), " / ", prop("Cliente"))' }]
+    const alterada = await m.alterarBase(ana, projetos.id, { esquema })
+    assert.equal(alterada.ligadas.length, 1); assert.equal(alterada.ligadas[0].itens.length, 4)
+    const proj = await m.criarItem(ana, projetos.id, { titulo: 'Site', propriedades: { cliente: [cli.id] } })
+    assert.deepEqual(proj.propriedades.cliente, [cli.id])
+    await rejeita(m.criarItem(ana, projetos.id, { propriedades: { cliente: [proj.id] } }), 400)
+    await rejeita(m.alterarItem(ana, proj.id, { propriedades: { f: 'x' } }), 400)
+    await rejeita(m.alterarBase(ana, projetos.id, { esquema: [{ id: 'r', nome: 'R', tipo: 'relacao', baseRelacionada: '00000000-0000-4000-8000-000000000000' }] }), 400)
+    await rejeita(m.alterarBase(ana, projetos.id, { esquema: [{ id: 'f', nome: 'F', tipo: 'formula', expressao: 'prop(' }] }), 400)
+  })
+
+  test('etapa 3: modelos de item', async () => {
+    const { base } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'tabela' })
+    const modelo = await m.criarItem(ana, base.id, { e_modelo: true, titulo: 'Bug', propriedades: { prioridade: 'alta' } })
+    assert.equal(modelo.e_modelo, true)
+    await m.atualizarPagina(ana, modelo.id, null, { icone: '🐞' })
+    const doModelo = await m.criarItem(bia, base.id, { modelo_id: modelo.id, titulo: 'Erro no login' })
+    assert.equal(doModelo.icone, '🐞'); assert.equal(doModelo.propriedades.prioridade, 'alta'); assert.equal(doModelo.e_modelo, false)
+    assert.ok(!(await m.arvore(ana)).paginas.some(p => p.id === modelo.id))
+  })
+
+  test('etapa 3: histórico guarda versões, só uma a cada 10 min por pessoa, e restaura', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Contrato' })
+    const texto = (t: string) => [{ type: 'paragraph', content: [{ type: 'text', text: t, styles: {} }] }]
+    let atual = await m.atualizarPagina(ana, p.id, p.versao, { conteudo: texto('versão A') })
+    atual = await m.atualizarPagina(ana, p.id, atual.versao, { conteudo: texto('versão B') })
+    await m.atualizarPagina(bia, p.id, atual.versao, { conteudo: texto('versão C') })
+    const versoes = await m.listarVersoes(ana, p.id)
+    assert.equal(versoes.length, 2, 'uma foto da ana (antes de A) e uma da bia (antes de C)')
+    const daBia = await m.obterVersao(ana, p.id, versoes[0].id)
+    assert.match(JSON.stringify(daBia.conteudo), /versão B/)
+    const restaurada = await m.restaurarVersao(ana, p.id, versoes[0].id)
+    assert.match(JSON.stringify(restaurada.conteudo), /versão B/)
+    assert.equal((await m.listarVersoes(ana, p.id)).length, 3)
+    await rejeita(m.restaurarVersao(vic, p.id, versoes[0].id), 403)
+    await rejeita(m.listarVersoes(edu, p.id), 404)
   })
 })

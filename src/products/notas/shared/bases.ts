@@ -1,10 +1,12 @@
-// Notas — bases de dados (etapa 2): regras puras usadas pela tela e pelo servidor. Uma base é uma página do tipo
+import { calcularFormula, validarFormula, type ValorFormula } from './formula'
+
+// Notas — bases de dados (etapas 2 e 3): regras puras usadas pela tela e pelo servidor. Uma base é uma página do tipo
 // "base" com um esquema (as propriedades) e visões (tabela, quadro, lista); cada item é uma página com base_id e os
 // valores das propriedades em `propriedades` (chave = id da propriedade). O nome do item é o título da página.
 
 export const TIPOS_PROPRIEDADE = [
   'texto', 'numero', 'selecao', 'multisselecao', 'status', 'data', 'pessoa', 'checkbox', 'url', 'email', 'telefone',
-  'criado_em', 'editado_em', 'criado_por', 'editado_por',
+  'criado_em', 'editado_em', 'criado_por', 'editado_por', 'relacao', 'agregacao', 'formula',
 ] as const
 export type TipoPropriedade = typeof TIPOS_PROPRIEDADE[number]
 
@@ -12,9 +14,12 @@ export const NOME_TIPO: Record<TipoPropriedade, string> = {
   texto: 'Texto', numero: 'Número', selecao: 'Seleção', multisselecao: 'Seleção múltipla', status: 'Status', data: 'Data',
   pessoa: 'Pessoa', checkbox: 'Caixa de seleção', url: 'URL', email: 'E-mail', telefone: 'Telefone',
   criado_em: 'Criado em', editado_em: 'Editado em', criado_por: 'Criado por', editado_por: 'Editado por',
+  relacao: 'Relação', agregacao: 'Agregação', formula: 'Fórmula',
 }
+/** Tipos calculados na hora (fórmula e agregação): o valor não é guardado no item. */
+export const CALCULADOS: TipoPropriedade[] = ['agregacao', 'formula']
 /** Tipos preenchidos pelo sistema (não se edita a célula). */
-export const AUTOMATICOS: TipoPropriedade[] = ['criado_em', 'editado_em', 'criado_por', 'editado_por']
+export const AUTOMATICOS: TipoPropriedade[] = ['criado_em', 'editado_em', 'criado_por', 'editado_por', ...CALCULADOS]
 export const COM_OPCOES: TipoPropriedade[] = ['selecao', 'multisselecao', 'status']
 
 export const CORES = ['padrao', 'cinza', 'marrom', 'laranja', 'amarelo', 'verde', 'azul', 'roxo', 'rosa', 'vermelho'] as const
@@ -27,7 +32,15 @@ export type GrupoStatus = 'a_fazer' | 'em_andamento' | 'concluido'
 export const NOME_GRUPO_STATUS: Record<GrupoStatus, string> = { a_fazer: 'A fazer', em_andamento: 'Em andamento', concluido: 'Concluído' }
 export type Opcao = { id: string; nome: string; cor: Cor; grupo?: GrupoStatus }
 export type FormatoNumero = 'numero' | 'real' | 'porcentagem'
-export type Propriedade = { id: string; nome: string; tipo: TipoPropriedade; opcoes?: Opcao[]; formato?: FormatoNumero }
+export type Propriedade = {
+  id: string; nome: string; tipo: TipoPropriedade; opcoes?: Opcao[]; formato?: FormatoNumero
+  /** Relação: a base cujos itens podem ser ligados. */
+  baseRelacionada?: string
+  /** Agregação: qual relação, qual propriedade da outra base (ou "titulo") e o cálculo ("mostrar" lista os valores). */
+  relacao?: string; alvo?: string; calculo?: Calculo | 'mostrar'
+  /** Fórmula: a expressão (ver formula.ts). */
+  expressao?: string
+}
 
 /** "titulo" é o nome do item (a primeira coluna); as demais chaves são ids de propriedades. */
 export const TITULO = 'titulo'
@@ -38,7 +51,8 @@ export type Operador =
 export type Filtro = { prop: string; operador: Operador; valor?: unknown }
 export type Ordenacao = { prop: string; direcao: 'asc' | 'desc' }
 export type Calculo = 'nenhum' | 'contar' | 'vazios' | 'preenchidos' | 'unicos' | 'soma' | 'media' | 'minimo' | 'maximo' | 'marcados' | 'pct_marcados'
-export type TipoVisao = 'tabela' | 'quadro' | 'lista'
+export type TipoVisao = 'tabela' | 'quadro' | 'lista' | 'galeria' | 'calendario'
+export const TIPOS_VISAO: TipoVisao[] = ['tabela', 'quadro', 'lista', 'galeria', 'calendario']
 export type Visao = {
   id: string; nome: string; tipo: TipoVisao
   filtros: Filtro[]; juncao: 'e' | 'ou'; ordenacao: Ordenacao[]
@@ -50,11 +64,19 @@ export type Visao = {
   calculos?: Record<string, Calculo>
   /** Quadro: colunas escondidas (ids de opção; "" = sem valor). */
   colunasOcultas?: string[]
+  /** Calendário: propriedade de data que posiciona os itens. */
+  dataPor?: string | null
+  /** Galeria: tamanho do cartão e se mostra a capa do item. */
+  tamanhoCartao?: 'pequeno' | 'medio' | 'grande'
+  capaCartao?: boolean
 }
 
 export type Item = {
   id: string; titulo: string; icone: string | null; posicao: number; propriedades: Record<string, unknown>
   created_at: string; updated_at: string; created_by: string; updated_by: string | null
+  capa?: string | null
+  /** Modelo de item da base (não aparece nas visões; usado no "Novo ▾"). */
+  e_modelo?: boolean
 }
 
 export type Resultado<T> = { ok: true; valor: T } | { ok: false; erro: string }
@@ -62,6 +84,7 @@ const ok = <T>(valor: T): Resultado<T> => ({ ok: true, valor })
 const erro = (mensagem: string): Resultado<never> => ({ ok: false, erro: mensagem })
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export const novoId = () => Math.random().toString(36).slice(2, 10)
 
@@ -89,6 +112,8 @@ export function validarValor(prop: Propriedade, valor: unknown): Resultado<unkno
       return typeof valor === 'string' && ids.has(valor) ? ok(valor) : erro(`Opção inexistente em “${prop.nome}”.`)
     case 'multisselecao':
       return Array.isArray(valor) && valor.every(v => typeof v === 'string' && ids.has(v)) ? ok([...new Set(valor as string[])]) : erro(`Opção inexistente em “${prop.nome}”.`)
+    case 'relacao':
+      return Array.isArray(valor) && valor.length <= 100 && valor.every(v => typeof v === 'string' && UUID.test(v)) ? ok([...new Set(valor as string[])]) : erro(`“${prop.nome}” precisa ser uma lista de itens.`)
     case 'pessoa':
       return Array.isArray(valor) && valor.length <= 50 && valor.every(v => typeof v === 'string' && v.length <= 100) ? ok([...new Set(valor as string[])]) : erro(`“${prop.nome}” precisa ser uma lista de pessoas.`)
     default:
@@ -124,8 +149,29 @@ export function validarEsquema(esquema: unknown): Resultado<Propriedade[]> {
           : { id: oid, nome: onome, cor })
       }
     }
-    if (tipo === 'numero') prop.formato = (['numero', 'real', 'porcentagem'] as const).includes(bruto.formato as FormatoNumero) ? bruto.formato as FormatoNumero : 'numero'
+    if (tipo === 'numero' || tipo === 'formula' || tipo === 'agregacao') {
+      prop.formato = (['numero', 'real', 'porcentagem'] as const).includes(bruto.formato as FormatoNumero) ? bruto.formato as FormatoNumero : 'numero'
+    }
+    if (tipo === 'relacao') {
+      if (typeof bruto.baseRelacionada !== 'string' || !UUID.test(bruto.baseRelacionada)) return erro(`Escolha a base ligada em “${nome}”.`)
+      prop.baseRelacionada = bruto.baseRelacionada
+    }
+    if (tipo === 'formula') {
+      const expressao = typeof bruto.expressao === 'string' ? bruto.expressao.slice(0, 2000) : ''
+      const problema = expressao.trim() ? validarFormula(expressao) : null
+      if (problema) return erro(`Fórmula de “${nome}”: ${problema}`)
+      prop.expressao = expressao
+    }
+    if (tipo === 'agregacao') {
+      prop.relacao = typeof bruto.relacao === 'string' ? bruto.relacao : undefined
+      prop.alvo = typeof bruto.alvo === 'string' && /^[\w-]{1,40}$/.test(bruto.alvo) ? bruto.alvo : TITULO
+      prop.calculo = typeof bruto.calculo === 'string' && [...Object.keys(NOME_CALCULO), 'mostrar'].includes(bruto.calculo) ? bruto.calculo as Calculo | 'mostrar' : 'mostrar'
+    }
     limpo.push(prop)
+  }
+  // A agregação aponta para uma relação desta base (ou fica sem relação até a pessoa escolher).
+  for (const prop of limpo) {
+    if (prop.tipo === 'agregacao' && prop.relacao && !limpo.some(p => p.id === prop.relacao && p.tipo === 'relacao')) delete prop.relacao
   }
   return ok(limpo)
 }
@@ -140,7 +186,7 @@ export function validarVisoes(visoes: unknown, esquema: Propriedade[]): Resultad
     const id = String(v?.id ?? ''), nome = String(v?.nome ?? '').trim().slice(0, 100) || 'Visão'
     if (!/^[\w-]{1,40}$/.test(id) || ids.has(id)) return erro('Visão com identificador inválido.')
     ids.add(id)
-    const tipo = (['tabela', 'quadro', 'lista'] as const).includes(v.tipo as TipoVisao) ? v.tipo as TipoVisao : 'tabela'
+    const tipo = TIPOS_VISAO.includes(v.tipo as TipoVisao) ? v.tipo as TipoVisao : 'tabela'
     const filtros = (Array.isArray(v.filtros) ? v.filtros as Filtro[] : []).filter(f => f && existe(f.prop) && typeof f.operador === 'string').slice(0, 20)
     const ordenacao = (Array.isArray(v.ordenacao) ? v.ordenacao as Ordenacao[] : []).filter(o => o && existe(o.prop))
       .map(o => ({ prop: o.prop, direcao: o.direcao === 'desc' ? 'desc' as const : 'asc' as const })).slice(0, 10)
@@ -153,7 +199,11 @@ export function validarVisoes(visoes: unknown, esquema: Propriedade[]): Resultad
         .filter(([p, l]) => existe(p) && typeof l === 'number' && l >= 60 && l <= 1000)) as Record<string, number>,
       calculos: Object.fromEntries(Object.entries((v.calculos ?? {}) as Record<string, unknown>).filter(([p, c]) => existe(p) && typeof c === 'string')) as Record<string, Calculo>,
       colunasOcultas: (Array.isArray(v.colunasOcultas) ? v.colunasOcultas as unknown[] : []).filter((c): c is string => typeof c === 'string').slice(0, 200),
+      dataPor: esquema.some(e => e.id === v.dataPor && ['data', 'criado_em', 'editado_em'].includes(e.tipo)) ? v.dataPor as string : null,
+      tamanhoCartao: (['pequeno', 'medio', 'grande'] as const).includes(v.tamanhoCartao as 'medio') ? v.tamanhoCartao as 'medio' : 'medio',
+      capaCartao: v.capaCartao !== false,
     }
+    if (tipo === 'calendario' && !visao.dataPor) visao.dataPor = esquema.find(e => e.tipo === 'data')?.id ?? esquema.find(e => e.tipo === 'criado_em')?.id ?? null
     if (tipo === 'quadro' && !visao.agruparPor) visao.agruparPor = esquema.find(e => e.tipo === 'status')?.id ?? esquema.find(e => e.tipo === 'selecao')?.id ?? null
     limpas.push(visao)
   }
@@ -170,6 +220,8 @@ export function textoDoValor(prop: Propriedade | undefined, valor: unknown): str
     case 'multisselecao': return Array.isArray(valor) ? valor.map(nomeOpcao).filter(Boolean).join(', ') : ''
     case 'checkbox': return valor ? 'Sim' : ''
     case 'pessoa': return Array.isArray(valor) ? valor.join(', ') : ''
+    case 'relacao': return Array.isArray(valor) ? `${valor.length} ${valor.length === 1 ? 'item' : 'itens'}` : ''
+    case 'formula': case 'agregacao': return typeof valor === 'boolean' ? (valor ? 'Sim' : '') : typeof valor === 'number' ? String(valor) : String(valor)
     case 'numero': return typeof valor === 'number' ? String(valor) : ''
     default: return String(valor)
   }
@@ -239,6 +291,8 @@ export function operadoresDe(tipo: TipoPropriedade | 'titulo'): Operador[] {
     case 'multisselecao': case 'pessoa': case 'criado_por': case 'editado_por': return ['tem', 'nao_tem', 'vazio', 'nao_vazio']
     case 'data': case 'criado_em': case 'editado_em': return ['igual', 'antes', 'depois', 'vazio', 'nao_vazio']
     case 'checkbox': return ['marcado', 'desmarcado']
+    case 'relacao': return ['vazio', 'nao_vazio']
+    case 'formula': case 'agregacao': return ['contem', 'igual', 'diferente', 'maior', 'menor', 'vazio', 'nao_vazio', 'marcado', 'desmarcado']
   }
 }
 export const NOME_OPERADOR: Record<Operador, string> = {
@@ -259,7 +313,9 @@ export function passaNoFiltro(item: Item, filtro: Filtro, esquema: Propriedade[]
   if (filtro.operador === 'marcado') return valor === true
   if (filtro.operador === 'desmarcado') return valor !== true
   if (alvo === undefined || alvo === null || alvo === '') return true
-  const tipo = filtro.prop === TITULO ? 'texto' : def?.tipo
+  // Fórmula e agregação têm o tipo do resultado: número compara como número; o resto, como texto.
+  const calculado = def && CALCULADOS.includes(def.tipo)
+  const tipo = filtro.prop === TITULO ? 'texto' : calculado ? (typeof valor === 'number' ? 'numero' : 'texto') : def?.tipo
   if (tipo === 'numero') {
     const n = typeof valor === 'number' ? valor : NaN, m = Number(alvo)
     if (Number.isNaN(n)) return filtro.operador === 'diferente'
@@ -305,7 +361,7 @@ function chave(item: Item, prop: string, esquema: Propriedade[]): string | numbe
   const def = esquema.find(p => p.id === prop)
   const valor = valorDe(item, prop, esquema)
   if (estaVazio(valor) && def?.tipo !== 'checkbox') return null
-  if (def?.tipo === 'numero') return valor as number
+  if (def?.tipo === 'numero' || typeof valor === 'number') return valor as number
   if (def?.tipo === 'checkbox') return valor ? 1 : 0
   if (def && COM_OPCOES.includes(def.tipo)) {
     const primeiro = Array.isArray(valor) ? valor[0] : valor
@@ -345,6 +401,7 @@ export function calculosDe(tipo: TipoPropriedade | 'titulo'): Calculo[] {
   const base: Calculo[] = ['nenhum', 'contar', 'vazios', 'preenchidos', 'unicos']
   if (tipo === 'numero') return [...base, 'soma', 'media', 'minimo', 'maximo']
   if (tipo === 'checkbox') return ['nenhum', 'contar', 'marcados', 'pct_marcados']
+  if (tipo === 'formula' || tipo === 'agregacao') return [...base, 'soma', 'media', 'minimo', 'maximo', 'marcados', 'pct_marcados']
   return base
 }
 export const NOME_CALCULO: Record<Calculo, string> = {
@@ -421,10 +478,96 @@ export function modeloDeBase(modelo: 'vazia' | 'tarefas', visaoInicial: TipoVisa
     ] },
     { id: 'tags', nome: 'Tags', tipo: 'multisselecao', opcoes: [] },
   ]
-  const nomes: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista' }
+  const nomes: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista', galeria: 'Galeria', calendario: 'Calendário' }
   return {
     esquema,
     visoes: [visao(visaoInicial, nomes[visaoInicial], visaoInicial, visaoInicial === 'quadro' ? ['tags'] : ['status', 'tags'], visaoInicial === 'quadro' ? 'status' : null)],
     itens: visaoInicial === 'tabela' ? [{ titulo: '', propriedades: {} }, { titulo: '', propriedades: {} }, { titulo: '', propriedades: {} }] : [],
   }
+}
+
+// ---------------------------------------------------------------- etapa 3: relação, agregação e fórmula
+
+/** Outra base ligada por relação: o esquema e os itens dela (para mostrar títulos e calcular agregações). */
+export type BaseLigada = { id: string; titulo: string; esquema: Propriedade[]; itens: Item[] }
+
+/** Valor de uma propriedade como a fórmula enxerga: opção vira nome, data vira data, relação vira os títulos. */
+function valorParaFormula(item: Item, prop: Propriedade, ligadas: Map<string, BaseLigada>): ValorFormula {
+  const v = valorDe(item, prop.id, [prop])
+  if (v === null || v === undefined) return null
+  switch (prop.tipo) {
+    case 'numero': return typeof v === 'number' ? v : null
+    case 'checkbox': return Boolean(v)
+    case 'data': case 'criado_em': case 'editado_em': { const d = new Date(String(v).length === 10 ? `${v}T00:00:00` : String(v)); return Number.isNaN(d.getTime()) ? null : d }
+    case 'relacao': {
+      const outra = prop.baseRelacionada ? ligadas.get(prop.baseRelacionada) : undefined
+      return (v as string[]).map(id => outra?.itens.find(i => i.id === id)?.titulo ?? '').filter(Boolean).join(', ')
+    }
+    case 'formula': case 'agregacao': {
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}(T|$)/.test(v)) return new Date(v.length === 10 ? `${v}T00:00:00` : v)
+      return v as ValorFormula
+    }
+    default: return textoDoValor(prop, v) || null
+  }
+}
+
+/** Resultado da fórmula guardável (data vira texto ISO; dia sem hora vira AAAA-MM-DD). */
+function guardar(v: ValorFormula): unknown {
+  if (!(v instanceof Date)) return v === '' ? null : v
+  if (!v.getHours() && !v.getMinutes() && !v.getSeconds()) return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`
+  return v.toISOString()
+}
+
+/** Agregação: valores da propriedade alvo nos itens ligados, com o cálculo escolhido. */
+function agregar(item: Item, prop: Propriedade, esquema: Propriedade[], ligadas: Map<string, BaseLigada>): unknown {
+  const relacao = esquema.find(p => p.id === prop.relacao && p.tipo === 'relacao')
+  const outra = relacao?.baseRelacionada ? ligadas.get(relacao.baseRelacionada) : undefined
+  if (!relacao || !outra) return null
+  const ids = (item.propriedades[relacao.id] as string[] | undefined) ?? []
+  const itens = ids.map(id => outra.itens.find(i => i.id === id)).filter((i): i is Item => Boolean(i))
+  const alvo = prop.alvo ?? TITULO
+  if (!prop.calculo || prop.calculo === 'mostrar') {
+    const def = outra.esquema.find(p => p.id === alvo)
+    const textos = itens.map(i => alvo === TITULO ? i.titulo : textoDoValor(def, valorDe(i, alvo, outra.esquema))).filter(Boolean)
+    return textos.length ? textos.join(', ') : null
+  }
+  return calcular(itens, alvo, prop.calculo, outra.esquema)
+}
+
+/**
+ * Preenche as propriedades calculadas dos itens: agregações (a partir das bases ligadas) e fórmulas (que podem usar
+ * outras fórmulas; uma fórmula que depende de si mesma fica vazia). As bases ligadas também têm as fórmulas
+ * calculadas antes, para a agregação poder somar uma fórmula da outra base.
+ */
+export function computar(itens: Item[], esquema: Propriedade[], ligadas: BaseLigada[] = [], agora = new Date()): Item[] {
+  const calculadas = esquema.filter(p => CALCULADOS.includes(p.tipo))
+  if (!calculadas.length) return itens
+  const mapa = new Map(ligadas.map(b => [b.id, { ...b, itens: computar(b.itens, b.esquema, [], agora) }]))
+  return itens.map(item => {
+    const propriedades = { ...item.propriedades }
+    const atual: Item = { ...item, propriedades }
+    for (const p of calculadas) if (p.tipo === 'agregacao') propriedades[p.id] = agregar(atual, p, esquema, mapa)
+    const calculando = new Set<string>()
+    const prontas = new Set<string>()
+    const formula = (p: Propriedade): ValorFormula => {
+      if (prontas.has(p.id)) return valorParaFormula(atual, p, mapa)
+      if (calculando.has(p.id)) throw new Error('ciclo')
+      calculando.add(p.id)
+      const r = calcularFormula(p.expressao ?? '', nome => {
+        if (nome.toLowerCase() === 'nome' && !esquema.some(e => e.nome.toLowerCase() === 'nome')) return atual.titulo
+        const alvo = esquema.find(e => e.nome.toLowerCase() === nome.toLowerCase())
+        if (!alvo) throw new Error(`Propriedade inexistente: “${nome}”.`)
+        return alvo.tipo === 'formula' ? formula(alvo) : valorParaFormula(atual, alvo, mapa)
+      }, agora)
+      calculando.delete(p.id)
+      propriedades[p.id] = r.ok ? guardar(r.valor) : null
+      prontas.add(p.id)
+      return r.ok ? r.valor : null
+    }
+    for (const p of calculadas) {
+      if (p.tipo !== 'formula' || prontas.has(p.id)) continue
+      try { formula(p) } catch { propriedades[p.id] = null; prontas.add(p.id); calculando.clear() }
+    }
+    return atual
+  })
 }

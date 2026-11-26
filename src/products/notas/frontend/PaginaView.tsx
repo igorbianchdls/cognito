@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronsRight, Columns3, Copy, FileText, ImageIcon, List, ListChecks, Link2, Lock, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2,
+  ChevronsRight, Columns3, Copy, FileText, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2,
   Trash2, Undo2, Unlock,
 } from 'lucide-react'
 import { caminho, textoDoConteudo, tituloExibido } from '@/products/notas/shared/arvore'
@@ -14,9 +14,12 @@ import { editadoHa, ErroNotas, notasApi, type Pagina } from './api'
 import { BaseView } from './base/BaseView'
 import { PropriedadesItem } from './base/PropriedadesItem'
 import { avisarItem } from './base/useBase'
+import { MODELOS_PAGINA, type ModeloPagina } from '@/products/notas/shared/modelos'
+import { Historico } from './Historico'
 import { estiloCapa } from './catalogo'
 import { Chave, ItemMenu, Menu } from './Menu'
 import { EVENTO_RENOMEAR, useNotas } from './NotasProvider'
+import { useTituloDaAba } from './local'
 import { SeletorCapa, SeletorIcone } from './Seletores'
 import x from './notas.module.css'
 
@@ -49,12 +52,16 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const [seletorCapa, setSeletorCapa] = useState<HTMLElement | null>(null)
   const [reposicionando, setReposicionando] = useState<number | null>(null)
   const [vazia, setVazia] = useState(false)
+  const [historico, setHistorico] = useState(false)
+  const [menuModelos, setMenuModelos] = useState<HTMLElement | null>(null)
   const pendente = useRef<Partial<Pagina>>({})
   const versao = useRef(0)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const salvarDeNovo = useRef<() => Promise<void>>(async () => {})
   const titulo = useRef<HTMLTextAreaElement>(null)
   const arrastoCapa = useRef<{ y: number; inicio: number } | null>(null)
+  const focarEditor = useRef(false)
+  useTituloDaAba(!lateral && pagina ? `${pagina.icone ? `${pagina.icone} ` : ''}${tituloExibido(pagina.titulo)} · Notas` : null)
 
   const aplicar = useCallback((nova: Pagina) => {
     versao.current = nova.versao; pendente.current = {}
@@ -133,12 +140,11 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     return () => window.removeEventListener(EVENTO_RENOMEAR, ouvir)
   }, [id, mudar, pagina?.pode_editar])
 
-  // O título cresce com o texto; a aba do navegador mostra o ícone e o título (só a página principal).
+  // O título cresce com o texto.
   useEffect(() => {
     const t = titulo.current
     if (t) { t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px` }
-    if (!lateral && pagina) document.title = `${pagina.icone ? `${pagina.icone} ` : ''}${tituloExibido(pagina.titulo)} · Notas`
-  }, [pagina, lateral])
+  }, [pagina])
 
   // Reposicionar a capa: arrastar para cima/baixo muda a posição vertical (0–100%).
   useEffect(() => {
@@ -166,6 +172,14 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       return { id: nova.base.id, titulo: nova.base.titulo, icone: nova.base.icone }
     } catch (e) { avisar((e as Error).message); return null }
   }, [id, recarregar, avisar])
+
+  /** Página vazia → um modelo pronto (título se estiver vazio, ícone e conteúdo). O editor recomeça com o conteúdo novo. */
+  const aplicarModelo = (modelo: ModeloPagina) => {
+    if (!pagina) return
+    setMenuModelos(null)
+    mudar({ conteudo: modelo.conteudo, ...(pagina.titulo ? {} : { titulo: modelo.titulo }), ...(pagina.icone ? {} : { icone: modelo.icone }) }, true)
+    setChave(`${id}:modelo:${modelo.id}`); setVazia(false)
+  }
 
   /** Página vazia → base ("Comece com: Tabela, Quadro, Lista, Tarefas"). */
   const virarBase = async (modelo: 'vazia' | 'tarefas', visao: TipoVisao) => {
@@ -249,6 +263,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
         direita={<Chave ligada={pagina.bloqueada} />}>Bloquear página</ItemMenu>}
       <ItemMenu icone={Link2} onClick={() => { setMenu(null); void navigator.clipboard.writeText(`${location.origin}/notas/${id}`).then(() => avisar('Link copiado.')) }}>Copiar link</ItemMenu>
       {!pagina.base_id && <ItemMenu icone={Copy} onClick={() => { setMenu(null); void salvar().then(() => duplicar(id)) }}>Duplicar</ItemMenu>}
+      {!ehBase && <ItemMenu icone={History} onClick={() => { setMenu(null); void salvar().then(() => setHistorico(true)) }}>Histórico de versões</ItemMenu>}
       {pagina.pode_editar && !pagina.arquivada_em && <ItemMenu icone={Trash2} perigo onClick={mandarParaLixeira}>Mover para a lixeira</ItemMenu>}
     </Menu>}
 
@@ -257,6 +272,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       {pagina.pode_editar && <><button type="button" className={x.bannerBtn} onClick={() => void restaurar()}><Undo2 size={14} /> Restaurar página</button>
         <button type="button" className={x.bannerBtn} onClick={() => void apagar()}>Apagar de vez</button></>}
     </div>}
+    {pagina.e_modelo && <div className={`${x.banner} ${x.templateBanner}`}>Você está editando um modelo. Itens criados a partir dele começam com este conteúdo, ícone e valores.</div>}
     {conflito && <div className={x.banner}>
       Esta página foi alterada em outro lugar enquanto você editava. Suas últimas alterações não foram salvas.
       <button type="button" className={x.bannerBtn} onClick={() => void carregar()}>Recarregar</button>
@@ -294,7 +310,9 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
             onKeyDown={e => {
               if (e.key !== 'Enter') return
               e.preventDefault()
-              ;(e.currentTarget.closest(`.${x.doc}`)?.querySelector('.bn-editor') as HTMLElement | null)?.focus()
+              // Enter leva ao texto. Se o editor ainda está carregando, o foco vai para ele assim que ficar pronto.
+              const editor = e.currentTarget.closest(`.${x.doc}`)?.querySelector('.bn-editor') as HTMLElement | null
+              if (editor) editor.focus(); else { focarEditor.current = true; e.currentTarget.blur() }
             }} />
           {pagina.base_id && <PropriedadesItem pagina={pagina} editavel={editavel} />}
           {editavel && vazia && !ehBase && !pagina.base_id && <div className={x.starter}>
@@ -304,18 +322,28 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
               <button type="button" onClick={() => void virarBase('vazia', 'quadro')}><Columns3 size={16} />Quadro</button>
               <button type="button" onClick={() => void virarBase('vazia', 'lista')}><List size={16} />Lista</button>
               <button type="button" onClick={() => void virarBase('tarefas', 'quadro')}><ListChecks size={16} />Tarefas</button>
+              <button type="button" onClick={e => setMenuModelos(e.currentTarget)}><LayoutTemplate size={16} />Modelos</button>
             </div>
           </div>}
         </div>
         {ehBase
           ? <BaseView key={id} id={id} />
           : <div className={x.editor}>
-            <Editor chave={chave} conteudo={pagina.conteudo} editavel={editavel} paginaId={id} criarSubpagina={criarSubpagina} criarBase={criarBaseDentro}
+            <Editor chave={chave} conteudo={pagina.conteudo} editavel={editavel} paginaId={id}
+              aoCarregar={() => { if (focarEditor.current) { focarEditor.current = false; (titulo.current?.closest(`.${x.doc}`)?.querySelector('.bn-editor') as HTMLElement | null)?.focus() } }} criarSubpagina={criarSubpagina} criarBase={criarBaseDentro}
               onMudar={blocos => { setVazia(false); mudar({ conteudo: blocos }) }} />
           </div>}
       </div>
     </div>
 
+    {menuModelos && <Menu ancora={menuModelos} onFechar={() => setMenuModelos(null)} className={x.menuWide}>
+      <div className={x.menuLabel}>Modelos</div>
+      {MODELOS_PAGINA.map(m => <ItemMenu key={m.id} onClick={() => aplicarModelo(m)}>
+        <span style={{ display: 'grid' }}><span>{m.icone} {m.nome}</span><small style={{ marginLeft: 0, color: 'var(--n-faint)' }}>{m.descricao}</small></span>
+      </ItemMenu>)}
+    </Menu>}
+    {historico && <Historico pagina={pagina} podeRestaurar={editavel} onFechar={() => setHistorico(false)}
+      onRestaurada={nova => { setHistorico(false); aplicar(nova); void recarregar(); avisar('Versão restaurada.') }} />}
     {seletorIcone && <SeletorIcone ancora={seletorIcone} onFechar={() => setSeletorIcone(null)} onEscolher={icone => mudar({ icone }, true)} />}
     {seletorCapa && <SeletorCapa ancora={seletorCapa} onFechar={() => setSeletorCapa(null)} onEscolher={capa => mudar({ capa }, true)} />}
   </div>

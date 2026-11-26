@@ -1,7 +1,8 @@
 'use client'
 
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { EyeOff, Maximize2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, EyeOff, Maximize2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { estiloCapa } from '../catalogo'
 import {
   agrupar, calcular, calculosDe, formatarNumero, NOME_CALCULO, novoId, TITULO, valorDe,
   type Calculo, type Item, type Propriedade, type TipoPropriedade, type Visao,
@@ -35,12 +36,12 @@ function MenuItem({ ancora, onFechar, onAbrir, onArquivar, editavel }: { ancora:
 /** "+" no fim do cabeçalho: nome e tipo da propriedade nova (entra visível nesta visão). */
 function NovaPropriedade({ ancora, api, base, visao, onFechar }: { ancora: HTMLElement; api: BaseApi; base: Pagina; visao: Visao; onFechar: () => void }) {
   const [nome, setNome] = useState('')
-  const criar = (tipo: TipoPropriedade) => {
+  const criar = (tipo: TipoPropriedade, extra: Partial<Propriedade> = {}) => {
     const id = novoId()
     const nomeFinal = nome.trim() || `Propriedade ${base.esquema.length + 1}`
     if (base.esquema.some(p => p.nome.toLowerCase() === nomeFinal.toLowerCase())) return
     void api.salvarBase({
-      esquema: [...base.esquema, { id, nome: nomeFinal, tipo, ...(['selecao', 'multisselecao', 'status'].includes(tipo) ? { opcoes: [] } : {}) }],
+      esquema: [...base.esquema, { id, nome: nomeFinal, tipo, ...(['selecao', 'multisselecao', 'status'].includes(tipo) ? { opcoes: [] } : {}), ...extra }],
       visoes: base.visoes.map(v => v.id === visao.id ? { ...v, visiveis: [...v.visiveis, id] } : v),
     })
     onFechar()
@@ -122,7 +123,7 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
         })}
       </div>
     </div>
-    {menuCol && <MenuPropriedade ancora={menuCol.ancora} prop={menuCol.prop} visao={visao} editavel={editavel} onFechar={() => setMenuCol(null)}
+    {menuCol && <MenuPropriedade ancora={menuCol.ancora} prop={menuCol.prop} esquema={base.esquema} visao={visao} editavel={editavel} onFechar={() => setMenuCol(null)}
       onMudar={m => menuCol.prop && api.mudarPropriedade(menuCol.prop.id, m)}
       onExcluir={() => menuCol.prop && void api.salvarBase({ esquema: base.esquema.filter(p => p.id !== menuCol.prop!.id) })}
       onMudarVisao={m => api.mudarVisao(visao.id, m)} />}
@@ -224,5 +225,108 @@ export function Lista({ api, base, visao, itens, pessoas, editavel, abrir, valor
     </div>)}
     {editavel && <button type="button" className={x.newRow} onClick={() => void api.novoItem(valoresNovos).then(i => i && abrir(i.id))}><Plus size={16} />Novo</button>}
     {menu && <MenuItem ancora={menu.ancora} editavel={editavel} onFechar={() => setMenu(null)} onAbrir={() => abrir(menu.id)} onArquivar={() => void api.arquivarItem(menu.id)} />}
+  </div>
+}
+
+const LARGURA_CARTAO = { pequeno: 180, medio: 240, grande: 320 } as const
+
+/** Galeria: cartões com a capa (ou o ícone) do item, o título e as propriedades visíveis. */
+export function Galeria({ api, base, visao, itens, pessoas, editavel, abrir, valoresNovos }: VistaProps) {
+  const [menu, setMenu] = useState<{ ancora: { x: number; y: number }; id: string } | null>(null)
+  const largura = LARGURA_CARTAO[visao.tamanhoCartao ?? 'medio']
+  return <div className={x.gallery} style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${largura}px, 1fr))` }}>
+    {itens.map(item => <div key={item.id} role="button" tabIndex={0} className={x.galleryCard} onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
+      onContextMenu={e => { e.preventDefault(); setMenu({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
+      {visao.capaCartao !== false && <div className={x.galleryCover} style={item.capa ? estiloCapa(item.capa, 50) : undefined}>
+        {!item.capa && <span>{item.icone ?? '📄'}</span>}
+      </div>}
+      <div className={x.galleryBody}>
+        <div className={x.cardItemTitle}>{item.icone && item.capa && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span></div>
+        <ValoresVisiveis item={item} visao={visao} esquema={base.esquema} pessoas={pessoas} className={x.cardProps} />
+      </div>
+    </div>)}
+    {editavel && <button type="button" className={`${x.galleryCard} ${x.galleryNew}`} onClick={() => void api.novoItem(valoresNovos).then(i => i && abrir(i.id))}><Plus size={16} />Novo</button>}
+    {menu && <MenuItem ancora={menu.ancora} editavel={editavel} onFechar={() => setMenu(null)} onAbrir={() => abrir(menu.id)} onArquivar={() => void api.arquivarItem(menu.id)} />}
+  </div>
+}
+
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const diaLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+/** Dia (AAAA-MM-DD, no fuso de quem vê) de um valor de data: data pura ou data e hora. */
+function diaDoValor(valor: unknown) {
+  if (typeof valor !== 'string' || !valor) return null
+  return valor.length === 10 ? valor : diaLocal(new Date(valor))
+}
+
+/**
+ * Calendário do mês pela propriedade de data da visão: arrastar o item para outro dia muda a data; "+" no dia cria
+ * um item naquele dia. Itens sem data ficam numa lista ao lado.
+ */
+export function Calendario({ api, base, visao, itens, editavel, abrir, valoresNovos }: VistaProps) {
+  const [mes, setMes] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1) })
+  const [arrastando, setArrastando] = useState<string | null>(null)
+  const [alvo, setAlvo] = useState<string | null>(null)
+  const [semData, setSemData] = useState(false)
+  const prop = base.esquema.find(p => p.id === visao.dataPor)
+  if (!prop) return <div className={x.empty} style={{ padding: '24px 4px', height: 'auto' }}>Para usar o calendário, crie uma propriedade de data e escolha-a em “Propriedades → Mostrar no calendário por”.</div>
+  const movivel = editavel && prop.tipo === 'data'
+  const hoje = diaLocal(new Date())
+  const inicio = new Date(mes); inicio.setDate(1 - mes.getDay())
+  const dias = Array.from({ length: 42 }, (_, i) => { const d = new Date(inicio); d.setDate(inicio.getDate() + i); return d })
+  const semanas = dias[35].getMonth() !== mes.getMonth() ? 5 : 6
+  const porDia = new Map<string, Item[]>()
+  const sem: Item[] = []
+  for (const item of itens) {
+    const dia = diaDoValor(valorDe(item, prop.id, base.esquema))
+    if (!dia) sem.push(item)
+    else porDia.set(dia, [...(porDia.get(dia) ?? []), item])
+  }
+  const soltar = (dia: string) => {
+    const id = arrastando
+    setArrastando(null); setAlvo(null)
+    if (id && movivel) void api.mudarItem(id, { propriedades: { [prop.id]: dia } })
+  }
+  const nomeMes = mes.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+
+  return <div className={x.calendar}>
+    <div className={x.calendarHead}>
+      <b>{nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1)}</b>
+      <span className={x.barSpacer} />
+      {sem.length > 0 && <button type="button" className={x.barBtn} onClick={() => setSemData(!semData)}>Sem data ({sem.length})</button>}
+      <button type="button" className={x.barBtn} aria-label="Mês anterior" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() - 1, 1))}><ChevronLeft size={16} /></button>
+      <button type="button" className={x.barBtn} onClick={() => { const d = new Date(); setMes(new Date(d.getFullYear(), d.getMonth(), 1)) }}>Hoje</button>
+      <button type="button" className={x.barBtn} aria-label="Próximo mês" onClick={() => setMes(new Date(mes.getFullYear(), mes.getMonth() + 1, 1))}><ChevronRight size={16} /></button>
+    </div>
+    <div className={x.calendarWrap}>
+      <div className={x.calendarGrid} role="grid" aria-label={nomeMes}>
+        {DIAS_SEMANA.map(d => <div key={d} className={x.calendarDow}>{d}</div>)}
+        {dias.slice(0, semanas * 7).map(d => {
+          const dia = diaLocal(d)
+          return <div key={dia} role="gridcell" className={`${x.calendarDay} ${d.getMonth() !== mes.getMonth() ? x.calendarOut : ''} ${alvo === dia ? x.calendarDrop : ''}`}
+            onDragOver={e => { if (!arrastando) return; e.preventDefault(); if (alvo !== dia) setAlvo(dia) }}
+            onDrop={e => { e.preventDefault(); soltar(dia) }}>
+            <div className={x.calendarDayHead}>
+              {editavel && prop.tipo === 'data' && <button type="button" className={x.calendarAdd} aria-label={`Novo em ${dia}`}
+                onClick={() => void api.novoItem({ ...valoresNovos, [prop.id]: dia }).then(i => i && abrir(i.id))}><Plus size={14} /></button>}
+              <span className={dia === hoje ? x.calendarToday : ''}>{d.getDate() === 1 ? `${d.getDate()} ${d.toLocaleDateString('pt-BR', { month: 'short' })}` : d.getDate()}</span>
+            </div>
+            {(porDia.get(dia) ?? []).map(item => <div key={item.id} role="button" tabIndex={0} draggable={movivel} className={x.calendarItem}
+              onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
+              onDragStart={e => { setArrastando(item.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', item.id) }}
+              onDragEnd={() => { setArrastando(null); setAlvo(null) }}>
+              {item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span>
+            </div>)}
+          </div>
+        })}
+      </div>
+      {semData && <div className={x.calendarSide}>
+        <div className={x.menuLabel}>Sem data</div>
+        {sem.map(item => <div key={item.id} role="button" tabIndex={0} draggable={movivel} className={x.calendarItem}
+          onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
+          onDragStart={e => { setArrastando(item.id); e.dataTransfer.setData('text/plain', item.id) }} onDragEnd={() => { setArrastando(null); setAlvo(null) }}>
+          {item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span>
+        </div>)}
+      </div>}
+    </div>
   </div>
 }

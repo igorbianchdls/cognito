@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  agrupar, calcular, converterValor, filtrar, modeloDeBase, ordenar, passaNoFiltro, validarEsquema, validarValor, validarVisoes,
+  agrupar, calcular, computar, converterValor, filtrar, modeloDeBase, ordenar, passaNoFiltro, validarEsquema, validarValor, validarVisoes,
   type Item, type Propriedade,
 } from './bases'
 
@@ -36,7 +36,7 @@ test('validarValor normaliza e recusa valores fora do tipo', () => {
 test('validarEsquema recusa nomes repetidos, ids inválidos e dá grupo ao status', () => {
   assert.equal(validarEsquema([{ id: 'a', nome: 'X', tipo: 'texto' }, { id: 'b', nome: 'x', tipo: 'numero' }]).ok, false)
   assert.equal(validarEsquema([{ id: 'titulo', nome: 'X', tipo: 'texto' }]).ok, false)
-  assert.equal(validarEsquema([{ id: 'a', nome: 'X', tipo: 'formula' }]).ok, false)
+  assert.equal(validarEsquema([{ id: 'a', nome: 'X', tipo: 'inexistente' }]).ok, false)
   const r = validarEsquema([{ id: 's', nome: 'S', tipo: 'status', opcoes: [{ id: 'o', nome: 'O', cor: 'azul' }] }, { id: 'n', nome: 'N', tipo: 'numero' }])
   assert.ok(r.ok)
   if (r.ok) { assert.equal(r.valor[0].opcoes?.[0].grupo, 'a_fazer'); assert.equal(r.valor[1].formato, 'numero') }
@@ -109,4 +109,34 @@ test('modelos de base passam na validação', () => {
     if (e.ok) assert.ok(validarVisoes(m.visoes, e.valor).ok)
     assert.equal(m.visoes[0].tipo, visao)
   }
+})
+
+test('relação, agregação e fórmula calculadas juntas (e fórmula que usa outra fórmula)', () => {
+  const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  const tarefas = { id: B, titulo: 'Tarefas', esquema: [{ id: 'horas', nome: 'Horas', tipo: 'numero' as const }, { id: 'ok', nome: 'Feita', tipo: 'checkbox' as const }],
+    itens: [item('11111111-1111-4111-8111-111111111111', 'Roteiro', { horas: 3, ok: true }), item('22222222-2222-4222-8222-222222222222', 'Gravação', { horas: 5 })] }
+  const esq: Propriedade[] = [
+    { id: 'rel', nome: 'Tarefas', tipo: 'relacao', baseRelacionada: B },
+    { id: 'total', nome: 'Horas totais', tipo: 'agregacao', relacao: 'rel', alvo: 'horas', calculo: 'soma' },
+    { id: 'nomes', nome: 'Quais', tipo: 'agregacao', relacao: 'rel', alvo: 'titulo', calculo: 'mostrar' },
+    { id: 'pct', nome: 'Feitas %', tipo: 'agregacao', relacao: 'rel', alvo: 'ok', calculo: 'pct_marcados' },
+    { id: 'custo', nome: 'Custo', tipo: 'formula', expressao: 'prop("Horas totais") * prop("Valor hora")' },
+    { id: 'vh', nome: 'Valor hora', tipo: 'numero' },
+    { id: 'resumo', nome: 'Resumo', tipo: 'formula', expressao: 'concat(prop("Nome"), ": ", prop("Custo"), " (", prop("Quais"), ")")' },
+    { id: 'ciclo', nome: 'Ciclo', tipo: 'formula', expressao: 'prop("Ciclo") + 1' },
+  ]
+  assert.ok(validarEsquema(esq).ok)
+  const [r] = computar([item('p', 'Vídeo', { rel: [tarefas.itens[0].id, tarefas.itens[1].id], vh: 100 })], esq, [tarefas])
+  assert.equal(r.propriedades.total, 8)
+  assert.equal(r.propriedades.nomes, 'Roteiro, Gravação')
+  assert.equal(r.propriedades.pct, 50)
+  assert.equal(r.propriedades.custo, 800)
+  assert.equal(r.propriedades.resumo, 'Vídeo: 800 (Roteiro, Gravação)')
+  assert.equal(r.propriedades.ciclo, null)
+  // Filtrar e ordenar pelo valor calculado.
+  const itensCalc = computar([item('a', 'A', { rel: [tarefas.itens[0].id], vh: 10 }), item('b', 'B', { rel: [tarefas.itens[1].id], vh: 10 })], esq, [tarefas])
+  assert.deepEqual(ordenar(itensCalc, [{ prop: 'custo', direcao: 'desc' }], esq).map(i => i.id), ['b', 'a'])
+  assert.deepEqual(filtrar(itensCalc, { filtros: [{ prop: 'custo', operador: 'maior', valor: 40 }], juncao: 'e' }, esq).map(i => i.id), ['b'])
+  assert.equal(validarEsquema([{ id: 'f', nome: 'F', tipo: 'formula', expressao: 'prop("X" +' }]).ok, false)
+  assert.equal(validarEsquema([{ id: 'r', nome: 'R', tipo: 'relacao' }]).ok, false)
 })

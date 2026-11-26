@@ -2,14 +2,14 @@
 // decidido pelas políticas das páginas. As regras de tipos, valores e conversões vêm de shared/bases.ts.
 import {
   COM_OPCOES, converterValor, modeloDeBase, validarEsquema, validarValor, validarVisoes,
-  type Item, type Propriedade, type TipoVisao, type Visao,
+  type BaseLigada, type Item, type Propriedade, type TipoVisao, type Visao,
 } from '../shared/bases'
 import { posicaoEntre, textoDoConteudo, type Espaco } from '../shared/arvore'
 import { comoPessoa, NotasError, type Client, type Contexto } from './db'
 import { exigirEdicao, exigirLeitura, lerPagina, proximaPosicao, semPermissao, type Pagina } from './paginas'
 
 const LIMITE_ITENS = 5000
-const ITEM = 'id, titulo, icone, posicao, propriedades, created_at, updated_at, created_by, updated_by'
+const ITEM = 'id, titulo, icone, posicao, propriedades, created_at, updated_at, created_by, updated_by, capa, e_modelo'
 
 async function exigirBase(client: Client, ctx: Contexto, id: string, editar = false) {
   const base = editar ? await exigirEdicao(client, ctx, id) : await lerPagina(client, ctx, id)
@@ -21,12 +21,28 @@ async function lerItens(client: Client, baseId: string) {
   return (await client.query(`SELECT ${ITEM} FROM notas.paginas WHERE base_id = $1 AND arquivada_em IS NULL ORDER BY posicao LIMIT ${LIMITE_ITENS}`, [baseId])).rows as Item[]
 }
 
-/** A base (esquema, visões, permissões) e os itens dela. */
+/** Bases ligadas por relação (as que a pessoa enxerga), com esquema e itens, para títulos e agregações. */
+async function lerLigadas(client: Client, ctx: Contexto, esquema: Propriedade[]): Promise<BaseLigada[]> {
+  const ids = [...new Set(esquema.filter(p => p.tipo === 'relacao' && p.baseRelacionada).map(p => p.baseRelacionada!))]
+  const ligadas: BaseLigada[] = []
+  for (const id of ids) {
+    const { rows } = await client.query(`SELECT id, titulo, esquema FROM notas.paginas WHERE id = $1 AND workspace_id = $2 AND tipo = 'base' AND arquivada_em IS NULL`, [id, ctx.orgId])
+    if (rows[0]) ligadas.push({ ...rows[0], itens: (await lerItens(client, id)).filter(i => !i.e_modelo) })
+  }
+  return ligadas
+}
+async function completa(client: Client, ctx: Contexto, id: string) {
+  const base = await exigirBase(client, ctx, id)
+  return { base, itens: await lerItens(client, id), ligadas: await lerLigadas(client, ctx, base.esquema) }
+}
+
+/** A base (esquema, visões, permissões), os itens dela (e os modelos) e as bases ligadas por relação. */
 export function obterBase(ctx: Contexto, id: string, semItens = false) {
   return comoPessoa(ctx, async client => {
     await exigirLeitura(client, ctx)
+    if (!semItens) return completa(client, ctx, id)
     const base = await exigirBase(client, ctx, id)
-    return { base, itens: semItens ? [] : await lerItens(client, id) }
+    return { base, itens: [] as Item[], ligadas: await lerLigadas(client, ctx, base.esquema) }
   })
 }
 
@@ -87,7 +103,7 @@ export function criarBase(ctx: Contexto, dados: { parent_id?: string | null; esp
     }
     const base = await exigirBase(client, ctx, id)
     await inserirItens(client, ctx, base, modelo.itens, null)
-    return { base, itens: await lerItens(client, id) }
+    return completa(client, ctx, id)
   })
 }
 
@@ -105,6 +121,11 @@ export function alterarBase(ctx: Contexto, id: string, dados: { esquema?: unknow
       const r = validarEsquema(dados.esquema)
       if (!r.ok) throw new NotasError(400, r.erro)
       esquema = r.valor
+      // A base ligada precisa existir e a pessoa precisa enxergá-la.
+      for (const prop of esquema.filter(p => p.tipo === 'relacao')) {
+        const outra = await lerPagina(client, ctx, prop.baseRelacionada!).catch(() => null)
+        if (outra?.tipo !== 'base') throw new NotasError(400, `A base ligada em “${prop.nome}” não existe ou você não tem acesso.`)
+      }
       const itens = (await client.query(`SELECT id, propriedades FROM notas.paginas WHERE base_id = $1 FOR UPDATE`, [id])).rows as { id: string; propriedades: Record<string, unknown> }[]
       const mudados: { id: string; propriedades: Record<string, unknown> }[] = []
       for (const item of itens) {
@@ -129,19 +150,42 @@ export function alterarBase(ctx: Contexto, id: string, dados: { esquema?: unknow
     if (!visoes.ok) throw new NotasError(400, visoes.erro)
     await client.query(`UPDATE notas.paginas SET esquema = $2::jsonb, visoes = $3::jsonb, updated_by = editor.uid() WHERE id = $1`,
       [id, JSON.stringify(esquema), JSON.stringify(visoes.valor)]).catch(semPermissao)
-    return { base: await exigirBase(client, ctx, id), itens: await lerItens(client, id) }
+    return completa(client, ctx, id)
   })
 }
 
-/** Item novo na base (com valores iniciais, por exemplo a coluna do quadro onde a pessoa clicou em "+ Novo"). */
-export function criarItem(ctx: Contexto, baseId: string, dados: { titulo?: string; propriedades?: Record<string, unknown>; posicao?: number }) {
+/** Os ids ligados numa relação precisam ser itens da base ligada. */
+async function conferirRelacoes(client: Client, esquema: Propriedade[], valores: Record<string, unknown>) {
+  for (const prop of esquema.filter(p => p.tipo === 'relacao')) {
+    const ids = valores[prop.id]
+    if (!Array.isArray(ids) || !ids.length) continue
+    const { rows } = await client.query('SELECT count(*)::int AS n FROM notas.paginas WHERE base_id = $1 AND id = ANY($2::uuid[]) AND NOT e_modelo', [prop.baseRelacionada, ids])
+    if (rows[0].n !== ids.length) throw new NotasError(400, `Há itens em “${prop.nome}” que não são da base ligada.`)
+  }
+}
+
+/**
+ * Item novo na base (com valores iniciais, por exemplo a coluna do quadro onde a pessoa clicou em "+ Novo"). Com
+ * `modelo_id`, copia ícone, conteúdo e valores do modelo; com `e_modelo`, cria um modelo (não aparece nas visões).
+ */
+export function criarItem(ctx: Contexto, baseId: string, dados: { titulo?: string; propriedades?: Record<string, unknown>; posicao?: number; modelo_id?: string; e_modelo?: boolean }) {
   return comoPessoa(ctx, async client => {
     await exigirLeitura(client, ctx)
     const base = await exigirBase(client, ctx, baseId, true)
-    const valores = semVazios(conferirValores(base.esquema as Propriedade[], dados.propriedades ?? {}))
+    let modelo: { titulo: string; icone: string | null; conteudo: unknown; conteudo_texto: string; propriedades: Record<string, unknown> } | null = null
+    if (dados.modelo_id) {
+      modelo = (await client.query(`SELECT titulo, icone, conteudo, conteudo_texto, propriedades FROM notas.paginas WHERE id = $1 AND base_id = $2 AND e_modelo AND arquivada_em IS NULL`,
+        [dados.modelo_id, baseId])).rows[0] ?? null
+      if (!modelo) throw new NotasError(404, 'Modelo não encontrado.')
+    }
+    const valores = semVazios({ ...(modelo?.propriedades ?? {}), ...conferirValores(base.esquema, dados.propriedades ?? {}) })
+    await conferirRelacoes(client, base.esquema, valores)
     const posicao = Number.isFinite(dados.posicao) ? dados.posicao! : await proximaPosicao(client, ctx, baseId, base.espaco)
-    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades)
-      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb) RETURNING ${ITEM}`, [ctx.orgId, base.espaco, baseId, posicao, (dados.titulo ?? '').slice(0, 500), JSON.stringify(valores)]).catch(semPermissao)
+    const titulo = (dados.titulo || (modelo && !dados.e_modelo ? '' : dados.e_modelo ? 'Novo modelo' : '')).slice(0, 500)
+    const { rows } = await client.query(`INSERT INTO notas.paginas (workspace_id, espaco, parent_id, base_id, posicao, titulo, propriedades, icone, conteudo, conteudo_texto, e_modelo)
+      VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10) RETURNING ${ITEM}`,
+    [ctx.orgId, base.espaco, baseId, posicao, titulo, JSON.stringify(valores), modelo?.icone ?? null, JSON.stringify(modelo?.conteudo ?? []),
+      modelo?.conteudo_texto ?? '', Boolean(dados.e_modelo)]).catch(semPermissao)
     return rows[0] as Item
   })
 }
@@ -156,7 +200,8 @@ export function alterarItem(ctx: Contexto, id: string, dados: { titulo?: string;
     const item = await exigirEdicao(client, ctx, id)
     if (!item.base_id) throw new NotasError(409, 'Esta página não é item de uma base.')
     const base = await exigirBase(client, ctx, item.base_id)
-    const valores = conferirValores(base.esquema as Propriedade[], dados.propriedades ?? {})
+    const valores = conferirValores(base.esquema, dados.propriedades ?? {})
+    await conferirRelacoes(client, base.esquema, valores)
     const apagar = Object.keys(valores).filter(k => valores[k] === null || valores[k] === false)
     const gravar = semVazios(valores)
     const { rows } = await client.query(`UPDATE notas.paginas SET propriedades = (propriedades || $2::jsonb) - $3::text[],
