@@ -194,7 +194,8 @@ const APELIDOS: Record<string, string> = {
   formatardata: 'formatdate', ano: 'year', mes: 'month', mês: 'month', dia: 'day', data: 'date',
 }
 /** Nomes aceitos (para a ajuda do editor de fórmulas). */
-export const FUNCOES_FORMULA = ['prop', 'if', ...Object.keys(FUNCOES)]
+export const FUNCOES_FORMULA = ['prop', 'if', 'concat', 'length', 'lower', 'upper', 'contains', 'replace', 'slice', 'round', 'floor', 'ceil', 'abs', 'sqrt',
+  'min', 'max', 'sum', 'toNumber', 'format', 'empty', 'now', 'today', 'dateAdd', 'dateSubtract', 'dateBetween', 'formatDate', 'year', 'month', 'day', 'date']
 
 function avaliar(no: No, ctx: Contexto): ValorFormula {
   switch (no.t) {

@@ -237,11 +237,9 @@ export function Galeria({ api, base, visao, itens, pessoas, editavel, abrir, val
   return <div className={x.gallery} style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${largura}px, 1fr))` }}>
     {itens.map(item => <div key={item.id} role="button" tabIndex={0} className={x.galleryCard} onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
       onContextMenu={e => { e.preventDefault(); setMenu({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
-      {visao.capaCartao !== false && <div className={x.galleryCover} style={item.capa ? estiloCapa(item.capa, 50) : undefined}>
-        {!item.capa && <span>{item.icone ?? '📄'}</span>}
-      </div>}
+      {visao.capaCartao !== false && item.capa && <div className={x.galleryCover} style={estiloCapa(item.capa, 50)} />}
       <div className={x.galleryBody}>
-        <div className={x.cardItemTitle}>{item.icone && item.capa && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span></div>
+        <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span></div>
         <ValoresVisiveis item={item} visao={visao} esquema={base.esquema} pessoas={pessoas} className={x.cardProps} />
       </div>
     </div>)}

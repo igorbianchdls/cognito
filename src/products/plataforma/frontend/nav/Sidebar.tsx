@@ -107,6 +107,8 @@ export function AppSidebar({ className, style, ...props }: React.ComponentProps<
 
   React.useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
+      // Uma tela com busca própria (Notas) já tratou o atalho: não abre as duas.
+      if (event.defaultPrevented) return
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault()
         setSearchOpen(true)

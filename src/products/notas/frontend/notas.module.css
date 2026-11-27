@@ -147,6 +147,9 @@
 .serif .title, .serif .editor :global(.bn-editor), .mono .title, .mono .editor :global(.bn-editor) { font-family: var(--n-page-font); }
 .small .editor :global(.bn-editor) { font-size: 14px; }
 .editor :global(.bn-container) { --bn-colors-editor-background: transparent; --bn-font-family: var(--n-font); }
+/* O tema do editor (claro ou escuro) traz fundo e cor de texto próprios: aqui valem os da página. */
+.app :global(.bn-container[data-color-scheme]) { --bn-colors-editor-background: transparent !important; --bn-colors-editor-text: var(--n-text) !important; background: transparent !important; }
+.app :global(.bn-editor) { background: transparent !important; }
 .editor :global(.bn-editor) { padding-inline: 54px; color: var(--n-text); font-size: 16px; }
 .mencao { display: inline-flex; align-items: baseline; gap: 3px; padding: 0 2px; border-radius: 3px; color: inherit; text-decoration: none; cursor: pointer; white-space: nowrap; }
 .mencao:hover { background: var(--n-hover); }
@@ -328,7 +331,7 @@
 .optRow:hover, .optRowOn { background: var(--n-hover); }
 .optRow .grip { margin-left: auto; color: var(--n-faint); }
 .menuInput { margin: 2px 8px 6px; width: calc(100% - 16px); height: 28px; padding: 0 8px; border-radius: 6px; border: 0; outline: 0; background: var(--n-hover); box-shadow: inset 0 0 0 1px var(--n-line); color: var(--n-text); font: inherit; }
-.menuWide { width: 290px; max-width: 290px; }
+.menuWide { width: 330px; max-width: calc(100vw - 16px); }
 .filterRow { display: flex; align-items: center; gap: 6px; padding: 4px 8px; }
 .filterRow select, .filterRow input { height: 28px; min-width: 0; padding: 0 6px; border-radius: 6px; border: 0; background: var(--n-hover); box-shadow: inset 0 0 0 1px var(--n-line); color: var(--n-text); font: inherit; font-size: 13px; outline: 0; }
 .filterRow input { flex: 1; }
@@ -463,3 +466,13 @@
 .presence { display: flex; align-items: center; margin-right: 4px; }
 .presence span { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 600; box-shadow: 0 0 0 2px var(--n-bg); }
 @media print { .side, .top, .comments, .peek, .toast, .sideBackdrop, .peekZone, .addRow { display: none !important; } .app { height: auto; display: block; } .scroll { overflow: visible; } }
+
+/* Base em página inteira: tabela e quadro vão até a borda da tela (rolagem lateral), como no Notion. */
+.docWide > .base .table, .docWide > .base .board { margin-right: -96px; padding-right: 96px; }
+@media (max-width: 900px) { .docWide > .base .table, .docWide > .base .board { margin-right: -24px; padding-right: 24px; } }
+.filterRow input[aria-label="Nome da opção"] { flex: 1; min-width: 0; }
+.filterRow select[aria-label="Grupo"] { width: 118px; flex-shrink: 0; }
+/* Na tabela, etiquetas e pessoas ficam numa linha só (o que não cabe some), como no Notion. */
+.td .tags { flex-wrap: nowrap; overflow: hidden; }
+/* O Otto pinta h1–h6 com a cor primária dele; nas Notas os títulos seguem a cor do texto (claro e escuro). */
+.app h1, .app h2, .app h3, .app h4, .app h5, .app h6 { color: inherit; }

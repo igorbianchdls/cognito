@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpDown, CalendarDays, ChevronDown, Columns3, Copy, FileText, Filter, LayoutGrid, List, Loader2, PenLine, Plus, Search, SlidersHorizontal, Table2, Trash2, type LucideIcon } from 'lucide-react'
-import { computar, filtrar, novoId, ordenar, TIPOS_VISAO, TITULO, type TipoVisao, type Visao } from '@/products/notas/shared/bases'
+import { computar, filtrar, novoId, ordenar, SEM_VALOR, TIPOS_VISAO, TITULO, type TipoVisao, type Visao } from '@/products/notas/shared/bases'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { ItemMenu, Menu } from '../Menu'
 import { useLocal } from '../local'
@@ -57,6 +57,8 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   const editavel = base.pode_editar && !base.bloqueada && !base.arquivada_em
   const mudarVisao = (m: Partial<Visao>) => api.mudarVisao(visao.id, m)
   const props: VistaProps = { api, base, visao, itens, pessoas, editavel, abrir: setAberto, valoresNovos: valoresDosFiltros(visao) }
+  // Só conta filtro completo (com valor, ou "está vazio"/"marcado"): o que ainda está sendo montado não filtra nada.
+  const filtrosAtivos = visao.filtros.filter(f => SEM_VALOR.includes(f.operador) || (f.valor !== undefined && f.valor !== null && f.valor !== '')).length
   const Vista = { tabela: Tabela, quadro: Quadro, lista: Lista, galeria: Galeria, calendario: Calendario }[visao.tipo]
 
   const novaVisao = (tipo: TipoVisao) => {
@@ -86,8 +88,8 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
         {editavel && <button type="button" className={x.barBtn} aria-label="Nova visão" title="Nova visão" onClick={e => setMenu({ tipo: 'novaVisao', ancora: e.currentTarget })}><Plus size={16} /></button>}
       </div>
       <span className={x.barSpacer} />
-      <button type="button" className={`${x.barBtn} ${visao.filtros.length ? x.barBtnOn : ''}`} onClick={e => setMenu({ tipo: 'filtros', ancora: e.currentTarget })} title="Filtrar">
-        <Filter size={15} />{visao.filtros.length ? visao.filtros.length : ''}<span className="sr-only">Filtrar</span>
+      <button type="button" className={`${x.barBtn} ${filtrosAtivos ? x.barBtnOn : ''}`} onClick={e => setMenu({ tipo: 'filtros', ancora: e.currentTarget })} title="Filtrar">
+        <Filter size={15} />{filtrosAtivos || ''}<span className="sr-only">Filtrar</span>
       </button>
       <button type="button" className={`${x.barBtn} ${visao.ordenacao.length ? x.barBtnOn : ''}`} onClick={e => setMenu({ tipo: 'ordenacao', ancora: e.currentTarget })} title="Ordenar">
         <ArrowUpDown size={15} /><span className="sr-only">Ordenar</span>

@@ -177,8 +177,8 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         },
       },
       ...([
-        ['Tabela', 'Base de dados em tabela, dentro desta página', 'vazia', 'tabela', Table2, ['tabela', 'table', 'base', 'database']],
-        ['Quadro', 'Base de dados em quadro (kanban)', 'vazia', 'quadro', Columns3, ['quadro', 'kanban', 'board']],
+        ['Tabela (base de dados)', 'Base de dados em tabela, dentro desta página', 'vazia', 'tabela', Table2, ['tabela', 'table', 'base', 'database', 'banco']],
+        ['Quadro (base de dados)', 'Base de dados em quadro (kanban)', 'vazia', 'quadro', Columns3, ['quadro', 'kanban', 'board']],
         ['Lista de tarefas', 'Base com status, responsável, prazo e prioridade', 'tarefas', 'quadro', ListChecks, ['tarefas', 'tasks', 'todo']],
       ] as const).map(([title, subtext, modelo, visao, Icone, aliases]) => ({
         title, subtext, group: 'Bases de dados', aliases: [...aliases], icon: <Icone size={18} />,

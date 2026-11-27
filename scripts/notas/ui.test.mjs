@@ -241,6 +241,7 @@ describe('Notas — telas de ponta a ponta', () => {
 
   test('sem erros de servidor nem de página', () => {
     const relevantes = erros.filter(e => !/clerk|ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED/i.test(e))
+    if (relevantes.length) console.error('Erros encontrados:', JSON.stringify(relevantes, null, 1))
     assert.deepEqual(relevantes, [])
   })
 })

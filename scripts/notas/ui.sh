@@ -6,6 +6,10 @@ raiz="$(cd "$(dirname "$0")/../.." && pwd)"; cd "$raiz"
 porta="${NOTAS_UI_PORTA:-3100}"
 url_banco="$(scripts/notas/banco-local.sh)"
 pkill -f "next dev -p $porta" 2>/dev/null || true
+# O cache do Turbopack de uma execução anterior faz o navegador recarregar sem parar ("HMR hash mismatch"), e uma
+# compilação de produção em .next também atrapalha: começa sempre com o cache de desenvolvimento limpo.
+rm -rf .next/dev
+if [ -f .next/BUILD_ID ]; then echo "Há uma compilação de produção em .next; mova a pasta antes de rodar os testes de tela." >&2; exit 1; fi
 log="$(mktemp)"
 NODE_ENV=development NEXT_PUBLIC_NOTAS_TEMPO_REAL=local NOTAS_TESTE_USUARIO=ana:org_a SUPABASE_DB_URL="$url_banco" npx next dev -p "$porta" >"$log" 2>&1 &
 servidor=$!
