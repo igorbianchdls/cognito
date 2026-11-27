@@ -168,6 +168,7 @@
 .editor :global([data-content-type='quote']) { border-left: 3px solid currentColor; }
 .saving { color: #c4554d; font-size: 13px; padding: 0 6px; white-space: nowrap; }
 .soCelular { display: none; }
+.soCelularFlex { display: none !important; }
 
 .picker { width: 380px; }
 .pickerTabs { display: flex; gap: 2px; padding: 0 8px 6px; border-bottom: 1px solid var(--n-line); }
@@ -234,6 +235,8 @@
   .edited { display: none; }
   .soComputador { display: none; }
   .soCelular { display: inline-block !important; }
+  .soCelularFlex { display: flex !important; }
+  .soComputadorFlex { display: none !important; }
 }
 
 @media (max-width: 900px) {
@@ -509,7 +512,7 @@
 .app :global(.bn-block:has(> * > .bn-block-content[data-content-type='colunas']) .bn-block-outer)::before { display: none !important; border: 0 !important; }
 .app :global(.bn-block:has(> * > .bn-block-content[data-content-type='colunas']) .bn-block-group) { border-left: 0 !important; }
 
-.incorporadoCaixa { margin: 4px 0; }
+.incorporadoCaixa { flex: 1; width: 100%; min-width: 0; margin: 4px 0; }
 .incorporado { position: relative; width: 100%; border-radius: 6px; overflow: hidden; background: var(--n-hover); box-shadow: inset 0 0 0 1px var(--n-line); }
 .incorporadoCarregando { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 8px; color: var(--n-faint); font-size: 13px; }
 .incorporado iframe { transition: opacity .2s; }
@@ -569,7 +572,7 @@
 .inboxIcone { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--n-hover); color: var(--n-muted); }
 .inboxNova .inboxIcone { background: rgba(35, 131, 226, .12); color: var(--n-blue); }
 .inboxNova::after { content: ""; position: absolute; right: 14px; top: 18px; width: 8px; height: 8px; border-radius: 50%; background: var(--n-blue); }
-.inboxTexto { display: grid; gap: 3px; min-width: 0; font-size: 13px; line-height: 1.4; padding-right: 16px; }
+.inboxTexto { flex: 1; display: grid; gap: 3px; min-width: 0; font-size: 13px; line-height: 1.4; padding-right: 16px; }
 .inboxTexto b { font-weight: 600; }
 .inboxTexto small { color: var(--n-faint); font-size: 12px; }
 .inboxPagina { display: inline-flex; align-items: center; gap: 5px; min-width: 0; color: var(--n-muted); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -622,3 +625,38 @@
 .cellEditorNome { flex: 1; min-width: 0; padding: 0; margin: 0; border: 0; outline: 0; resize: none; overflow: hidden; background: transparent; color: var(--n-text); font: inherit; font-weight: inherit; line-height: inherit; field-sizing: content; caret-color: var(--n-blue); }
 .timelineVazia { position: absolute; left: 0; right: 0; top: 64px; display: flex; justify-content: center; color: var(--n-faint); font-size: 13px; pointer-events: none; }
 .timelineSemIcone { color: var(--n-faint); flex-shrink: 0; }
+
+/* Início: cartões com o lugar e quando mudou; boas-vindas no primeiro uso. */
+.card { height: auto !important; min-height: 140px; }
+.cardTopVazio { background: linear-gradient(180deg, var(--n-hover), transparent) !important; }
+.cardTitle { padding-bottom: 2px !important; }
+.cardMeta { margin-top: auto; padding: 0 14px 12px; color: var(--n-faint); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.homeIntro { max-width: 560px; margin: -14px 0 8px; color: var(--n-muted); font-size: 15px; line-height: 1.55; }
+.comecos { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.comecos button { display: grid; align-content: start; gap: 6px; min-height: 130px; padding: 16px; border-radius: 12px; text-align: left; color: var(--n-text);
+  box-shadow: rgba(15, 15, 15, .1) 0 0 0 1px, rgba(15, 15, 15, .04) 0 2px 4px; background: var(--n-bg); transition: background .12s; }
+.comecos button:hover:not(:disabled) { background: var(--n-hover); }
+.comecos button:disabled { opacity: .6; cursor: progress; }
+.comecos button > svg { color: var(--n-muted); }
+.comecos b { font-weight: 600; font-size: 14px; }
+.comecos span { color: var(--n-muted); font-size: 13px; line-height: 1.45; }
+.comecos .comecoEmoji { font-size: 20px; line-height: 1; color: inherit; }
+
+/* Quadro: ⋯ no cartão (no computador aparece ao passar o mouse; no toque fica sempre). No celular, as colunas encaixam ao rolar. */
+.cardItemTitle > span:nth-last-child(2) { flex: 1; min-width: 0; }
+.cardMais { flex-shrink: 0; align-self: flex-start; margin: -2px -4px 0 auto; width: 24px; height: 24px; border-radius: 5px; display: grid; place-items: center; color: var(--n-muted); opacity: 0; }
+.cardItem:hover .cardMais, .cardMais:focus-visible { opacity: 1; }
+.cardMais:hover { background: var(--n-hover); }
+@media (hover: none) { .cardMais { opacity: 1; } }
+@media (max-width: 700px) {
+  .board { scroll-snap-type: x mandatory; scroll-padding-left: 16px; gap: 10px; }
+  .column { width: min(82vw, 300px); scroll-snap-align: start; }
+}
+/* Célula com foco pelo teclado: contorno azul, como numa planilha. */
+.app [role=gridcell]:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(35, 131, 226, .65); border-radius: 2px; }
+.cards > .cardNew { min-height: 140px !important; }
+:global(.dark) .card, :global(.dark) .comecos button { box-shadow: 0 0 0 1px rgba(255, 255, 255, .09); background: rgba(255, 255, 255, .02); }
+:global(.dark) .card:hover, :global(.dark) .comecos button:hover:not(:disabled) { background: rgba(255, 255, 255, .055); }
+:global(.dark) .cardIcon svg { background: transparent; }
+:global(.dark) .inbox, :global(.dark) .shareMenu { box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 32px rgba(0, 0, 0, .5); }
+@media (max-width: 700px) { .home { padding-top: 28px; } .home h1 { font-size: 26px; } }

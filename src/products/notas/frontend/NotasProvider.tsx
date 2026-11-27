@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, u
 import { useRouter } from 'next/navigation'
 import type { Espaco, PaginaResumo } from '@/products/notas/shared/arvore'
 import { ErroNotas, notasApi, type Arvore, type Pagina } from './api'
+import { ABRIR_GAVETA_NOTAS } from './eventos'
 import { useLocal } from './local'
 
 type Estado = {
@@ -62,6 +63,11 @@ export function NotasProvider({ children }: { children: ReactNode }) {
   const [gaveta, setGaveta] = useState(false)
   const recolhida = celular ? !gaveta : recolhidaSalva
   const setRecolhida = useCallback((v: boolean) => { if (celular) setGaveta(!v); else salvarRecolhida(v) }, [celular, salvarRecolhida])
+  useEffect(() => {
+    const abrir = () => setGaveta(true)
+    window.addEventListener(ABRIR_GAVETA_NOTAS, abrir)
+    return () => window.removeEventListener(ABRIR_GAVETA_NOTAS, abrir)
+  }, [])
 
   const recarregar = useCallback(async () => {
     try { setArvore(await notasApi<Arvore>('/arvore')); setErro('') } catch (e) { falhou(e) }

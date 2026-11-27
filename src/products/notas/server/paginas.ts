@@ -8,7 +8,7 @@ import { avisar, canalDaPagina } from './notificacoes'
 import { moverCriaCiclo, pessoasMencionadas, tituloExibido, posicaoEntre, textoDoConteudo, type Espaco, type PaginaResumo } from '../shared/arvore'
 import { comoPessoa, gravarArquivo, NotasError, type Client, type Contexto } from './db'
 
-const RESUMO = 'id, parent_id, espaco, titulo, icone, posicao, tipo, base_id, created_by, acesso'
+const RESUMO = 'id, parent_id, espaco, titulo, icone, posicao, tipo, base_id, created_by, acesso, updated_at, capa'
 export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null

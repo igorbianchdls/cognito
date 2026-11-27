@@ -320,7 +320,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
           <span style={{ flex: 1 }} />
         </>
         : <>
-          {recolhida && <button type="button" className={x.topBtn} aria-label="Mostrar a barra lateral" title="Mostrar a barra lateral (Ctrl+\)" onClick={() => setRecolhida(false)}><ChevronsRight size={18} /></button>}
+          {recolhida && <button type="button" className={`${x.topBtn} ${x.soComputadorFlex}`} aria-label="Mostrar a barra lateral" title="Mostrar a barra lateral (Ctrl+\)" onClick={() => setRecolhida(false)}><ChevronsRight size={18} /></button>}
           <nav className={x.crumbs} aria-label="Caminho">
             {trilhaVisivel.map((item, i, lista) => <span key={item?.id ?? 'reticencias'} style={{ display: 'contents' }}>
               {item

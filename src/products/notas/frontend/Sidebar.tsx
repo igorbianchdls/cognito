@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useOrganization } from '@clerk/nextjs'
 import {
-  ChevronRight, ChevronsLeft, Copy, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
+  ChevronRight, ChevronsLeft, Copy, LayoutGrid, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
 } from 'lucide-react'
 import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore } from '@/products/notas/shared/arvore'
 import { notasApi, type ItemLixeira } from './api'
@@ -13,6 +13,7 @@ import { ItemMenu, Menu } from './Menu'
 import { useLocal } from './local'
 import { CaixaDeEntrada } from './CaixaDeEntrada'
 import { useNotas } from './NotasProvider'
+import { ABRIR_IMPORTACAO, ABRIR_MENU_OTTO } from './eventos'
 import x from './notas.module.css'
 
 const LARGURA_PADRAO = 248, LARGURA_MIN = 200, LARGURA_MAX = 480
@@ -154,6 +155,11 @@ export function Sidebar() {
   const router = useRouter()
   const [importando, setImportando] = useState(false)
   const entradaArquivo = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const abrir = () => entradaArquivo.current?.click()
+    window.addEventListener(ABRIR_IMPORTACAO, abrir)
+    return () => window.removeEventListener(ABRIR_IMPORTACAO, abrir)
+  }, [])
   const params = useParams<{ id?: string }>()
   const pathname = usePathname()
   const [larguraSalva, salvarLargura] = useLocal('notas:largura', LARGURA_PADRAO)
@@ -251,6 +257,10 @@ export function Sidebar() {
         <button type="button" className={x.collapse} aria-label={recolhida ? 'Fixar a barra lateral' : 'Recolher a barra lateral'} title={recolhida ? 'Fixar a barra lateral (Ctrl+\\)' : 'Recolher a barra lateral (Ctrl+\\)'}
           onClick={() => { setEspiando(false); setRecolhida(!recolhida) }}>{recolhida ? <ChevronsLeft size={18} style={{ transform: 'scaleX(-1)' }} /> : <ChevronsLeft size={18} />}</button>
       </div>
+      {/* No celular, o caminho para os outros produtos do Otto passa por aqui (o topo tem um botão de menu só). */}
+      <button type="button" className={`${x.navItem} ${x.soCelularFlex}`} onClick={() => { setRecolhida(true); window.dispatchEvent(new Event(ABRIR_MENU_OTTO)) }}>
+        <LayoutGrid size={16} />Menu do Otto
+      </button>
       <button type="button" className={x.navItem} onClick={() => setBuscaAberta(true)}><Search size={16} />Buscar<kbd>Ctrl+K</kbd></button>
       <Link href="/notas" className={`${x.navItem} ${pathname === '/notas' ? x.navOn : ''}`} onClick={() => { if (ehCelular()) setRecolhida(true) }}><House size={16} />Início</Link>
       <CaixaDeEntrada classe={x.navItem} />

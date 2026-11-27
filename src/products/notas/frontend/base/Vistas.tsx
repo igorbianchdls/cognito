@@ -27,12 +27,44 @@ export type VistaProps = {
 
 const LARGURA_TITULO = 280, LARGURA = 200
 
+/**
+ * Setas entre as células da tabela (como numa planilha): a célula com foco anda para o lado ou para a linha de
+ * cima/baixo; Enter edita (a própria célula cuida disso). Só quando o foco está na célula, não dentro de um editor.
+ */
+function andarComSetas(e: React.KeyboardEvent<HTMLDivElement>) {
+  const celula = e.target as HTMLElement
+  if (celula.getAttribute('role') !== 'gridcell' || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return
+  const linha = celula.closest('[role=row]')
+  if (!linha) return
+  const celulas = (l: Element | null) => l ? [...l.querySelectorAll<HTMLElement>(':scope [role=gridcell]')].filter(c => c.closest('[role=row]') === l) : []
+  const daLinha = celulas(linha)
+  const i = daLinha.indexOf(celula)
+  const linhas = [...e.currentTarget.querySelectorAll('[role=row]')].filter(l => celulas(l).length)
+  const j = linhas.indexOf(linha)
+  const destino = e.key === 'ArrowLeft' ? daLinha[i - 1] : e.key === 'ArrowRight' ? daLinha[i + 1]
+    : celulas(linhas[e.key === 'ArrowUp' ? j - 1 : j + 1] ?? null)[i]
+  if (!destino) return
+  e.preventDefault()
+  if (!destino.hasAttribute('tabindex')) destino.tabIndex = -1
+  destino.focus()
+  destino.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+}
+
 /** Menu de um item (botão direito ou ⋯): abrir e mandar para a lixeira. */
-function MenuItem({ ancora, onFechar, onAbrir, onArquivar, editavel, onSubitem }: {
+function MenuItem({ ancora, onFechar, onAbrir, onArquivar, editavel, onSubitem, mover }: {
   ancora: HTMLElement | { x: number; y: number }; onFechar: () => void; onAbrir: () => void; onArquivar: () => void; editavel: boolean; onSubitem?: () => void
+  /** Quadro: mudar de coluna sem arrastar (no celular não dá para arrastar). */
+  mover?: { colunas: { id: string; nome: string; cor?: string }[]; atual: string; onMover: (coluna: string) => void }
 }) {
   return <Menu ancora={ancora} onFechar={onFechar}>
     <ItemMenu icone={Maximize2} onClick={() => { onFechar(); onAbrir() }}>Abrir</ItemMenu>
+    {editavel && mover && <>
+      <div className={x.menuLabel}>Mover para</div>
+      {mover.colunas.filter(c => c.id !== mover.atual).map(c => <ItemMenu key={c.id || 'sem'} onClick={() => { onFechar(); mover.onMover(c.id) }}>
+        {c.id ? <span className={x.tag} data-cor={c.cor}>{c.nome}</span> : c.nome}
+      </ItemMenu>)}
+      <div className={x.menuSep} />
+    </>}
     {editavel && onSubitem && <ItemMenu icone={Plus} onClick={() => { onFechar(); onSubitem() }}>Novo subitem</ItemMenu>}
     {editavel && <ItemMenu icone={Trash2} perigo onClick={() => { onFechar(); onArquivar() }}>Mover para a lixeira</ItemMenu>}
   </Menu>
@@ -102,7 +134,7 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
 
   const novo = async () => { const item = await api.novoItem(valoresNovos); if (item) setEditarTitulo(item.id) }
 
-  return <div className={x.table} role="grid" aria-label={visao.nome}>
+  return <div className={x.table} role="grid" aria-label={visao.nome} onKeyDown={andarComSetas}>
     <div className={x.tableInner}>
       <div className={`${x.tr} ${x.headRow}`} role="row">
         {colunas.map(col => {
@@ -219,7 +251,10 @@ export function Quadro({ api, base, visao, itens, pessoas, editavel, abrir, valo
             const antesDe = e.clientY < r.top + r.height / 2 ? item.id : g.itens[g.itens.indexOf(item) + 1]?.id ?? null
             if (alvo?.grupo !== g.id || alvo.antesDe !== antesDe) setAlvo({ grupo: g.id, antesDe })
           }}>
-          <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span></div>
+          <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span>
+            <button type="button" className={x.cardMais} aria-label="Ações do cartão" draggable={false}
+              onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuCartao({ ancora: { x: r.left, y: r.bottom + 4 }, id: item.id }) }}><MoreHorizontal size={15} /></button>
+          </div>
           <ValoresVisiveis item={item} visao={visao} esquema={base.esquema} pessoas={pessoas} className={x.cardProps} />
         </div>
       </Fragment>)}
@@ -236,7 +271,15 @@ export function Quadro({ api, base, visao, itens, pessoas, editavel, abrir, valo
     {menuColuna && <Menu ancora={menuColuna.ancora} onFechar={() => setMenuColuna(null)}>
       <ItemMenu icone={EyeOff} onClick={() => { api.mudarVisao(visao.id, { colunasOcultas: [...ocultas, menuColuna.grupo] }); setMenuColuna(null) }}>Ocultar coluna</ItemMenu>
     </Menu>}
-    {menuCartao && <MenuItem ancora={menuCartao.ancora} editavel={editavel} onFechar={() => setMenuCartao(null)} onAbrir={() => abrir(menuCartao.id)} onArquivar={() => void api.arquivarItem(menuCartao.id)} />}
+    {menuCartao && <MenuItem ancora={menuCartao.ancora} editavel={editavel} onFechar={() => setMenuCartao(null)} onAbrir={() => abrir(menuCartao.id)} onArquivar={() => void api.arquivarItem(menuCartao.id)}
+      mover={{
+        colunas: grupos.filter(g => !ocultas.has(g.id)).map(g => ({ id: g.id, nome: g.nome, cor: g.cor })),
+        atual: grupos.find(g => g.itens.some(i => i.id === menuCartao.id))?.id ?? '',
+        onMover: coluna => {
+          const destino = grupos.find(g => g.id === coluna)?.itens ?? []
+          void api.mudarItem(menuCartao.id, { posicao: posicaoEntre(destino.at(-1)?.posicao ?? null, null), propriedades: { [prop.id]: coluna || null } })
+        },
+      }} />}
   </div>
 }
 

@@ -332,6 +332,25 @@ describe('Notas — telas de ponta a ponta', () => {
     await foto('ui-17-notion')
   })
 
+  test('polimento: mover cartão pelo menu ⋯ e andar na tabela com as setas', async () => {
+    await novaPagina()
+    await page.getByRole('button', { name: 'Tarefas' }).click()
+    await page.getByRole('tab', { name: 'Quadro' }).waitFor()
+    const cartao = page.locator('[role=button]', { hasText: 'Tarefa 1' }).first()
+    await cartao.hover()
+    await cartao.getByRole('button', { name: 'Ações do cartão' }).click()
+    await page.getByRole('menuitem', { name: /Concluída/ }).click()
+    await page.locator('[class*=column]', { hasText: 'Concluída' }).getByText('Tarefa 1').waitFor()
+    await page.waitForLoadState('networkidle')
+    await page.getByRole('tab', { name: 'Tabela' }).click()
+    await page.locator('[role=row]', { hasText: 'Tarefa 2' }).locator('[role=gridcell]').nth(1).focus()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('ArrowRight')
+    const foco = await page.evaluate(() => { const a = document.activeElement; return { papel: a?.getAttribute('role'), linha: a?.closest('[role=row]')?.textContent ?? '' } })
+    assert.equal(foco.papel, 'gridcell')
+    assert.ok(!foco.linha.includes('Tarefa 2'), 'a seta para baixo saiu da linha da Tarefa 2')
+  })
+
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui
     // e a importação segue sem ela (é o comportamento esperado). Em produção o bucket "notas" existe.

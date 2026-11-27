@@ -7,6 +7,8 @@ export type PaginaResumo = {
   tipo?: 'pagina' | 'base'; base_id?: string | null
   /** Quem criou e o acesso (página restrita aparece com cadeado; particular de outra pessoa = compartilhada comigo). */
   created_by?: string; acesso?: 'empresa' | 'restrito'
+  /** Para os cartões do Início: quando mudou e a capa. */
+  updated_at?: string; capa?: string | null
 }
 export type NoArvore = PaginaResumo & { filhos: NoArvore[] }
 

@@ -1,11 +1,14 @@
 "use client"
 
+import { useEffect } from "react"
 import Link from "next/link"
+import { PanelLeftIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useOrganization } from "@clerk/nextjs"
 import { IconBellFilled, IconHelpCircleFilled, IconSettingsFilled } from "@tabler/icons-react"
 
-import { SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar"
+import { ABRIR_GAVETA_NOTAS, ABRIR_MENU_OTTO } from "@/products/notas/frontend/eventos"
 import { cn } from "@/lib/utils"
 import { AuthUserMenu } from "@/products/auth/frontend/components/AuthUserMenu"
 import { useNotifications } from "@/products/marketing/frontend/notifications/store"
@@ -25,10 +28,21 @@ export function AppHeader({ className }: { className?: string }) {
   // O sino conta tudo: notificações do Otto e avisos das Notas (a caixa de entrada das Notas mostra os mesmos).
   const unread = useNotifications().filter((n) => !n.read).length + useAvisosNotas().nao_lidas
   const on = (url: string) => pathname === url || pathname.startsWith(url + "/")
+  // Nas Notas, o botão de menu do celular abre as páginas das Notas (e dali o menu do Otto): um botão só, não dois.
+  const notas = on("/notas")
+  const { setOpenMobile } = useSidebar()
+  useEffect(() => {
+    const abrir = () => setOpenMobile(true)
+    window.addEventListener(ABRIR_MENU_OTTO, abrir)
+    return () => window.removeEventListener(ABRIR_MENU_OTTO, abrir)
+  }, [setOpenMobile])
 
   return (
     <header className={cn("sticky top-0 z-30 flex h-[var(--app-header-h)] shrink-0 items-center gap-1 border-b border-black/[0.06] bg-white px-3", className)}>
-      <SidebarTrigger className="md:hidden" />
+      {notas
+        ? <button type="button" className="grid size-7 place-items-center rounded-md hover:bg-black/[0.05] md:hidden" aria-label="Páginas das Notas"
+            onClick={() => window.dispatchEvent(new Event(ABRIR_GAVETA_NOTAS))}><PanelLeftIcon className="size-4" /></button>
+        : <SidebarTrigger className="md:hidden" />}
       <div className="flex-1" />
       <Link href="/marketing/notificacoes" title="Notificações" aria-label={unread ? `Notificações (${unread} não lidas)` : "Notificações"}
         className={cn(button, on("/marketing/notificacoes") && "bg-black/[0.06]")}>

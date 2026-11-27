@@ -209,8 +209,10 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
       onClick={e => e.stopPropagation()} onFocus={e => { const t = e.currentTarget; t.setSelectionRange(t.value.length, t.value.length) }}
       onKeyDown={e => {
         e.stopPropagation()
-        if (e.key === 'Escape') setEditando(null)
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); gravar(e.currentTarget.value) }
+        // Ao sair do editor pelo teclado, o foco volta para a célula (as setas continuam andando pela tabela).
+        const celula = e.currentTarget.closest<HTMLElement>('[role=gridcell]')
+        if (e.key === 'Escape') { setEditando(null); celula?.focus() }
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); gravar(e.currentTarget.value); setTimeout(() => celula?.focus(), 0) }
       }}
       onBlur={e => gravar(e.currentTarget.value)} />
 
