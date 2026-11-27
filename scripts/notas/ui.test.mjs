@@ -549,6 +549,30 @@ describe('Notas — telas de ponta a ponta', () => {
     await foto('ui-23-capa-ilustrada')
   })
 
+  test('desfazer e refazer no editor colaborativo; código no meio do texto com estilo próprio; página pública sem erro', async () => {
+    await novaPagina()
+    await page.getByLabel('Título da página').fill('Desfazer')
+    await page.keyboard.press('Enter')
+    const textos = () => page.evaluate(() => window.__notasEditor.document.map(b => (b.content ?? []).map(c => c.text).join('')).filter(Boolean))
+    await page.keyboard.type('primeira linha'); await page.waitForTimeout(700); await page.keyboard.press('Enter')
+    await page.keyboard.type('segunda linha'); await page.waitForTimeout(700)
+    await page.keyboard.press('Control+z')
+    await page.waitForFunction(() => !JSON.stringify(window.__notasEditor.document).includes('segunda linha'))
+    await page.keyboard.press('Control+Shift+z')
+    await page.waitForFunction(() => JSON.stringify(window.__notasEditor.document).includes('segunda linha'))
+    assert.deepEqual(await textos(), ['primeira linha', 'segunda linha'])
+    await page.keyboard.press('Enter'); await page.keyboard.type('use `npm run` aqui ')
+    const fundo = await page.locator('.bn-inline-content code').first().evaluate(e => getComputedStyle(e).backgroundColor)
+    assert.notEqual(fundo, 'rgba(0, 0, 0, 0)', 'código no meio do texto tem fundo')
+    await salvo()
+    await page.getByRole('button', { name: 'Compartilhar' }).click()
+    await page.getByRole('button', { name: /Publicar na web/ }).click()
+    const link = await page.getByLabel('Link público').inputValue()
+    await page.keyboard.press('Escape')
+    const resposta = await page.request.get(link)
+    assert.equal(resposta.status(), 200, 'a página pública abre sem erro no servidor')
+  })
+
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui
     // e a importação segue sem ela (é o comportamento esperado). Em produção o bucket "notas" existe.

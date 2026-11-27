@@ -5,7 +5,7 @@ import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import { BlockNoteSchema, createCodeBlockSpec, defaultBlockSpecs, defaultInlineContentSpecs, type PartialBlock } from '@blocknote/core'
 import { pt } from '@blocknote/core/locales'
-import { useRef } from 'react'
+import { useRef, useSyncExternalStore } from 'react'
 import { createReactBlockSpec, createReactInlineContentSpec, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import { tituloExibido } from '@/products/notas/shared/arvore'
@@ -40,7 +40,14 @@ const schema = BlockNoteSchema.create({
   inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: Mencao, pessoa: PessoaPublica },
 })
 
+const nada = () => () => {}
+/** O editor só existe no navegador (no servidor não há janela): o texto aparece depois que a página carrega. */
 function Conteudo({ conteudo }: { conteudo: unknown[] }) {
+  const noNavegador = useSyncExternalStore(nada, () => true, () => false)
+  return noNavegador ? <ConteudoEditor conteudo={conteudo} /> : <div className={x.editorCaixa} style={{ minHeight: 200 }} />
+}
+
+function ConteudoEditor({ conteudo }: { conteudo: unknown[] }) {
   const editor = useCreateBlockNote({ schema, initialContent: conteudo.length ? conteudo as PartialBlock[] as never : undefined, dictionary: pt, extensions: [syntaxHighlighter] })
   const caixa = useRef<HTMLDivElement>(null)
   return <div ref={caixa} className={x.editorCaixa}>

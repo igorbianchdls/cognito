@@ -165,7 +165,11 @@
 :global(.dark) .editor :global([data-content-type='codeBlock']) { background: rgba(255, 255, 255, .03) !important; color: rgba(255, 255, 255, .81) !important; }
 .editor :global([data-content-type='codeBlock']) :global(code) { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; }
 .editor :global([data-content-type='checkListItem'] input[type='checkbox']) { width: 16px; height: 16px; accent-color: var(--n-blue); cursor: pointer; }
-.editor :global([data-content-type='quote']) { border-left: 3px solid currentColor; }
+.editor :global([data-content-type='quote']) { color: inherit !important; border-left: 3px solid currentColor; }
+/* Código no meio do texto (`assim`), como no Notion: fundo cinza claro e letra avermelhada. */
+.editor :global(.bn-inline-content code) { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; color: #eb5757; background: rgba(135, 131, 120, .15); border-radius: 4px; padding: .2em .4em; }
+:global(.dark) .editor :global(.bn-inline-content code) { color: #ff7369; background: rgba(255, 255, 255, .08); }
+.editor :global([data-content-type=codeBlock] .bn-inline-content code) { color: inherit; background: none; padding: 0; font-size: inherit; }
 .saving { color: #c4554d; font-size: 13px; padding: 0 6px; white-space: nowrap; }
 .soCelular { display: none; }
 .soCelularFlex { display: none !important; }

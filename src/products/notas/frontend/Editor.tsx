@@ -127,6 +127,19 @@ function textoDoBloco(bloco: { content?: unknown }) {
   return Array.isArray(bloco.content) ? bloco.content.map(c => (c as { text?: string }).text ?? '').join('').slice(0, 300) : ''
 }
 
+type Desfazer = { doc: Y.Doc; trackedOrigins: Set<unknown>; afterTransactionHandler: (t: Y.Transaction) => void }
+/** Religa o histórico de desfazer do Yjs se ele foi desligado quando a tela do editor foi desmontada. */
+function religarDesfazer(editor: unknown) {
+  const estado = (editor as { prosemirrorState: { plugins: { key: string; getState: (s: unknown) => unknown }[] } }).prosemirrorState
+  const plugin = estado.plugins.find(p => p.key.startsWith('y-undo$'))
+  const desfazer = (plugin?.getState(estado) as { undoManager?: Desfazer } | undefined)?.undoManager
+  if (!desfazer) return
+  const ouvintes = (desfazer.doc as unknown as { _observers: Map<string, Set<unknown>> })._observers.get('afterTransaction')
+  if (ouvintes?.has(desfazer.afterTransactionHandler)) return
+  desfazer.trackedOrigins.add(desfazer)
+  desfazer.doc.on('afterTransaction', desfazer.afterTransactionHandler)
+}
+
 /**
  * Junta blocos no fim do documento colaborativo de uma página (o estado salvo; vazio = semeado igual aos editores).
  * Devolve o estado inteiro (para gravar) e só a mudança (para quem está com a página aberta).
@@ -168,7 +181,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   const editor = useCreateBlockNote({
     schema,
     ...(colaboracao
-      ? { extensions: [syntaxHighlighter, CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })] }
+      ? { extensions: [syntaxHighlighter, CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })], disableExtensions: ['history'] }
       : { initialContent: inicial as never, extensions: [syntaxHighlighter] }),
     dictionary: DICIONARIO,
     uploadFile: enviarArquivoNotas,
@@ -237,6 +250,17 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
       }
     }, 250)
     return () => clearInterval(t)
+  }, [editor])
+  // Desfazer na edição simultânea: quando a tela do editor é montada de novo (o React faz isso, por exemplo), o plugin
+  // do Yjs desliga o histórico dele e o Ctrl+Z deixa de funcionar. Religa sempre que o editor é montado ou recebe foco.
+  useEffect(() => {
+    if (!colaboracao) return
+    const religar = () => { try { religarDesfazer(editor) } catch { /* sem histórico colaborativo */ } }
+    const t = setTimeout(religar, 0)
+    const raiz = caixa.current
+    raiz?.addEventListener('focusin', religar)
+    return () => { clearTimeout(t); raiz?.removeEventListener('focusin', religar) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o editor muda
   }, [editor])
   // Testes de tela (só em desenvolvimento): o documento do editor fica acessível para conferir a estrutura.
   useEffect(() => {
