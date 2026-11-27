@@ -13,6 +13,7 @@ import { DICIONARIO, arrumarMenu } from './menuBarra'
 import { IconePagina } from './IconePagina'
 import { ColunasVivas } from './ColunasVivas'
 import { BotoesDoCodigo } from './BotoesDoCodigo'
+import { ArrasteLateral } from './ArrasteLateral'
 import { AcoesDoBlocoContexto, MenuDoBloco, semIds } from './MenuDoBloco'
 import { Menu } from './Menu'
 import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SideMenu, SideMenuController, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
@@ -26,6 +27,8 @@ import { Botao, Coluna, Colunas, Destaque, Incorporar, MencaoPessoa } from './bl
 import { usePessoas } from './base/pessoas'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
 import { enviarArquivoNotas, notasApi, type Pagina } from './api'
+import { abrirCanal } from './tempoReal'
+import { deBase64, paraBase64 } from '@/products/notas/shared/colaboracao'
 import { useNotas } from './NotasProvider'
 import x from './notas.module.css'
 
@@ -124,6 +127,24 @@ function textoDoBloco(bloco: { content?: unknown }) {
   return Array.isArray(bloco.content) ? bloco.content.map(c => (c as { text?: string }).text ?? '').join('').slice(0, 300) : ''
 }
 
+/**
+ * Junta blocos no fim do documento colaborativo de uma página (o estado salvo; vazio = semeado igual aos editores).
+ * Devolve o estado inteiro (para gravar) e só a mudança (para quem está com a página aberta).
+ */
+function anexarAoDocumento(estado: string | null, conteudo: unknown[], blocos: unknown[]) {
+  const doc = new Y.Doc()
+  if (estado) Y.applyUpdate(doc, deBase64(estado))
+  const fragmento = doc.getXmlFragment('conteudo')
+  semear(fragmento, conteudo)
+  const antes = Y.encodeStateVector(doc)
+  const temporario = new Y.Doc()
+  blocksToYXmlFragment(BlockNoteEditor.create({ schema }) as never, blocos as never, temporario.getXmlFragment('conteudo'))
+  const novos = (temporario.getXmlFragment('conteudo').get(0) as Y.XmlElement).toArray().map(n => (n as Y.XmlElement).clone())
+  const grupo = fragmento.get(0) as Y.XmlElement
+  doc.transact(() => grupo.insert(grupo.length, novos))
+  return { estado: paraBase64(Y.encodeStateAsUpdate(doc)), atualizacao: paraBase64(Y.encodeStateAsUpdate(doc, antes)) }
+}
+
 /** Semeia o documento colaborativo a partir do conteúdo salvo (sempre igual: id de cliente 1 e um editor só de conversão). */
 function semear(fragment: Y.XmlFragment, conteudo: unknown[]) {
   if (fragment.length || !fragment.doc) return
@@ -184,7 +205,10 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     comentar: onComentar ? (b: { id: string; content?: unknown }) => onComentar(b.id, textoDoBloco(b)) : undefined,
     mover: editavel ? (bloco: { id: string }, ancora: HTMLElement) => { setBuscaMover(''); setMover({ bloco, ancora }) } : undefined,
   }), [avisar, onComentar, editavel])
-  /** Leva o bloco (com o que tem dentro) para o fim de outra página e tira daqui. */
+  /**
+   * Leva o bloco (com o que tem dentro) para o fim de outra página e tira daqui. Entra no documento colaborativo do
+   * destino como mais uma edição: quem está com a página aberta recebe o bloco na hora, sem precisar recarregar.
+   */
   const moverPara = async (destino: { id: string; titulo: string }) => {
     const alvo = mover; setMover(null)
     if (!alvo) return
@@ -192,7 +216,10 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     if (!bloco) return
     try {
       const pagina = await notasApi<Pagina>(`/paginas/${destino.id}`)
-      await notasApi(`/paginas/${destino.id}`, { method: 'PATCH', json: { versao: pagina.versao, conteudo: [...(pagina.conteudo as unknown[] ?? []), semIds(bloco as never)] } })
+      const copia = semIds(bloco as never)
+      const { estado, atualizacao } = anexarAoDocumento(pagina.estado_yjs ?? null, pagina.conteudo ?? [], [copia])
+      await notasApi(`/paginas/${destino.id}`, { method: 'PATCH', json: { estado_yjs: estado, geracao_yjs: pagina.geracao_yjs, conteudo: [...(pagina.conteudo ?? []), copia] } })
+      if (pagina.canal) { const canal = abrirCanal(pagina.canal); canal.enviar('update', atualizacao); setTimeout(() => canal.fechar(), 3000) }
       editor.removeBlocks([bloco])
       avisar(`Movido para “${tituloExibido(destino.titulo)}”.`)
     } catch (e) { avisar((e as Error).message) }
@@ -306,6 +333,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
       ])
     }} />
     <SideMenuController sideMenu={props => <SideMenu {...props} dragHandleMenu={MenuDoBloco} />} />
+    <ArrasteLateral caixa={caixa} editavel={editavel} />
   </BlockNoteView>
   </AcoesDoBlocoContexto.Provider>
   <BotoesDoCodigo editor={editor as never} caixa={caixa} />

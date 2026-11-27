@@ -506,6 +506,49 @@ describe('Notas — telas de ponta a ponta', () => {
     await page.keyboard.press('Escape')
   })
 
+  test('soltar na lateral cria colunas; mover para outra página chega ao vivo em quem está com ela aberta; capa ilustrada', async () => {
+    await novaPagina()
+    await page.getByLabel('Título da página').fill('Destino ao vivo')
+    await salvo()
+    const destino = page.url()
+    await novaPagina()
+    await page.getByLabel('Título da página').fill('Origem lateral')
+    await page.waitForFunction(() => Boolean(window.__notasEditor))
+    await page.evaluate(() => { const e = window.__notasEditor; const p = t => ({ type: 'paragraph', content: t })
+      e.replaceBlocks(e.document, [p('Bloco A'), p('Bloco B'), p('Viaja para lá')]) })
+    // Arrastar "Bloco B" pela alça até a borda direita de "Bloco A".
+    await page.mouse.move(5, 5)
+    await page.locator('.bn-block-content', { hasText: 'Bloco B' }).hover()
+    const h = await page.locator('.bn-side-menu [draggable=true]').first().boundingBox()
+    const t = await page.locator('.bn-block-content', { hasText: 'Bloco A' }).first().boundingBox()
+    await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2); await page.mouse.down()
+    await page.mouse.move(t.x + t.width - 15, t.y + t.height / 2, { steps: 15 })
+    await page.locator('[class*=soltarLateral]').waitFor()
+    await page.mouse.up()
+    await page.waitForFunction(() => { const c = window.__notasEditor.document[0]; return c.type === 'colunas' && c.children.length === 2 })
+    // A página de destino aberta numa segunda aba recebe o bloco sem recarregar.
+    const outra = await page.context().newPage()
+    await outra.goto(destino, { waitUntil: 'domcontentloaded' })
+    await outra.locator('.bn-editor').waitFor()
+    await outra.waitForTimeout(1500)
+    await page.bringToFront()
+    await page.mouse.move(5, 5)
+    await page.locator('.bn-block-content', { hasText: 'Viaja para lá' }).hover()
+    await page.locator('.bn-side-menu [draggable=true]').first().click()
+    await page.getByRole('menuitem', { name: /Mover para/ }).click()
+    await page.getByLabel('Buscar página de destino').fill('Destino ao vivo')
+    await page.locator('button', { hasText: 'Destino ao vivo' }).last().click()
+    await outra.locator('.bn-editor').getByText('Viaja para lá').waitFor()
+    assert.equal(await outra.getByText(/Recarregue/).count(), 0, 'sem pedir para recarregar')
+    await outra.close()
+    // Capa: uma das ilustrações da galeria.
+    await page.getByLabel('Título da página').hover()
+    await page.getByRole('button', { name: 'Adicionar capa' }).click()
+    await page.getByRole('button', { name: 'Usar a capa Aurora' }).click()
+    await page.waitForFunction(() => [...document.querySelectorAll('[class*=cover]')].some(e => getComputedStyle(e).backgroundImage.includes('capas-notas/aurora.svg')))
+    await foto('ui-23-capa-ilustrada')
+  })
+
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui
     // e a importação segue sem ela (é o comportamento esperado). Em produção o bucket "notas" existe.

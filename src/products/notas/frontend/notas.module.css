@@ -183,7 +183,10 @@
 .emojiBusca input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--n-text); font: inherit; font-size: 13px; }
 .emojiGrid button { height: 32px; border-radius: 4px; font-size: 22px; line-height: 1; }
 .emojiGrid button:hover { background: var(--n-hover); }
-.coverGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; }
+.coverGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 6px 10px 10px; }
+.coverGridIlustracoes { grid-template-columns: repeat(3, 1fr); }
+.coverGridIlustracoes button { height: 64px; background-position: center; }
+.capasRolagem { max-height: 360px; overflow-y: auto; }
 .coverGrid button { height: 56px; border-radius: 4px; }
 .coverGrid button:hover { box-shadow: 0 0 0 2px var(--n-blue); }
 .pickerBody { padding: 10px; display: grid; gap: 8px; }
@@ -766,3 +769,5 @@
 .codigoCopiar:hover { color: #fff; background: rgba(255, 255, 255, .16); }
 /* Tabela simples alinhada com o texto (o editor punha um recuo de 9px). */
 .app :global(.bn-block-content[data-content-type=table] .tableWrapper) { padding-left: 0 !important; }
+/* Soltar na lateral de um bloco: barra azul vertical onde a coluna nova vai entrar. */
+.soltarLateral { position: fixed; z-index: 60; width: 3px; border-radius: 2px; background: rgba(35, 131, 226, .8); pointer-events: none; }

@@ -6,6 +6,12 @@ export const EMOJIS = ('📄 📝 📌 📎 📁 📂 🗂️ 📅 📆 🗓️ 
 export const emojiAleatorio = () => EMOJIS[Math.floor(Math.random() * EMOJIS.length)]
 
 /** Capas prontas: o valor guardado é "cor:<css>" (gradiente ou cor); imagem enviada é a URL. */
+/** Ilustrações de capa (arquivos do próprio Otto, em public/capas-notas; funcionam também no link público). */
+export const ILUSTRACOES = [
+  ['aurora', 'Aurora'], ['por-do-sol', 'Pôr do sol'], ['ondas', 'Ondas'], ['montanhas', 'Montanhas'], ['ceu-estrelado', 'Céu estrelado'], ['oceano', 'Oceano'],
+  ['floresta', 'Floresta'], ['dunas', 'Dunas'], ['lavanda', 'Lavanda'], ['aquarela', 'Aquarela'], ['pastel', 'Pastel'], ['curvas-de-nivel', 'Curvas de nível'],
+].map(([arquivo, nome]) => ({ nome, capa: `/capas-notas/${arquivo}.svg` }))
+
 export const CAPAS = [
   'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
   'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)', 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',

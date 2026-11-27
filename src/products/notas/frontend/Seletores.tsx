@@ -5,7 +5,7 @@ import { Loader2, Search } from 'lucide-react'
 import { loadFrimousseData, searchEmojis } from '@blocknote/core/emoji-data'
 import { useLocal } from './local'
 import { enviarArquivoNotas } from './api'
-import { CAPAS, EMOJIS, emojiAleatorio, estiloCapa } from './catalogo'
+import { CAPAS, EMOJIS, ILUSTRACOES, emojiAleatorio, estiloCapa } from './catalogo'
 import { Menu } from './Menu'
 import x from './notas.module.css'
 
@@ -73,8 +73,15 @@ export function SeletorCapa({ ancora, onFechar, onEscolher }: { ancora: HTMLElem
       <span className={x.spacer} />
       <button type="button" onClick={() => escolher(null)}>Remover</button>
     </div>
-    {aba === 'galeria' && <div className={x.coverGrid}>
-      {CAPAS.map(capa => <button key={capa} type="button" aria-label="Usar esta capa" style={estiloCapa(capa)} onClick={() => escolher(capa)} />)}
+    {aba === 'galeria' && <div className={x.capasRolagem}>
+      <div className={x.emojiGrupo}>Ilustrações</div>
+      <div className={`${x.coverGrid} ${x.coverGridIlustracoes}`}>
+        {ILUSTRACOES.map(i => <button key={i.capa} type="button" aria-label={`Usar a capa ${i.nome}`} title={i.nome} style={{ ...estiloCapa(i.capa), backgroundSize: 'cover' }} onClick={() => escolher(i.capa)} />)}
+      </div>
+      <div className={x.emojiGrupo}>Cores e gradientes</div>
+      <div className={x.coverGrid}>
+        {CAPAS.map(capa => <button key={capa} type="button" aria-label="Usar esta capa" style={estiloCapa(capa)} onClick={() => escolher(capa)} />)}
+      </div>
     </div>}
     {aba === 'enviar' && <div className={x.pickerBody}>
       <label className={x.primary} style={{ display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
