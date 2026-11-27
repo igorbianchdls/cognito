@@ -1,7 +1,7 @@
 // Testes de tela das Notas, de ponta a ponta: navegador → telas reais → rotas reais → Postgres local.
 // Uso: npm run notas:ui (sobe o banco local e o Next em modo de teste, roda e desliga).
 // Variáveis: NOTAS_UI_URL (padrão http://localhost:3100), NOTAS_UI_FOTOS (pasta para salvar capturas, opcional).
-import { after, afterEach, before, describe, test } from 'node:test'
+import { after, afterEach, before, beforeEach, describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createRequire } from 'node:module'
 
@@ -14,6 +14,7 @@ const BASE = process.env.NOTAS_UI_URL ?? 'http://localhost:3100'
 const FOTOS = process.env.NOTAS_UI_FOTOS
 let browser, page
 const erros = []
+let testeAtual = ''
 
 const foto = async nome => { if (FOTOS) await page.screenshot({ path: `${FOTOS}/${nome}.png` }) }
 /** Espera a página terminar de salvar (o "Salvando…" do topo some). */
@@ -33,8 +34,8 @@ describe('Notas — telas de ponta a ponta', () => {
     browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), proxy: { server: process.env.HTTPS_PROXY || 'direct://', bypass: '<-loopback>,localhost,127.0.0.1' } })
     page = await (await browser.newContext({ viewport: { width: 1440, height: 900 }, acceptDownloads: true })).newPage()
     page.setDefaultTimeout(20000)
-    page.on('pageerror', e => erros.push(String(e)))
-    page.on('console', m => { if (m.type() === 'error') erros.push(`console: ${m.text().slice(0, 300)}`) })
+    page.on('pageerror', e => erros.push(`[${testeAtual}] ${String(e)}`))
+    page.on('console', m => { if (m.type() === 'error') erros.push(`[${testeAtual}] console: ${m.text().slice(0, 300)}`) })
     page.on('response', r => { if (r.url().includes('/api/notas/') && (r.status() >= 500 || r.status() === 409 || r.status() === 400)) r.text().then(t => {
       let campos = ''; try { campos = Object.keys(JSON.parse(r.request().postData() ?? '{}')).join(',') } catch { /* sem corpo */ }
       let titulo = ''; try { titulo = JSON.parse(t).atual?.titulo ?? '' } catch { /* sem json */ }
@@ -42,6 +43,7 @@ describe('Notas — telas de ponta a ponta', () => {
     }).catch(() => {}) })
   })
   after(async () => { await browser?.close() })
+  beforeEach(t => { testeAtual = t.name.slice(0, 40) })
   afterEach(async t => { if (FOTOS && page) await page.screenshot({ path: `${FOTOS}/fim-${t.name.slice(0, 30).replace(/[^\w]+/g, '-')}.png` }).catch(() => {}) })
 
   test('criar página, escrever, salvar e reabrir com o texto', async () => {
@@ -462,6 +464,47 @@ describe('Notas — telas de ponta a ponta', () => {
     await foto('ui-22-trimestres')
   })
 
+
+  test('polimento 3: menu do bloco (transformar, duplicar, mover), código com linguagem, ícone com busca e clique direito', async () => {
+    await novaPagina()
+    await page.getByLabel('Título da página').fill('Menu do bloco')
+    await page.waitForFunction(() => Boolean(window.__notasEditor))
+    await page.evaluate(() => { const e = window.__notasEditor
+      e.replaceBlocks(e.document, [{ type: 'paragraph', content: 'Item para mexer' }, { type: 'codeBlock', props: { language: 'javascript' }, content: 'const a = 1' }, { type: 'paragraph', content: 'Vai embora' }]) })
+    const alca = async texto => {
+      await page.mouse.move(5, 5)
+      await page.locator('.bn-editor').getByText(texto).hover()
+      await page.locator('.bn-side-menu [draggable=true]').first().click()
+    }
+    await alca('Item para mexer')
+    await page.getByText('Transformar em').hover()
+    await page.getByRole('menuitem', { name: /Título 2/ }).click()
+    await page.waitForFunction(() => window.__notasEditor.document[0].type === 'heading')
+    await alca('Item para mexer')
+    await page.getByRole('menuitem', { name: 'Duplicar' }).click()
+    await page.waitForFunction(() => window.__notasEditor.document.filter(b => JSON.stringify(b.content).includes('Item para mexer')).length === 2)
+    // Código: escolha de linguagem visível e botão de copiar.
+    await page.locator('.bn-block-content[data-content-type=codeBlock] select').waitFor()
+    assert.equal(await page.locator('.bn-block-content[data-content-type=codeBlock] select').inputValue(), 'javascript')
+    await page.getByRole('button', { name: 'Copiar código' }).waitFor({ state: 'attached' })
+    // Mover para outra página.
+    await alca('Vai embora')
+    await page.getByRole('menuitem', { name: /Mover para/ }).click()
+    await page.getByLabel('Buscar página de destino').fill('Plano de lan')
+    await page.locator('button', { hasText: 'Plano de lançamento' }).last().click()
+    await page.waitForFunction(() => !JSON.stringify(window.__notasEditor.document).includes('Vai embora'))
+    await page.getByText(/Movido para/).waitFor()
+    // Ícone: busca em português.
+    await page.getByLabel('Título da página').hover()
+    await page.getByRole('button', { name: 'Adicionar ícone' }).click()
+    await page.getByLabel('Buscar emoji').fill('foguete')
+    await page.getByRole('button', { name: 'Usar 🚀' }).click()
+    await page.getByRole('button', { name: 'Trocar ícone' }).waitFor()
+    // Clique direito na barra lateral abre o menu da página.
+    await page.locator('[role=treeitem]', { hasText: 'Menu do bloco' }).first().click({ button: 'right' })
+    await page.getByRole('menuitem', { name: 'Renomear' }).waitFor()
+    await page.keyboard.press('Escape')
+  })
 
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui

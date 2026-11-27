@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Check, Copy, Globe, MoreHorizontal, PenLine, Search, Sparkles, Trash2 } from 'lucide-react'
+import { Check, Copy, Globe, Loader2, MoreHorizontal, PenLine, Search, Sparkles, Trash2 } from 'lucide-react'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { editadoHa, notasApi } from './api'
 import { MolduraArtefato } from './ArtefatoView'
@@ -56,12 +56,17 @@ export function GaleriaArtefatos() {
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [ordem, setOrdem] = useState<'recentes' | 'nome'>('recentes')
   const [menu, setMenu] = useState<{ ancora: HTMLElement; a: Resumo } | null>(null)
+  const [buscando, setBuscando] = useState(false)
 
   const carregar = useCallback(() => {
     const q = new URLSearchParams({ filtro, ordem, ...(busca.trim() ? { busca: busca.trim() } : {}) })
-    return notasApi<Resumo[]>(`/artefatos?${q}`).then(setLista).catch(e => { avisar((e as Error).message); setLista([]) })
+    setBuscando(true)
+    return notasApi<Resumo[]>(`/artefatos?${q}`).then(setLista).catch(e => { avisar((e as Error).message); setLista([]) }).finally(() => setBuscando(false))
   }, [busca, filtro, ordem, avisar])
-  useEffect(() => { const t = setTimeout(() => void carregar(), busca ? 200 : 0); return () => clearTimeout(t) }, [carregar, busca])
+  // Enquanto digita, a lista antiga fica esmaecida (sabe-se que está buscando), em vez de mostrar um resultado velho.
+  const [digitando, setDigitando] = useState(false)
+  useEffect(() => { const t = setTimeout(() => { setDigitando(false); void carregar() }, busca ? 220 : 0); return () => clearTimeout(t) }, [carregar, busca])
+  const ocupado = buscando || digitando
 
   const nome = (id: string) => pessoas.find(p => p.id === id)?.nome ?? 'Alguém da equipe'
   const link = (a: Resumo) => `${location.origin}/artefatos/${a.id}`
@@ -84,8 +89,8 @@ export function GaleriaArtefatos() {
           </div>
         </div>
         <div className={x.artefatosFerramentas}>
-          <label className={x.artefatosBusca}><Search size={15} />
-            <input value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar artefatos…" aria-label="Buscar artefatos" />
+          <label className={x.artefatosBusca}>{ocupado ? <Loader2 size={15} className={x.spin} /> : <Search size={15} />}
+            <input value={busca} onChange={e => { setBusca(e.target.value); setDigitando(true) }} placeholder="Buscar artefatos…" aria-label="Buscar artefatos" />
           </label>
           <div className={x.inboxAbas} role="tablist" aria-label="Filtro" style={{ border: 0, padding: 0 }}>
             {(['todos', 'meus', 'equipe'] as const).map(f => <button key={f} type="button" role="tab" aria-selected={filtro === f} onClick={() => setFiltro(f)}>
@@ -98,7 +103,7 @@ export function GaleriaArtefatos() {
         </div>
 
         {lista === null && <div className={x.artefatosGrade}>{[0, 1, 2].map(i => <div key={i} className={`${x.artefatoCartao} ${x.artefatoCartaoCarregando}`} />)}</div>}
-        {lista && !lista.length && <div className={x.artefatosVazio}>
+        {lista && !lista.length && !ocupado && <div className={x.artefatosVazio}>
           <Sparkles size={34} strokeWidth={1.4} />
           <b>{busca || filtro !== 'todos' ? 'Nenhum artefato encontrado' : 'Nenhum artefato ainda'}</b>
           {!busca && filtro === 'todos' && <span>
@@ -106,7 +111,7 @@ export function GaleriaArtefatos() {
             O artefato aparece aqui, pronto para a equipe abrir e compartilhar.
           </span>}
         </div>}
-        {lista && lista.length > 0 && <div className={x.artefatosGrade}>
+        {lista && lista.length > 0 && <div className={x.artefatosGrade} style={ocupado ? { opacity: .5, transition: 'opacity .15s' } : undefined} aria-busy={ocupado}>
           {lista.map(a => <div key={a.id} className={x.artefatoCartao}>
             <Link href={`/artefatos/${a.id}`} className={x.artefatoCartaoLink} aria-label={`Abrir ${tituloExibido(a.titulo)}`}>
               <Miniatura id={a.id} titulo={a.titulo} />

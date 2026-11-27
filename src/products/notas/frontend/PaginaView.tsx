@@ -438,7 +438,11 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
           {pagina.base_id && <PropriedadesItem pagina={pagina} editavel={editavel} />}
           {/* Item de base: os comentários ficam aqui, logo abaixo das propriedades (como no Notion). */}
           {pagina.base_id && !pagina.e_modelo && <Comentarios embutido paginaId={id} euId={user?.id ?? null} rascunho={null}
-            onIrPara={b => controle.current?.irPara(b)} onMudou={setDiscussoes} />}
+            onIrPara={b => controle.current?.irPara(b)} onMudou={lista => {
+              setDiscussoes(lista)
+              // O contador da linha/cartão na base muda na hora (sem esperar fechar o item).
+              avisarItem({ id, base_id: pagina.base_id!, comentarios: lista.filter(c => !c.discussao_id && !c.resolvido).length })
+            }} />}
           {editavel && vazia && !ehBase && !pagina.base_id && <div className={x.starter}>
             Pressione Enter para escrever, ou comece com:
             <div>

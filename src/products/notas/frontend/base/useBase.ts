@@ -7,7 +7,7 @@ import { useNotas } from '../NotasProvider'
 
 /** Item mudou em outro lugar da tela (painel lateral, página do item): a base atualiza sem recarregar. */
 export const EVENTO_ITEM = 'notas:item'
-export type MudancaItem = { id: string; base_id: string; titulo?: string; icone?: string | null; propriedades?: Record<string, unknown>; arquivado?: boolean }
+export type MudancaItem = { id: string; base_id: string; titulo?: string; icone?: string | null; propriedades?: Record<string, unknown>; arquivado?: boolean; comentarios?: number }
 export const avisarItem = (mudanca: MudancaItem) => window.dispatchEvent(new CustomEvent(EVENTO_ITEM, { detail: mudanca }))
 
 /** Estado de uma base: carrega, salva visões e esquema, cria e edita itens (a tela muda na hora; o servidor confirma). */
@@ -26,7 +26,12 @@ export function useBase(id: string) {
   }, [])
   useEffect(() => { atual.current = dados }, [dados])
 
-  const carregar = useCallback(() => notasApi<BaseCompleta>(`/bases/${id}`).then(setDados).catch(e => setErro((e as Error).message)), [id])
+  // Dois carregamentos ao mesmo tempo (fechar o item e outra mudança): vale só a resposta do pedido mais novo.
+  const pedido = useRef(0)
+  const carregar = useCallback(() => {
+    const n = ++pedido.current
+    return notasApi<BaseCompleta>(`/bases/${id}`).then(d => { if (n === pedido.current) setDados(d) }).catch(e => { if (n === pedido.current) setErro((e as Error).message) })
+  }, [id])
   useEffect(() => {
     let ativo = true
     notasApi<BaseCompleta>(`/bases/${id}`).then(d => { if (ativo) setDados(d) }).catch(e => { if (ativo) setErro((e as Error).message) })
@@ -41,7 +46,7 @@ export function useBase(id: string) {
       setDados(d => d && {
         ...d, itens: m.arquivado ? d.itens.filter(i => i.id !== m.id) : d.itens.map(i => i.id !== m.id ? i : {
           ...i, ...(m.titulo !== undefined ? { titulo: m.titulo } : {}), ...(m.icone !== undefined ? { icone: m.icone } : {}),
-          ...(m.propriedades ? { propriedades: m.propriedades } : {}),
+          ...(m.propriedades ? { propriedades: m.propriedades } : {}), ...(m.comentarios !== undefined ? { comentarios: m.comentarios } : {}),
         }),
       })
     }

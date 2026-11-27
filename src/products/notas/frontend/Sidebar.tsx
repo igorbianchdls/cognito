@@ -47,7 +47,7 @@ function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrasta
 }) {
   const { criar, arquivar, duplicar, favoritar, arvore, avisar, renomear, setRecolhida } = useNotas()
   const router = useRouter()
-  const [menu, setMenu] = useState<HTMLElement | null>(null)
+  const [menu, setMenu] = useState<HTMLElement | { x: number; y: number } | null>(null)
   const [renomeando, setRenomeando] = useState(false)
   const abrir = () => { router.push(`/notas/${no.id}`); if (ehCelular()) setRecolhida(true) }
   const ehBase = no.tipo === 'base'
@@ -57,6 +57,7 @@ function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrasta
 
   return <>
     <div role="treeitem" aria-expanded={no.filhos.length ? aberta : undefined} aria-selected={atual === no.id} tabIndex={0} data-notas-linha data-nivel={nivel}
+      onContextMenu={e => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }) }}
       className={`${x.row} ${atual === no.id ? x.rowOn : ''} ${menu ? x.rowMenuOpen : ''} ${marca === 'dentro' ? x.dropInside : marca === 'antes' ? x.dropBefore : marca === 'depois' ? x.dropAfter : ''}`}
       style={{ paddingLeft: 4 + nivel * 12 }} draggable={!renomeando}
       onClick={() => { if (!renomeando) abrir() }} onDoubleClick={e => { e.preventDefault(); setRenomeando(true) }}

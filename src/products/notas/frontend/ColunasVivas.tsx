@@ -3,7 +3,7 @@
 // Colunas no editor: aplica as larguras guardadas em cada bloco "colunas" (por um <style> fora do editor, sem mexer no
 // HTML que o editor controla), desenha as alças entre as colunas para arrastar a divisão e, depois que a pessoa move
 // blocos, tira a coluna que ficou vazia ou desfaz as colunas quando sobra uma só.
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { useEditorChange } from '@blocknote/react'
 import { ajusteDeColunas, escreverLarguras, lerLarguras, moverDivisao } from '@/products/notas/shared/colunas'
 import x from './notas.module.css'
@@ -26,10 +26,14 @@ function blocosDeColunas(blocos: Bloco[], lista: { id: string; larguras: number[
 }
 
 export function ColunasVivas({ editor, editavel, caixa }: { editor: EditorColunas; editavel: boolean; caixa: RefObject<HTMLDivElement | null> }) {
-  const [versao, setVersao] = useState(0)
+  // As colunas do documento, lidas fora da renderização (ler o documento enquanto renderiza atualiza outros
+  // componentes do editor no meio da renderização, e o React reclama).
+  const [colunas, setColunas] = useState<{ id: string; larguras: number[] }[]>([])
   const [alcas, setAlcas] = useState<Alca[]>([])
   const [arrasto, setArrasto] = useState<{ colunasId: string; i: number; x0: number; base: number[]; agora: number[] } | null>(null)
   const arrumando = useRef(false)
+  const arrastoAtual = useRef<typeof arrasto>(null)
+  useEffect(() => { arrastoAtual.current = arrasto }, [arrasto])
 
   // Depois de mover blocos (só quem está editando, não as mudanças que chegam de outra pessoa): arruma as colunas.
   const arrumar = useCallback(() => {
@@ -53,15 +57,14 @@ export function ColunasVivas({ editor, editavel, caixa }: { editor: EditorColuna
   const refazer = useRef(arrumar)
   useEffect(() => { refazer.current = arrumar }, [arrumar])
 
-  useEditorChange(() => { setVersao(v => v + 1); arrumar() }, editor as never)
+  useEditorChange(() => { setColunas(blocosDeColunas(editor.document)); arrumar() }, editor as never)
   // O conteúdo colaborativo entra no editor antes deste componente começar a ouvir as mudanças: confere de novo logo
   // depois de montar (senão as larguras guardadas só apareceriam na primeira edição).
   useEffect(() => {
-    const tempos = [0, 300, 1200].map(ms => setTimeout(() => setVersao(v => v + 1), ms))
+    const tempos = [0, 300, 1200].map(ms => setTimeout(() => setColunas(blocosDeColunas(editor.document)), ms))
     return () => tempos.forEach(clearTimeout)
   }, [editor])
 
-  const colunas = useMemo(() => { void versao; return blocosDeColunas(editor.document) }, [editor, versao])
   const larguraDe = (id: string, padrao: number[]) => arrasto?.colunasId === id ? arrasto.agora : padrao
   const estilo = colunas.map(c => larguraDe(c.id, c.larguras).map((f, k) =>
     `.bn-block[data-id="${CSS.escape(c.id)}"] > .bn-block-group > .bn-block-outer:nth-child(${k + 1}){flex:${f.toFixed(4)} 1 0 !important}`).join('')).join('')
@@ -99,11 +102,11 @@ export function ColunasVivas({ editor, editavel, caixa }: { editor: EditorColuna
     const alca = alcas.find(a => a.colunasId === arrasto.colunasId && a.i === arrasto.i)
     const largura = alca?.largura || 1
     const mover = (e: MouseEvent) => setArrasto(a => a && { ...a, agora: moverDivisao(a.base, a.i, (e.clientX - a.x0) / largura) })
+    // Gravar no editor fora da atualização de estado (o React roda essa atualização durante a renderização).
     const soltar = () => {
-      setArrasto(a => {
-        if (a) { try { editor.updateBlock(a.colunasId, { props: { larguras: escreverLarguras(a.agora) } }) } catch { /* bloco apagado no meio */ } }
-        return null
-      })
+      const a = arrastoAtual.current
+      setArrasto(null)
+      if (a) { try { editor.updateBlock(a.colunasId, { props: { larguras: escreverLarguras(a.agora) } }) } catch { /* bloco apagado no meio */ } }
     }
     window.addEventListener('mousemove', mover)
     window.addEventListener('mouseup', soltar, { once: true })

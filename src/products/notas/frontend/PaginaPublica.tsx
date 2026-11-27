@@ -3,7 +3,7 @@
 // Página publicada na web: só leitura, sem login e sem nada do Otto em volta (como o "Publicar" do Notion).
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
-import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, type PartialBlock } from '@blocknote/core'
+import { BlockNoteSchema, createCodeBlockSpec, defaultBlockSpecs, defaultInlineContentSpecs, type PartialBlock } from '@blocknote/core'
 import { pt } from '@blocknote/core/locales'
 import { useRef } from 'react'
 import { createReactBlockSpec, createReactInlineContentSpec, useCreateBlockNote } from '@blocknote/react'
@@ -15,6 +15,7 @@ import { estiloCapa } from './catalogo'
 import { Coluna, Colunas, Destaque, Incorporar } from './blocos'
 import { MolduraArtefato } from './ArtefatoView'
 import { ColunasVivas } from './ColunasVivas'
+import { codeBlockOptions, syntaxHighlighter } from '@blocknote/code-block'
 import x from './notas.module.css'
 
 // Na versão pública, menção vira só o nome (sem link para dentro do Otto) e base embutida vira um aviso.
@@ -35,12 +36,12 @@ const PessoaPublica = createReactInlineContentSpec(
   { render: ({ inlineContent }) => <span className={x.mencaoPessoa}>@{inlineContent.props.nome || 'pessoa'}</span> },
 )
 const schema = BlockNoteSchema.create({
-  blockSpecs: { ...defaultBlockSpecs, base: BaseEmbutida(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: BotaoPublico() },
+  blockSpecs: { ...defaultBlockSpecs, codeBlock: createCodeBlockSpec({ ...codeBlockOptions, defaultLanguage: 'text' }), base: BaseEmbutida(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: BotaoPublico() },
   inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: Mencao, pessoa: PessoaPublica },
 })
 
 function Conteudo({ conteudo }: { conteudo: unknown[] }) {
-  const editor = useCreateBlockNote({ schema, initialContent: conteudo.length ? conteudo as PartialBlock[] as never : undefined, dictionary: pt })
+  const editor = useCreateBlockNote({ schema, initialContent: conteudo.length ? conteudo as PartialBlock[] as never : undefined, dictionary: pt, extensions: [syntaxHighlighter] })
   const caixa = useRef<HTMLDivElement>(null)
   return <div ref={caixa} className={x.editorCaixa}>
     <BlockNoteView editor={editor} editable={false} theme="light" />

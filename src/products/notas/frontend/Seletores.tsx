@@ -1,15 +1,33 @@
 'use client'
 
-import { useState } from 'react'
-import { Loader2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Loader2, Search } from 'lucide-react'
+import { loadFrimousseData, searchEmojis } from '@blocknote/core/emoji-data'
+import { useLocal } from './local'
 import { enviarArquivoNotas } from './api'
 import { CAPAS, EMOJIS, emojiAleatorio, estiloCapa } from './catalogo'
 import { Menu } from './Menu'
 import x from './notas.module.css'
 
-/** Seletor de ícone: emojis, aleatório e remover (como o do Notion). */
+type DadosEmoji = Awaited<ReturnType<typeof loadFrimousseData>>
+
+/**
+ * Seletor de ícone (como o do Notion): busca em português (nome e apelidos do emoji), os usados por último, sugestões
+ * para páginas e todos os emojis por categoria; aleatório e remover.
+ */
 export function SeletorIcone({ ancora, onFechar, onEscolher }: { ancora: HTMLElement; onFechar: () => void; onEscolher: (icone: string | null) => void }) {
-  const escolher = (icone: string | null) => { onEscolher(icone); onFechar() }
+  const [busca, setBusca] = useState('')
+  const [dados, setDados] = useState<DadosEmoji | null>(null)
+  const [recentes, setRecentes] = useLocal<string[]>('notas:emojis-recentes', [])
+  useEffect(() => { let ativo = true; void loadFrimousseData('pt').then(d => { if (ativo) setDados(d) }).catch(() => undefined); return () => { ativo = false } }, [])
+  const escolher = (icone: string | null) => {
+    if (icone) setRecentes([icone, ...recentes.filter(e => e !== icone)].slice(0, 20))
+    onEscolher(icone); onFechar()
+  }
+  const encontrados = useMemo(() => dados && busca.trim() ? searchEmojis(dados.emojis, busca, 'pt').slice(0, 160) : null, [dados, busca])
+  const grade = (lista: string[]) => <div className={x.emojiGrid}>
+    {lista.map((emoji, i) => <button key={`${emoji}${i}`} type="button" aria-label={`Usar ${emoji}`} onClick={() => escolher(emoji)}>{emoji}</button>)}
+  </div>
   return <Menu ancora={ancora} onFechar={onFechar} className={x.picker}>
     <div className={x.pickerTabs}>
       <button type="button" className={x.tabOn}>Emoji</button>
@@ -17,8 +35,21 @@ export function SeletorIcone({ ancora, onFechar, onEscolher }: { ancora: HTMLEle
       <button type="button" onClick={() => escolher(emojiAleatorio())}>Aleatório</button>
       <button type="button" onClick={() => escolher(null)}>Remover</button>
     </div>
-    <div className={x.emojiGrid}>
-      {EMOJIS.map(emoji => <button key={emoji} type="button" aria-label={`Usar ${emoji}`} onClick={() => escolher(emoji)}>{emoji}</button>)}
+    <label className={x.emojiBusca}><Search size={14} />
+      <input autoFocus value={busca} onChange={e => setBusca(e.target.value)} placeholder="Buscar emoji (ex.: foguete, calendário)…" aria-label="Buscar emoji"
+        onKeyDown={e => { if (e.key === 'Enter' && encontrados?.[0]) escolher(encontrados[0].emoji) }} />
+    </label>
+    <div className={x.emojiRolagem}>
+      {encontrados
+        ? encontrados.length ? grade(encontrados.map(e => e.emoji)) : <div className={x.muted} style={{ padding: 16, fontSize: 13 }}>Nenhum emoji encontrado.</div>
+        : <>
+          {recentes.length > 0 && <><div className={x.emojiGrupo}>Recentes</div>{grade(recentes)}</>}
+          <div className={x.emojiGrupo}>Para páginas</div>{grade(EMOJIS)}
+          {dados?.categories.map(c => <div key={c.index}>
+            <div className={x.emojiGrupo}>{c.label}</div>
+            {grade(dados.emojis.filter(e => e.category === c.index && !e.countryFlag).map(e => e.emoji))}
+          </div>)}
+        </>}
     </div>
   </Menu>
 }

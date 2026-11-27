@@ -176,7 +176,11 @@
 .pickerTabs button:hover { background: var(--n-hover); }
 .pickerTabs .tabOn { color: var(--n-text); box-shadow: inset 0 -2px 0 var(--n-text); border-radius: 0; }
 .pickerTabs .spacer { flex: 1; }
-.emojiGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; max-height: 260px; overflow-y: auto; padding: 8px; }
+.emojiGrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; padding: 2px 8px 6px; }
+.emojiRolagem { max-height: 300px; overflow-y: auto; }
+.emojiGrupo { padding: 8px 12px 2px; color: var(--n-muted); font-size: 11px; font-weight: 500; }
+.emojiBusca { display: flex; align-items: center; gap: 6px; margin: 8px 8px 0; height: 30px; padding: 0 8px; border-radius: 6px; background: var(--n-hover); color: var(--n-muted); box-shadow: inset 0 0 0 1px var(--n-line); }
+.emojiBusca input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--n-text); font: inherit; font-size: 13px; }
 .emojiGrid button { height: 32px; border-radius: 4px; font-size: 22px; line-height: 1; }
 .emojiGrid button:hover { background: var(--n-hover); }
 .coverGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 10px; }
@@ -475,7 +479,8 @@
 .commentBox textarea { flex: 1; min-height: 24px; max-height: 160px; border: 0; outline: 0; resize: none; background: none; color: var(--n-text); font: inherit; field-sizing: content; }
 .commentBox button { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--n-blue) !important; color: #fff !important; }
 .commentBox button:disabled { opacity: .35; }
-.threadActions { display: grid; gap: 4px; justify-items: start; }
+.threadActions { display: grid; gap: 4px; justify-items: stretch; }
+.threadActions > button { justify-self: start; }
 .shareMenu { width: 380px; max-width: calc(100vw - 16px); }
 .presence { display: flex; align-items: center; margin-right: 4px; }
 .presence span { width: 24px; height: 24px; margin-left: -6px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 600; box-shadow: 0 0 0 2px var(--n-bg); }
@@ -697,7 +702,7 @@
 .timelineDiasCompacto span { overflow: visible; justify-content: start; place-items: center start; white-space: nowrap; font-size: 10px; }
 
 /* Comentários dentro do item de uma base: abaixo das propriedades, discussões primeiro e o campo no fim. */
-.comentariosItem { margin: 6px 0 4px; padding: 10px 0 2px; border-top: 1px solid var(--n-line); }
+.comentariosItem { margin: -4px 0 8px; padding: 0 0 12px; border-bottom: 1px solid var(--n-line); }
 .comentariosItemTopo { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px; }
 .comentariosItemTopo b { font-size: 13px; font-weight: 600; color: var(--n-muted); }
 .comentariosItemLista { display: flex; flex-direction: column; gap: 6px; }
@@ -737,3 +742,27 @@
 .artefatosVazio svg { color: #c4b5fd; }
 .artefatosVazio b { color: var(--n-text); font-size: 16px; }
 @media (max-width: 700px) { .artefatosPagina { padding: 24px 16px 64px; } .artefatosGrade { grid-template-columns: 1fr; } }
+
+/* Menu da alça do bloco (⋮⋮). */
+.menuBlocoItem { display: inline-flex; align-items: center; gap: 8px; width: 100%; font-size: 14px; }
+.menuBlocoItem svg { color: var(--n-muted); flex-shrink: 0; }
+.menuBlocoSeta { margin-left: auto; }
+.menuBlocoCor { width: 15px; text-align: center; font-weight: 600; color: var(--n-muted); text-decoration: underline; }
+.menuBlocoPerigo { color: #c4554d; padding-left: 23px; }
+/* Bloco aberto por link (#b-…): destaque amarelo por alguns segundos. */
+.blocoDestacado > .bn-block-content { background: rgba(255, 212, 0, .22); border-radius: 4px; transition: background .4s; }
+/* Bloco de código: fundo escuro (as cores de sintaxe são do tema escuro do GitHub), linguagem em cima e o botão de copiar. */
+.app :global(.bn-block-content[data-content-type=codeBlock]) { position: relative; display: flex; flex-direction: column; border-radius: 8px; background: #1e1e1e !important; color: #e1e4e8 !important; }
+.app :global(.bn-block-content[data-content-type=codeBlock] > div:has(> select)) { position: static !important; padding: 8px 10px 0; }
+.app :global(.bn-block-content[data-content-type=codeBlock] select) {
+  position: static !important; opacity: 1 !important; appearance: none; border: 0; background: transparent; color: rgba(255, 255, 255, .55); font-family: inherit; font-size: 12px; padding: 2px 6px; border-radius: 4px; cursor: pointer;
+}
+.app :global(.bn-block-content[data-content-type=codeBlock] select:hover) { background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .85); }
+.app :global(.bn-block-content[data-content-type=codeBlock] select option) { color: #1f1f1f; }
+.app :global(.bn-block-content[data-content-type=codeBlock] pre), .app :global(.bn-block-content[data-content-type=codeBlock] code) { font-size: 13.5px !important; line-height: 1.65 !important; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !important; }
+.app :global(.bn-block-content[data-content-type=codeBlock] pre) { margin: 0; padding: 4px 16px 14px !important; white-space: pre-wrap; }
+.codigoCopiar { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px; border-radius: 5px; font-size: 12px; color: rgba(255, 255, 255, .7); background: rgba(255, 255, 255, .08); opacity: 0; transition: opacity .12s; }
+.editorCaixa:hover .codigoCopiar, .codigoCopiar:focus-visible { opacity: 1; }
+.codigoCopiar:hover { color: #fff; background: rgba(255, 255, 255, .16); }
+/* Tabela simples alinhada com o texto (o editor punha um recuo de 9px). */
+.app :global(.bn-block-content[data-content-type=table] .tableWrapper) { padding-left: 0 !important; }

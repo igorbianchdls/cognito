@@ -4,14 +4,18 @@
 import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
-import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type Block, type PartialBlock } from '@blocknote/core'
+import { BlockNoteEditor, BlockNoteSchema, createCodeBlockSpec, defaultBlockSpecs, defaultInlineContentSpecs, filterSuggestionItems, type Block, type PartialBlock } from '@blocknote/core'
+import { codeBlockOptions, syntaxHighlighter } from '@blocknote/code-block'
 import { blocksToYXmlFragment, CollaborationExtension } from '@blocknote/core/yjs'
 import * as Y from 'yjs'
 import type { Awareness } from 'y-protocols/awareness'
 import { DICIONARIO, arrumarMenu } from './menuBarra'
 import { IconePagina } from './IconePagina'
 import { ColunasVivas } from './ColunasVivas'
-import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
+import { BotoesDoCodigo } from './BotoesDoCodigo'
+import { AcoesDoBlocoContexto, MenuDoBloco, semIds } from './MenuDoBloco'
+import { Menu } from './Menu'
+import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SideMenu, SideMenuController, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -21,7 +25,7 @@ import { BaseView } from './base/BaseView'
 import { Botao, Coluna, Colunas, Destaque, Incorporar, MencaoPessoa } from './blocos'
 import { usePessoas } from './base/pessoas'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
-import { enviarArquivoNotas } from './api'
+import { enviarArquivoNotas, notasApi, type Pagina } from './api'
 import { useNotas } from './NotasProvider'
 import x from './notas.module.css'
 
@@ -53,9 +57,15 @@ const BaseBloco = createReactBlockSpec(
   { type: 'base', propSchema: { baseId: { default: '' } }, content: 'none' },
   { render: ({ block }) => block.props.baseId ? <div style={{ width: '100%' }}><BaseView id={block.props.baseId} embutida /></div> : null },
 )
+/** Bloco de código com a linguagem escolhida e cores de sintaxe (as linguagens carregam só quando usadas). */
+export const BLOCO_DE_CODIGO = createCodeBlockSpec({
+  ...codeBlockOptions,
+  defaultLanguage: 'text',
+  supportedLanguages: { ...codeBlockOptions.supportedLanguages, text: { name: 'Texto', aliases: ['text', 'txt', 'texto'] } },
+})
 const schema = BlockNoteSchema.create({
   blockSpecs: {
-    ...defaultBlockSpecs, base: BaseBloco(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: Botao(),
+    ...defaultBlockSpecs, codeBlock: BLOCO_DE_CODIGO, base: BaseBloco(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: Botao(),
   },
   inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: MencaoPagina, pessoa: MencaoPessoa },
 })
@@ -128,7 +138,7 @@ function semear(fragment: Y.XmlFragment, conteudo: unknown[]) {
 export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase, aoCarregar, colaboracao, controle, onComentar, destaques }: EditorProps) {
   const escuro = useTemaEscuro()
   const pessoas = usePessoas()
-  const { arvore } = useNotas()
+  const { arvore, avisar } = useNotas()
   const inicial = useMemo(() => (Array.isArray(conteudo) && conteudo.length ? conteudo as PartialBlock[] : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- o conteúdo inicial só vale quando a página (chave) muda
     [chave])
@@ -137,8 +147,8 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   const editor = useCreateBlockNote({
     schema,
     ...(colaboracao
-      ? { extensions: [CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })] }
-      : { initialContent: inicial as never }),
+      ? { extensions: [syntaxHighlighter, CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })] }
+      : { initialContent: inicial as never, extensions: [syntaxHighlighter] }),
     dictionary: DICIONARIO,
     uploadFile: enviarArquivoNotas,
   }, [chave])
@@ -167,6 +177,40 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   }
 
   const caixa = useRef<HTMLDivElement>(null)
+  const [mover, setMover] = useState<{ bloco: { id: string }; ancora: HTMLElement } | null>(null)
+  const [buscaMover, setBuscaMover] = useState('')
+  const acoesDoBloco = useMemo(() => ({
+    avisar: (texto: string) => avisar(texto),
+    comentar: onComentar ? (b: { id: string; content?: unknown }) => onComentar(b.id, textoDoBloco(b)) : undefined,
+    mover: editavel ? (bloco: { id: string }, ancora: HTMLElement) => { setBuscaMover(''); setMover({ bloco, ancora }) } : undefined,
+  }), [avisar, onComentar, editavel])
+  /** Leva o bloco (com o que tem dentro) para o fim de outra página e tira daqui. */
+  const moverPara = async (destino: { id: string; titulo: string }) => {
+    const alvo = mover; setMover(null)
+    if (!alvo) return
+    const bloco = editor.getBlock(alvo.bloco.id)
+    if (!bloco) return
+    try {
+      const pagina = await notasApi<Pagina>(`/paginas/${destino.id}`)
+      await notasApi(`/paginas/${destino.id}`, { method: 'PATCH', json: { versao: pagina.versao, conteudo: [...(pagina.conteudo as unknown[] ?? []), semIds(bloco as never)] } })
+      editor.removeBlocks([bloco])
+      avisar(`Movido para “${tituloExibido(destino.titulo)}”.`)
+    } catch (e) { avisar((e as Error).message) }
+  }
+  // Link de um bloco (#b-<id>): ao abrir a página, rola até ele (o conteúdo colaborativo pode chegar um pouco depois).
+  useEffect(() => {
+    const id = location.hash.startsWith('#b-') ? decodeURIComponent(location.hash.slice(3)) : ''
+    if (!id) return
+    let tentativas = 0
+    const t = setInterval(() => {
+      const el = document.querySelector(`.bn-block[data-id="${CSS.escape(id)}"]`)
+      if (el || ++tentativas > 20) {
+        clearInterval(t)
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add(x.blocoDestacado); setTimeout(() => el.classList.remove(x.blocoDestacado), 2400) }
+      }
+    }, 250)
+    return () => clearInterval(t)
+  }, [editor])
   // Testes de tela (só em desenvolvimento): o documento do editor fica acessível para conferir a estrutura.
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return
@@ -182,7 +226,8 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     try { const b = editor.getTextCursorPosition().block; onComentar(b.id, textoDoBloco(b)) } catch { /* sem cursor */ }
   }}>
   {destaques && destaques.length > 0 && <style>{destaques.map(id => `.bn-block[data-id="${CSS.escape(id)}"] > .bn-block-content`).join(',') + '{background:rgba(255,212,0,.16);border-bottom:2px solid rgba(255,212,0,.6)}'}</style>}
-  <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
+  <AcoesDoBlocoContexto.Provider value={acoesDoBloco}>
+  <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false} sideMenu={false}
     onChange={() => onMudar(editor.document)}>
     <SuggestionMenuController triggerCharacter="/" getItems={async query => arrumarMenu(filterSuggestionItems([
       ...getDefaultReactSlashMenuItems(editor),
@@ -260,7 +305,21 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         }] : []),
       ])
     }} />
+    <SideMenuController sideMenu={props => <SideMenu {...props} dragHandleMenu={MenuDoBloco} />} />
   </BlockNoteView>
+  </AcoesDoBlocoContexto.Provider>
+  <BotoesDoCodigo editor={editor as never} caixa={caixa} />
+  {mover && <Menu ancora={mover.ancora} onFechar={() => setMover(null)} className={x.menuWide}>
+    <div className={x.menuLabel}>Mover para</div>
+    <div className={x.filterRow}><input autoFocus value={buscaMover} onChange={e => setBuscaMover(e.target.value)} placeholder="Buscar página…" aria-label="Buscar página de destino" style={{ flex: 1 }} /></div>
+    <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+      {(arvore?.paginas ?? []).filter(p => p.id !== paginaId && (p.tipo ?? 'pagina') === 'pagina' && !p.base_id
+        && tituloExibido(p.titulo).toLowerCase().includes(buscaMover.trim().toLowerCase())).slice(0, 30)
+        .map(p => <button key={p.id} type="button" className={x.menuItem} onClick={() => void moverPara(p)}>
+          <IconePagina icone={p.icone} tipo={p.tipo} tamanho={15} /><span>{tituloExibido(p.titulo)}</span>
+        </button>)}
+    </div>
+  </Menu>}
   <ColunasVivas editor={editor as never} editavel={editavel} caixa={caixa} />
   </div>
 }
