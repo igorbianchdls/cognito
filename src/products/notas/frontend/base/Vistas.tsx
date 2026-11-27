@@ -477,6 +477,9 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
         {comData.filter(c => c.periodo).map(({ item }) => <div key={item.id} className={x.timelineNome} role="button" tabIndex={0} onClick={() => abrir(item.id)}
           onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}>{item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span></div>)}
       </div>
+      {!comPeriodo.length && <div className={x.timelineVazia}>
+        {semData.length && editavel ? 'Arraste um item de “Sem data” para um dia, ou clique em Novo.' : 'Nenhum item com data. Clique em Novo para criar um.'}
+      </div>}
       <div className={x.timelineArea}>
         <div style={{ width: totalDias * largura, position: 'relative', minHeight: comPeriodo.length ? undefined : 96 }}
           onDragOver={e => { if (editavel && e.dataTransfer.types.includes('text/x-notas-item')) e.preventDefault() }} onDrop={soltarSemData}>
@@ -491,9 +494,6 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
             return <span key={d} style={{ width: largura }} className={`${d === hojeDia && largura >= 10 ? x.timelineHoje : ''} ${largura >= 10 && [0, 6].includes(semana) ? x.timelineFds : ''}`}>{rotulo}</span>
           })}</div>
           {indice(hojeDia) >= 0 && indice(hojeDia) < totalDias && <div className={x.timelineLinhaHoje} style={{ left: indice(hojeDia) * largura + largura / 2 }} />}
-          {!comPeriodo.length && <div className={x.timelineVazia}>
-            {semData.length && editavel ? 'Arraste um item de “Sem data” para um dia, ou clique em Novo.' : 'Nenhum item com data. Clique em Novo para criar um.'}
-          </div>}
           {comData.filter(c => c.periodo).map(({ item, periodo }) => {
             const a = arrasto?.id === item.id ? arrasto : null
             const ini = indice(periodo!.inicio) + (a?.modo === 'mover' ? a.dias : 0)

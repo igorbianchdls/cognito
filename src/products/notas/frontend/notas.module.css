@@ -165,7 +165,7 @@
 :global(.dark) .editor :global([data-content-type='codeBlock']) { background: rgba(255, 255, 255, .03) !important; color: rgba(255, 255, 255, .81) !important; }
 .editor :global([data-content-type='codeBlock']) :global(code) { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; }
 .editor :global([data-content-type='checkListItem'] input[type='checkbox']) { width: 16px; height: 16px; accent-color: var(--n-blue); cursor: pointer; }
-.editor :global([data-content-type='quote']) { color: inherit !important; border-left: 3px solid currentColor; }
+.editor :global([data-content-type='quote'] blockquote) { color: inherit; border-left: 3px solid currentColor; padding-left: 14px; }
 /* Código no meio do texto (`assim`), como no Notion: fundo cinza claro e letra avermelhada. */
 .editor :global(.bn-inline-content code) { font-family: SFMono-Regular, Menlo, Consolas, monospace; font-size: 85%; color: #eb5757; background: rgba(135, 131, 120, .15); border-radius: 4px; padding: .2em .4em; }
 :global(.dark) .editor :global(.bn-inline-content code) { color: #ff7369; background: rgba(255, 255, 255, .08); }
@@ -292,6 +292,9 @@
 .viewTabs { display: flex; align-items: center; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .viewTab { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border-radius: 6px; color: var(--n-muted); white-space: nowrap; flex-shrink: 0; }
 .viewTab:hover { background: var(--n-hover); }
+.maisVisoes { flex-shrink: 0; gap: 2px; }
+/* Na tela de toque não há alça ⋮⋮ (como no Notion no celular): ela ficava cortada na borda da tela. */
+@media (hover: none) and (max-width: 700px) { .app :global(.bn-side-menu) { display: none !important; } }
 .viewTabOn { color: var(--n-text); font-weight: 500; }
 .viewTabOn::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -6px; height: 2px; background: var(--n-text); }
 .barSpacer { flex: 1; }
@@ -545,7 +548,7 @@
 
 /* linha do tempo */
 .timeline { padding: 8px 0 16px; user-select: none; }
-.timelineGrade { display: flex; border-top: 1px solid var(--n-line); }
+.timelineGrade { position: relative; display: flex; border-top: 1px solid var(--n-line); }
 .timelineNomes { width: 220px; flex-shrink: 0; border-right: 1px solid var(--n-line); }
 .timelineCab { height: 52px; border-bottom: 1px solid var(--n-line); }
 .timelineNome { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 8px; font-weight: 500; cursor: pointer; border-bottom: 1px solid transparent; }
@@ -635,7 +638,7 @@
 .seletor:hover:not(:disabled) { background-color: var(--n-hover); }
 .seletor:disabled { cursor: default; opacity: .7; }
 .cellEditorNome { flex: 1; min-width: 0; padding: 0; margin: 0; border: 0; outline: 0; resize: none; overflow: hidden; background: transparent; color: var(--n-text); font: inherit; font-weight: inherit; line-height: inherit; field-sizing: content; caret-color: var(--n-blue); }
-.timelineVazia { position: absolute; left: 0; right: 0; top: 64px; display: flex; justify-content: center; color: var(--n-faint); font-size: 13px; pointer-events: none; }
+.timelineVazia { position: absolute; z-index: 1; left: 220px; right: 0; top: 64px; padding: 0 16px; display: flex; justify-content: center; text-align: center; color: var(--n-faint); font-size: 13px; pointer-events: none; }
 .timelineSemIcone { color: var(--n-faint); flex-shrink: 0; }
 
 /* Início: cartões com o lugar e quando mudou; boas-vindas no primeiro uso. */

@@ -78,10 +78,10 @@ export function PaginaPublica({ dados, token }: { dados: Dados; token: string })
   return <div className={x.app} style={{ height: 'auto', minHeight: '100vh', display: 'block' }}>
     <title>{`${dados.icone ? `${dados.icone} ` : ''}${tituloExibido(dados.titulo)}`}</title>
     {capa && <div className={x.cover} style={estiloCapa(capa, dados.capa_posicao)} />}
-    <div className={[x.doc, dados.largura_total || dados.base ? x.docWide : '', dados.fonte === 'serifa' ? x.serif : dados.fonte === 'mono' ? x.mono : '', dados.texto_pequeno ? x.small : ''].join(' ')}>
-      <div className={x.head} style={{ paddingLeft: 0, paddingRight: 0 }}>
+    <div className={[x.doc, capa ? x.withCover : '', dados.largura_total || dados.base ? x.docWide : '', dados.fonte === 'serifa' ? x.serif : dados.fonte === 'mono' ? x.mono : '', dados.texto_pequeno ? x.small : ''].join(' ')}>
+      <div className={x.head} style={{ paddingLeft: 0, paddingRight: 0, ...(capa && !dados.icone ? { paddingTop: 40 } : {}) }}>
         {dados.icone && <div className={x.icon} style={{ cursor: 'default' }}>{dados.icone}</div>}
-        <h1 className={x.title} style={{ margin: 0 }}>{tituloExibido(dados.titulo)}</h1>
+        <h1 className={x.title} style={{ margin: capa && dados.icone ? '8px 0 0' : 0 }}>{tituloExibido(dados.titulo)}</h1>
       </div>
       {dados.base
         ? <div className={x.table} role="grid" aria-label={tituloExibido(dados.titulo)}><div className={x.tableInner}>

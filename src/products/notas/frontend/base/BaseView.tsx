@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpDown, CalendarDays, GanttChart, ChevronDown, Columns3, Copy, FileText, Filter, LayoutGrid, List, Loader2, PenLine, Plus, Search, SlidersHorizontal, Table2, Trash2, type LucideIcon } from 'lucide-react'
 import { computar, filtrar, novoId, ordenar, SEM_VALOR, TIPOS_VISAO, TITULO, type TipoVisao, type Visao } from '@/products/notas/shared/bases'
@@ -38,7 +38,7 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   const api = useBase(id)
   const pessoas = usePessoas()
   const [visaoSalva, setVisaoSalva] = useLocal<string | null>(`notas:visao:${id}`, null)
-  const [menu, setMenu] = useState<{ tipo: 'filtros' | 'ordenacao' | 'propriedades' | 'novaVisao' | 'visao' | 'modelos'; ancora: HTMLElement } | null>(null)
+  const [menu, setMenu] = useState<{ tipo: 'filtros' | 'ordenacao' | 'propriedades' | 'novaVisao' | 'visao' | 'modelos' | 'maisVisoes'; ancora: HTMLElement } | null>(null)
   const [busca, setBusca] = useState<string | null>(null)
   const [aberto, setAberto] = useState<string | null>(null)
   // Esc fecha o item aberto ao lado (como no Notion), se não estiver digitando nem com um menu aberto.
@@ -66,6 +66,30 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   const itens = useMemo(() => !dados || !visao ? [] : ordenar(filtrar(calculados, visao, dados.base.esquema, busca ?? ''), visao.ordenacao, dados.base.esquema),
     [dados, visao, busca, calculados])
 
+  const carregada = Boolean(dados)
+  // Abas que não cabem na barra: ficam num "N mais" (como no Notion), e a aba aberta sempre aparece.
+  const abas = useRef<HTMLDivElement>(null)
+  const [escondidas, setEscondidas] = useState<string[]>([])
+  const medirAbas = useCallback(() => {
+    const caixa = abas.current
+    if (!caixa) return
+    const limite = caixa.scrollLeft + caixa.clientWidth + 1
+    const fora = [...caixa.querySelectorAll<HTMLElement>('[data-visao]')].filter(e => e.offsetLeft + e.offsetWidth > limite || e.offsetLeft < caixa.scrollLeft - 1).map(e => e.dataset.visao!)
+    setEscondidas(atual => atual.join() === fora.join() ? atual : fora)
+  }, [])
+  useLayoutEffect(() => {
+    abas.current?.querySelector<HTMLElement>(`[data-visao="${CSS.escape(visao?.id ?? '')}"]`)?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+    medirAbas()
+  }, [visao?.id, dados?.base.visoes.length, medirAbas])
+  useEffect(() => {
+    const caixa = abas.current
+    if (!caixa) return
+    const obs = new ResizeObserver(medirAbas)
+    obs.observe(caixa)
+    return () => obs.disconnect()
+    // A barra só existe depois que a base carrega.
+  }, [medirAbas, carregada])
+
   if (api.erro && !dados) return <div className={x.empty} style={{ height: 'auto', padding: 16 }}>{api.erro}</div>
   if (!dados || !visao) return <div style={{ padding: 16 }}><Loader2 size={18} className={x.spin} /></div>
   const { base } = dados
@@ -78,7 +102,7 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
 
   const novaVisao = (tipo: TipoVisao) => {
     const nova: Visao = {
-      id: novoId(), nome: NOME_VISAO[tipo], tipo, filtros: [], juncao: 'e', ordenacao: [], visiveis: base.esquema.map(p => p.id).slice(0, 6),
+      id: novoId(), nome: nomeNovo(NOME_VISAO[tipo], base.visoes.map(v => v.nome)), tipo, filtros: [], juncao: 'e', ordenacao: [], visiveis: base.esquema.map(p => p.id).slice(0, 6),
       agruparPor: tipo === 'quadro' ? base.esquema.find(p => p.tipo === 'status')?.id ?? base.esquema.find(p => p.tipo === 'selecao')?.id ?? null : null,
       dataPor: tipo === 'calendario' || tipo === 'linha_tempo' ? base.esquema.find(p => p.tipo === 'data')?.id ?? null : null,
       larguras: {}, calculos: {}, colunasOcultas: [], tamanhoCartao: 'medio', capaCartao: true,
@@ -92,16 +116,19 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   return <LigadasContexto.Provider value={ligadas}><div className={`${x.base} ${embutida ? x.baseEmbed : ''}`} contentEditable={false} suppressContentEditableWarning>
     {embutida && <div className={x.baseTitle}><Link href={`/notas/${id}`}>{base.icone ? `${base.icone} ` : ''}{tituloExibido(base.titulo)}</Link></div>}
     <div className={x.baseBar}>
-      <div className={x.viewTabs} role="tablist" aria-label="Visões">
+      <div ref={abas} className={x.viewTabs} role="tablist" aria-label="Visões" onScroll={medirAbas}>
         {base.visoes.map(v => {
           const Icone = ICONE_VISAO[v.tipo]
-          return <button key={v.id} type="button" role="tab" aria-selected={v.id === visao.id} className={`${x.viewTab} ${v.id === visao.id ? x.viewTabOn : ''}`}
+          return <button key={v.id} data-visao={v.id} type="button" role="tab" aria-selected={v.id === visao.id} className={`${x.viewTab} ${v.id === visao.id ? x.viewTabOn : ''}`}
             onClick={e => { if (v.id === visao.id && editavel) setMenu({ tipo: 'visao', ancora: e.currentTarget }); else setVisaoSalva(v.id) }}>
             <Icone size={14} />{v.nome}
           </button>
         })}
-        {editavel && <button type="button" className={x.barBtn} aria-label="Nova visão" title="Nova visão" onClick={e => setMenu({ tipo: 'novaVisao', ancora: e.currentTarget })}><Plus size={16} /></button>}
       </div>
+      {escondidas.length > 0 && <button type="button" className={`${x.viewTab} ${x.maisVisoes}`} onClick={e => setMenu({ tipo: 'maisVisoes', ancora: e.currentTarget })}>
+        {escondidas.length} mais<ChevronDown size={14} />
+      </button>}
+      {editavel && <button type="button" className={x.barBtn} aria-label="Nova visão" title="Nova visão" onClick={e => setMenu({ tipo: 'novaVisao', ancora: e.currentTarget })}><Plus size={16} /></button>}
       <span className={x.barSpacer} />
       <button type="button" className={`${x.barBtn} ${filtrosAtivos ? x.barBtnOn : ''}`} onClick={e => setMenu({ tipo: 'filtros', ancora: e.currentTarget })} title="Filtrar">
         <Filter size={15} />{filtrosAtivos || ''}<span className="sr-only">Filtrar</span>
@@ -144,6 +171,10 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
       <div className={x.menuLabel}>Nova visão</div>
       {TIPOS_VISAO.map(t => <ItemMenu key={t} icone={ICONE_VISAO[t]} onClick={() => novaVisao(t)}>{NOME_VISAO[t]}</ItemMenu>)}
     </Menu>}
+    {menu?.tipo === 'maisVisoes' && <Menu ancora={menu.ancora} onFechar={() => setMenu(null)}>
+      <div className={x.menuLabel}>Visões</div>
+      {base.visoes.filter(v => escondidas.includes(v.id)).map(v => <ItemMenu key={v.id} icone={ICONE_VISAO[v.tipo]} onClick={() => { setVisaoSalva(v.id); setMenu(null) }}>{v.nome}</ItemMenu>)}
+    </Menu>}
     {menu?.tipo === 'visao' && <Menu ancora={menu.ancora} onFechar={() => setMenu(null)}>
       <input autoFocus className={x.menuInput} defaultValue={visao.nome} aria-label="Nome da visão" maxLength={100}
         onBlur={e => { const nome = e.target.value.trim(); if (nome && nome !== visao.nome) mudarVisao({ nome }) }}
@@ -180,4 +211,12 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
       <PaginaView key={aberto} id={aberto} lateral onFechar={() => { setAberto(null); void api.carregar() }} />
     </div>}
   </div></LigadasContexto.Provider>
+}
+
+/** Nome de uma visão nova sem repetir os que já existem ("Tabela", "Tabela 2", "Tabela 3"…). */
+function nomeNovo(nome: string, usados: string[]) {
+  if (!usados.includes(nome)) return nome
+  let n = 2
+  while (usados.includes(`${nome} ${n}`)) n++
+  return `${nome} ${n}`
 }
