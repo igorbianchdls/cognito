@@ -1,9 +1,9 @@
-// Produtos novos que dependem de tabelas ainda não criadas no banco: ficam fora do menu até a migração ser aplicada.
-// Para ligar, defina a variável na Vercel (valor "1") e publique de novo. Quem abrir o endereço direto antes disso vê
-// "em preparação" (as rotas respondem 503 quando a tabela não existe).
+// Produtos que dependeram de migração antes de aparecer no menu. As tabelas já existem no banco (migrações de
+// 20261126050000 a 20261126100000 aplicadas), então ficam ligados; para esconder de novo, defina a variável na Vercel
+// com o valor "0" e publique. Quem abrir o endereço direto sem as tabelas vê "em preparação" (as rotas respondem 503).
 export const RECURSOS = {
-  /** Notas (migrações 20261126060000_notas_schema e 20261126070000_notas_bases). */
-  notas: process.env.NEXT_PUBLIC_RECURSO_NOTAS === '1',
-  /** Marketing → Vídeos (migração 20261126050000_marketing_videos). */
-  videos: process.env.NEXT_PUBLIC_RECURSO_VIDEOS === '1',
+  /** Notas (migrações notas_schema, notas_bases, notas_etapa3, notas_etapa4 e notas_etapa5). */
+  notas: process.env.NEXT_PUBLIC_RECURSO_NOTAS !== '0',
+  /** Marketing → Vídeos (migração marketing_videos). */
+  videos: process.env.NEXT_PUBLIC_RECURSO_VIDEOS !== '0',
 }
