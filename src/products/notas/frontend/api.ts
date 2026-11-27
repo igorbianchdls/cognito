@@ -6,7 +6,7 @@ export type Pagina = PaginaResumo & {
   capa: string | null; capa_posicao: number; conteudo: unknown[]; largura_total: boolean; texto_pequeno: boolean
   fonte: 'padrao' | 'serifa' | 'mono'; bloqueada: boolean; versao: number; created_by: string; updated_by: string | null
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
-  tipo: 'pagina' | 'base'; base_id: string | null; e_modelo?: boolean; geracao_yjs: number; estado_yjs?: string | null
+  tipo: 'pagina' | 'base' | 'artefato'; base_id: string | null; e_modelo?: boolean; geracao_yjs: number; estado_yjs?: string | null
   acesso: 'empresa' | 'restrito'; restricao_id: string | null; publica: boolean; canal?: string | null; esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>
 }
 export type BaseCompleta = { base: Pagina; itens: Item[]; ligadas: BaseLigada[] }

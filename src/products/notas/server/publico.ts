@@ -6,9 +6,11 @@ import type { Item, Propriedade, Visao } from '../shared/bases'
 const TOKEN = /^[A-Za-z0-9_-]{20,100}$/
 
 export type PaginaPublica = {
-  titulo: string; icone: string | null; capa: string | null; capa_posicao: number; conteudo: unknown[]; tipo: 'pagina' | 'base'
+  titulo: string; icone: string | null; capa: string | null; capa_posicao: number; conteudo: unknown[]; tipo: 'pagina' | 'base' | 'artefato'
   largura_total: boolean; texto_pequeno: boolean; fonte: string; updated_at: string
   base?: { esquema: Propriedade[]; visao: Visao; itens: Omit<Item, 'created_by' | 'updated_by'>[] }
+  /** Artefato publicado: o HTML atual (a página pública mostra numa moldura isolada). */
+  html?: string
 }
 
 async function paginaPorToken(token: string) {
@@ -22,6 +24,10 @@ async function paginaPorToken(token: string) {
 
 export async function lerPaginaPublica(token: string): Promise<PaginaPublica> {
   const { id, workspace_id: _ws, esquema, visoes, ...pagina } = await paginaPorToken(token)
+  if (pagina.tipo === 'artefato') {
+    const [artefato] = await consultaDoServidor<{ html: string }>('SELECT html FROM notas.artefatos WHERE pagina_id = $1', [id])
+    return { ...pagina, html: artefato?.html ?? '' }
+  }
   if (pagina.tipo !== 'base') return pagina
   // Base publicada: a primeira visão e os itens (sem quem criou/editou).
   const itens = await consultaDoServidor<Omit<Item, 'created_by' | 'updated_by'>>(`SELECT id, titulo, icone, posicao, propriedades, capa, created_at, updated_at

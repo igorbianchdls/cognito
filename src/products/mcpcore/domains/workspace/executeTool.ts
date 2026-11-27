@@ -10,10 +10,11 @@ import { asMember, type Connect } from '../editor/server/database'
 import { driveTools } from '../drive/tools/catalog'
 import { analyticsTools } from '../analytics/tools/catalog'
 import { inboxTools } from '../inbox/tools/catalog'
+import { notasTools } from '../notas/tools/catalog'
 import type { ToolContext, WorkspaceTool } from './context'
 
-export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools, ...inboxTools]
-export const WORKSPACE_PREFIXES = ['drive_', 'analytics_', 'inbox_']
+export const workspaceTools: WorkspaceTool[] = [...driveTools, ...analyticsTools, ...inboxTools, ...notasTools]
+export const WORKSPACE_PREFIXES = ['drive_', 'analytics_', 'inbox_', 'notas_']
 export const isWorkspaceTool = (name: string) => WORKSPACE_PREFIXES.some(p => name.startsWith(p))
 export const workspaceWrites = (name: unknown) => workspaceTools.some(t => t.write && t.name === name)
 

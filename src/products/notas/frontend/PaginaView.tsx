@@ -26,6 +26,7 @@ import { PropriedadesItem } from './base/PropriedadesItem'
 import { avisarItem } from './base/useBase'
 import { MODELOS_PAGINA, conteudoDoModelo, type ModeloPagina } from '@/products/notas/shared/modelos'
 import { Historico } from './Historico'
+import { ArtefatoView } from './ArtefatoView'
 import { estiloCapa } from './catalogo'
 import { Chave, ItemMenu, Menu } from './Menu'
 import { EVENTO_RENOMEAR, useNotas } from './NotasProvider'
@@ -270,6 +271,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const trilha = arvore ? caminho(arvore.paginas, id) : []
   const editavel = pagina.pode_editar && !pagina.bloqueada && !pagina.arquivada_em && !conflito
   const ehBase = pagina.tipo === 'base'
+  const ehArtefato = pagina.tipo === 'artefato'
   const classes = [x.doc, pagina.largura_total || (ehBase && !lateral) ? x.docWide : '', pagina.capa ? x.withCover : '',
     pagina.fonte === 'serifa' ? x.serif : pagina.fonte === 'mono' ? x.mono : '', pagina.texto_pequeno ? x.small : ''].join(' ')
 
@@ -342,7 +344,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       {!lateral && <button type="button" className={x.topBtn} aria-label="Compartilhar" onClick={e => setCompartilhar(e.currentTarget)}>
         <UserPlus size={17} className={x.soCelular} /><span className={x.soComputador}>Compartilhar</span>
       </button>}
-      {!ehBase && <button type="button" className={x.topBtn} aria-label="Comentários" title="Comentários (Ctrl+Alt+M comenta o bloco)"
+      {!ehBase && !ehArtefato && <button type="button" className={x.topBtn} aria-label="Comentários" title="Comentários (Ctrl+Alt+M comenta o bloco)"
         onClick={() => setComentarios(comentarios ? null : { rascunho: null })}><MessageSquare size={17} />{abertas.length > 0 && <small>{abertas.length}</small>}</button>}
       <button type="button" className={`${x.topBtn} ${pagina.favorita ? x.starOn : ''}`} aria-label={pagina.favorita ? 'Remover dos favoritos' : 'Favoritar'}
         onClick={() => { setPagina({ ...pagina, favorita: !pagina.favorita }); void favoritar(id, !pagina.favorita) }}>
@@ -352,6 +354,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     </header>
 
     {menu && <Menu ancora={menu} onFechar={() => setMenu(null)} alinhar="fim">
+      {!ehArtefato && <>
       <div className={x.menuLabel}>Estilo</div>
       <div className={x.fontChoices}>
         {(['padrao', 'serifa', 'mono'] as const).map(fonte => <button key={fonte} type="button" disabled={!editavel}
@@ -364,13 +367,14 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       <ItemMenu onClick={() => editavel && mudar({ texto_pequeno: !pagina.texto_pequeno }, true)} direita={<Chave ligada={pagina.texto_pequeno} />}>Texto pequeno</ItemMenu>
       <ItemMenu onClick={() => editavel && mudar({ largura_total: !pagina.largura_total }, true)} direita={<Chave ligada={pagina.largura_total} />}>Largura total</ItemMenu>
       <div className={x.menuSep} />
+      </>}
       {pagina.pode_editar && !pagina.arquivada_em && <ItemMenu icone={pagina.bloqueada ? Unlock : Lock} onClick={() => mudar({ bloqueada: !pagina.bloqueada }, true)}
         direita={<Chave ligada={pagina.bloqueada} />}>Bloquear página</ItemMenu>}
       <ItemMenu icone={Link2} onClick={() => { setMenu(null); void navigator.clipboard.writeText(`${location.origin}/notas/${id}`).then(() => avisar('Link copiado.')) }}>Copiar link</ItemMenu>
       {!pagina.base_id && <ItemMenu icone={Copy} onClick={() => { setMenu(null); void salvar().then(() => duplicar(id)) }}>Duplicar</ItemMenu>}
-      {!ehBase && <ItemMenu icone={History} onClick={() => { setMenu(null); void salvar().then(() => setHistorico(true)) }}>Histórico de versões</ItemMenu>}
+      {!ehBase && !ehArtefato && <ItemMenu icone={History} onClick={() => { setMenu(null); void salvar().then(() => setHistorico(true)) }}>Histórico de versões</ItemMenu>}
       <div className={x.menuSep} />
-      {ehBase
+      {ehArtefato ? null : ehBase
         ? <ItemMenu icone={Download} onClick={() => void exportar('csv')}>Exportar CSV</ItemMenu>
         : <><ItemMenu icone={Download} onClick={() => void exportar('md')}>Exportar Markdown</ItemMenu>
           <ItemMenu icone={Download} onClick={() => void exportar('html')}>Exportar HTML</ItemMenu></>}
@@ -392,7 +396,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       {pagina.pode_editar && <button type="button" className={x.bannerBtn} onClick={() => mudar({ bloqueada: false }, true)}>Desbloquear</button>}
     </div>}
 
-    <div className={x.scroll}>
+    {ehArtefato ? <ArtefatoView key={id} paginaId={id} titulo={pagina.titulo} editavel={editavel} onMudou={() => void recarregar()} /> : <div className={x.scroll}>
       {pagina.capa && <div className={`${x.cover} ${reposicionando !== null ? x.coverMoving : ''}`} style={estiloCapa(pagina.capa, posicaoCapa)}
         onMouseDown={e => { if (reposicionando !== null) { e.preventDefault(); arrastoCapa.current = { y: e.clientY, inicio: posicaoCapa } } }}>
         {reposicionando !== null && <span className={x.coverHint}>Arraste a imagem para reposicionar</span>}
@@ -448,7 +452,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
               onMudar={blocos => { setVazia(false); mudar({ conteudo: blocos }) }} />
           </div>}
       </div>
-    </div>
+    </div>}
 
     {menuModelos && <Menu ancora={menuModelos} onFechar={() => setMenuModelos(null)} className={x.menuWide}>
       <div className={x.menuLabel}>Modelos</div>

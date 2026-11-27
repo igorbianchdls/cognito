@@ -351,11 +351,52 @@ describe('Notas — telas de ponta a ponta', () => {
     assert.ok(!foco.linha.includes('Tarefa 2'), 'a seta para baixo saiu da linha da Tarefa 2')
   })
 
+  test('artefato: roda isolado (sem o Otto, sem cookies, sem rede), versões, restaurar e código', async () => {
+    const { execFileSync } = await import('node:child_process')
+    const banco = process.env.NOTAS_TEST_DB_URL ?? 'postgresql://postgres@localhost:54329/postgres'
+    const v1 = `<!doctype html><html><head><title>Painel</title></head><body><h1>Painel versão um</h1><p id="r">rodando</p><script>
+      var r = [];
+      try { r.push('pai:' + (parent.document.title ? 'aberto' : 'aberto')) } catch (e) { r.push('pai:bloqueado') }
+      try { r.push('cookie:' + (document.cookie, 'visivel')) } catch (e) { r.push('cookie:bloqueado') }
+      var fim = function (x) { r.push(x); document.getElementById('r').textContent = r.join(' ') }
+      try { fetch('/api/notas/arvore').then(function () { fim('rede:aberta') }, function () { fim('rede:bloqueada') }) } catch (e) { fim('rede:bloqueada') }
+    </script></body></html>`
+    const v2 = '<!doctype html><html><body><h1>Painel versão dois</h1></body></html>'
+    const q = (marca, texto) => `$${marca}$${texto}$${marca}$`
+    const sql = `WITH p AS (INSERT INTO notas.paginas (workspace_id, espaco, titulo, tipo, created_by, posicao, conteudo_texto)
+        VALUES ('org_a', 'equipe', 'Painel do agente', 'artefato', 'ana', 999999, 'Painel') RETURNING id),
+      a AS (INSERT INTO notas.artefatos (pagina_id, workspace_id, html, versao, updated_by) SELECT id, 'org_a', ${q('h2', v2)}, 2, 'ana' FROM p),
+      v AS (INSERT INTO notas.artefato_versoes (pagina_id, workspace_id, versao, html, resumo, created_by)
+        SELECT id, 'org_a', 1, ${q('h1', v1)}, 'Primeira versão', 'ana' FROM p UNION ALL SELECT id, 'org_a', 2, ${q('h2', v2)}, 'Título novo', 'bia' FROM p)
+      SELECT id FROM p`
+    const id = execFileSync('psql', ['-qAt', banco, '-c', sql]).toString().trim()
+    await page.goto(`${BASE}/notas/${id}`, { waitUntil: 'domcontentloaded' })
+    const moldura = page.frameLocator('iframe[title="Painel do agente"]')
+    await moldura.getByText('Painel versão dois').waitFor()
+    assert.equal(await page.locator('iframe[title="Painel do agente"]').getAttribute('sandbox'), 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-modals allow-downloads')
+    await page.getByText(/Artefato · versão 2/).waitFor()
+    await page.getByRole('button', { name: 'Versões' }).click()
+    await page.getByText('Primeira versão').click()
+    await page.getByText('Vendo a versão 1.').waitFor()
+    await moldura.getByText('pai:bloqueado cookie:bloqueado rede:bloqueada').waitFor()
+    await foto('ui-19-artefato')
+    await page.getByRole('button', { name: 'Restaurar esta versão' }).click()
+    await page.getByText(/Artefato · versão 3/).waitFor()
+    await moldura.getByText('Painel versão um').waitFor()
+    await page.getByRole('button', { name: 'Código' }).click()
+    await page.locator('pre').getByText('Painel versão um').waitFor()
+    // Na barra lateral; e a página não oferece editor nem comentários.
+    await page.locator('[role=treeitem]', { hasText: 'Painel do agente' }).waitFor()
+    assert.equal(await page.locator('.bn-editor').count(), 0)
+    assert.equal(await page.getByRole('button', { name: 'Comentários' }).count(), 0)
+  })
+
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui
     // e a importação segue sem ela (é o comportamento esperado). Em produção o bucket "notas" existe.
     const semStorage = e => /\/arquivos|status of 500/.test(e) && erros.some(x => /500 POST (.*api\/notas)?\/arquivos/.test(x))
-    const relevantes = erros.filter(e => !/clerk|ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED/i.test(e) && !semStorage(e))
+    // A política do artefato recusando a rede é o esperado (o teste do artefato confere isso).
+    const relevantes = erros.filter(e => !/clerk|ERR_TUNNEL_CONNECTION_FAILED|ERR_NAME_NOT_RESOLVED|Content Security Policy|Failed to fetch/i.test(e) && !semStorage(e))
     if (relevantes.length) console.error('Erros encontrados:', JSON.stringify(relevantes, null, 1))
     assert.deepEqual(relevantes, [])
   })

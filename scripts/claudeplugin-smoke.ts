@@ -70,7 +70,7 @@ async function main() {
     const listed=body.result.tools as Listed[]
     assert.equal(listed.length,erpTools.length+erpActions.length+1+whatsappLocalTools.length+workspaceTools.length)
     for (const absent of ['abrir_painel','ler_configuracoes','atualizar_configuracoes','search_mentions']) assert(!listed.some(t=>t.name===absent),absent)
-    for (const tool of listed.filter(t=>!/^(whatsapp|drive|analytics|inbox)_/.test(t.name))) {
+    for (const tool of listed.filter(t=>!/^(whatsapp|drive|analytics|inbox|notas)_/.test(t.name))) {
       const write=erpActions.some(a=>a.name===tool.name)||Boolean(erpTools.find(candidate=>candidate.name===tool.name)?.write)
       assert(tool.name.length<=64&&/^[a-z_]+$/.test(tool.name),tool.name)
       assert(tool.title&&tool.title.length>0,`title ${tool.name}`)

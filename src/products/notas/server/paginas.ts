@@ -253,6 +253,13 @@ export function duplicarPagina(ctx: Contexto, id: string) {
         FROM notas.paginas WHERE id = $5`,
       [novosIds.get(p.id), mae, indice === 0 ? posicaoEntre(original.posicao, vizinhas[0]?.posicao ?? null) : p.posicao,
         indice === 0 ? `${original.titulo || 'Sem título'} (cópia)`.slice(0, 500) : p.titulo, p.id, base]).catch(semPermissao)
+      // Artefato: a cópia leva o HTML atual (como versão 1 dela).
+      if (p.tipo === 'artefato') {
+        await client.query('INSERT INTO notas.artefatos (pagina_id, workspace_id, html) SELECT $2, workspace_id, html FROM notas.artefatos WHERE pagina_id = $1',
+          [p.id, novosIds.get(p.id)]).catch(semPermissao)
+        await client.query(`INSERT INTO notas.artefato_versoes (pagina_id, workspace_id, versao, html, resumo)
+          SELECT $2, workspace_id, 1, html, 'Cópia' FROM notas.artefatos WHERE pagina_id = $1`, [p.id, novosIds.get(p.id)]).catch(semPermissao)
+      }
     }
     // A cópia herda a restrição do lugar onde ficou (os convidados não são copiados).
     await recalcularRestricao(client, novosIds.get(id)!)

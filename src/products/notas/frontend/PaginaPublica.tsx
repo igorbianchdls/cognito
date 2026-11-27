@@ -12,6 +12,7 @@ import { textoDoValor, formatarData, formatarNumero, valorDe, type Item, type Pr
 import type { PaginaPublica as Dados } from '@/products/notas/server/publico'
 import { estiloCapa } from './catalogo'
 import { Coluna, Colunas, Destaque, Incorporar } from './blocos'
+import { MolduraArtefato } from './ArtefatoView'
 import x from './notas.module.css'
 
 // Na versão pública, menção vira só o nome (sem link para dentro do Otto) e base embutida vira um aviso.
@@ -50,6 +51,11 @@ function valorTexto(item: Omit<Item, 'created_by' | 'updated_by'>, p: Propriedad
 }
 
 export function PaginaPublica({ dados, token }: { dados: Dados; token: string }) {
+  // Artefato publicado: a página inteira é a moldura isolada (o HTML não enxerga o Otto nem a rede).
+  if (dados.tipo === 'artefato') return <div style={{ position: 'fixed', inset: 0, display: 'flex', background: '#fff' }}>
+    <title>{`${dados.icone ? `${dados.icone} ` : ''}${tituloExibido(dados.titulo)}`}</title>
+    <MolduraArtefato html={dados.html ?? ''} titulo={dados.titulo} className={x.artefatoMoldura} />
+  </div>
   // Imagens do conteúdo e capa passam pela rota pública do link (que confere o token).
   const trocar = (texto: string) => texto.split('/api/notas/arquivos/').join(`/api/notas/publico/${token}/arquivos/`)
   const conteudo = JSON.parse(trocar(JSON.stringify(dados.conteudo ?? []))) as unknown[]

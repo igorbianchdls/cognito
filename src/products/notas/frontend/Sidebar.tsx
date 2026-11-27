@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useOrganization } from '@clerk/nextjs'
 import {
-  ChevronRight, ChevronsLeft, Copy, LayoutGrid, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Table2, Trash2, Undo2,
+  ChevronRight, ChevronsLeft, Copy, LayoutGrid, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Trash2, Undo2,
 } from 'lucide-react'
 import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore } from '@/products/notas/shared/arvore'
 import { notasApi, type ItemLixeira } from './api'
@@ -14,6 +14,7 @@ import { useLocal } from './local'
 import { CaixaDeEntrada } from './CaixaDeEntrada'
 import { useNotas } from './NotasProvider'
 import { ABRIR_IMPORTACAO, ABRIR_MENU_OTTO } from './eventos'
+import { IconePagina } from './IconePagina'
 import x from './notas.module.css'
 
 const LARGURA_PADRAO = 248, LARGURA_MIN = 200, LARGURA_MAX = 480
@@ -78,7 +79,7 @@ function Linha({ no, nivel, abertas, alternar, atual, soltar, setSoltar, arrasta
       }}
       onDrop={e => { e.preventDefault(); if (marca) onSoltar(no, marca); setSoltar(null) }}>
       <span className={x.rowIcon}>
-        {no.icone ? <span className={x.emoji}>{no.icone}</span> : ehBase ? <Table2 size={16} className={x.glyph} /> : <FileText size={16} className={x.glyph} />}
+        {no.icone ? <span className={x.emoji}>{no.icone}</span> : <IconePagina tipo={no.tipo} tamanho={16} className={x.glyph} />}
         <button type="button" className={`${x.toggle} ${aberta ? x.toggleOpen : ''}`} aria-label={aberta ? 'Recolher' : 'Expandir'}
           onClick={e => { e.stopPropagation(); alternar(no.id) }}><ChevronRight size={14} /></button>
       </span>
