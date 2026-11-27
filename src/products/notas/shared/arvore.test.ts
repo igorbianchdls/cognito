@@ -49,3 +49,11 @@ test('texto dos blocos para a busca', () => {
   assert.equal(textoDoConteudo(blocos), 'Plano de vendas Meta de dezembro detalhe Gráfico Ver Metas 2027 célula')
   assert.equal(tituloExibido('  '), 'Sem título')
 })
+
+test('pessoasMencionadas acha @pessoas em qualquer nível, sem repetir', async () => {
+  const { pessoasMencionadas, textoDoConteudo } = await import('./arvore')
+  const blocos = [{ type: 'paragraph', content: [{ type: 'text', text: 'Oi ' }, { type: 'pessoa', props: { userId: 'bia', nome: 'Bia' } }],
+    children: [{ type: 'paragraph', content: [{ type: 'pessoa', props: { userId: 'bia', nome: 'Bia' } }, { type: 'pessoa', props: { userId: 'vic', nome: 'Vic' } }] }] }]
+  assert.deepEqual(pessoasMencionadas(blocos), ['bia', 'vic'])
+  assert.match(textoDoConteudo(blocos), /@Bia/)
+})

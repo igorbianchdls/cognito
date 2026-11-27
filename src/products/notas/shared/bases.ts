@@ -40,6 +40,10 @@ export type Propriedade = {
   relacao?: string; alvo?: string; calculo?: Calculo | 'mostrar'
   /** Fórmula: a expressão (ver formula.ts). */
   expressao?: string
+  /** Relação nos dois sentidos: a propriedade de relação na outra base que espelha esta. */
+  reciproca?: string
+  /** Data: avisar na caixa de entrada no dia ou um dia antes. */
+  lembrete?: 'no_dia' | 'um_dia_antes'
 }
 
 /** "titulo" é o nome do item (a primeira coluna); as demais chaves são ids de propriedades. */
@@ -51,8 +55,8 @@ export type Operador =
 export type Filtro = { prop: string; operador: Operador; valor?: unknown }
 export type Ordenacao = { prop: string; direcao: 'asc' | 'desc' }
 export type Calculo = 'nenhum' | 'contar' | 'vazios' | 'preenchidos' | 'unicos' | 'soma' | 'media' | 'minimo' | 'maximo' | 'marcados' | 'pct_marcados'
-export type TipoVisao = 'tabela' | 'quadro' | 'lista' | 'galeria' | 'calendario'
-export const TIPOS_VISAO: TipoVisao[] = ['tabela', 'quadro', 'lista', 'galeria', 'calendario']
+export type TipoVisao = 'tabela' | 'quadro' | 'lista' | 'galeria' | 'calendario' | 'linha_tempo'
+export const TIPOS_VISAO: TipoVisao[] = ['tabela', 'quadro', 'lista', 'galeria', 'calendario', 'linha_tempo']
 export type Visao = {
   id: string; nome: string; tipo: TipoVisao
   filtros: Filtro[]; juncao: 'e' | 'ou'; ordenacao: Ordenacao[]
@@ -64,8 +68,12 @@ export type Visao = {
   calculos?: Record<string, Calculo>
   /** Quadro: colunas escondidas (ids de opção; "" = sem valor). */
   colunasOcultas?: string[]
-  /** Calendário: propriedade de data que posiciona os itens. */
+  /** Calendário e linha do tempo: propriedade de data que posiciona os itens (início). */
   dataPor?: string | null
+  /** Linha do tempo: propriedade de data do fim (sem ela, cada item ocupa um dia). */
+  dataFim?: string | null
+  /** Tabela: relação "Item pai" que monta a hierarquia de subitens. */
+  subitens?: string | null
   /** Galeria: tamanho do cartão e se mostra a capa do item. */
   tamanhoCartao?: 'pequeno' | 'medio' | 'grande'
   capaCartao?: boolean
@@ -155,7 +163,9 @@ export function validarEsquema(esquema: unknown): Resultado<Propriedade[]> {
     if (tipo === 'relacao') {
       if (typeof bruto.baseRelacionada !== 'string' || !UUID.test(bruto.baseRelacionada)) return erro(`Escolha a base ligada em “${nome}”.`)
       prop.baseRelacionada = bruto.baseRelacionada
+      if (typeof bruto.reciproca === 'string' && /^[\w-]{1,40}$/.test(bruto.reciproca)) prop.reciproca = bruto.reciproca
     }
+    if (tipo === 'data' && (bruto.lembrete === 'no_dia' || bruto.lembrete === 'um_dia_antes')) prop.lembrete = bruto.lembrete
     if (tipo === 'formula') {
       const expressao = typeof bruto.expressao === 'string' ? bruto.expressao.slice(0, 2000) : ''
       const problema = expressao.trim() ? validarFormula(expressao) : null
@@ -202,8 +212,10 @@ export function validarVisoes(visoes: unknown, esquema: Propriedade[]): Resultad
       dataPor: esquema.some(e => e.id === v.dataPor && ['data', 'criado_em', 'editado_em'].includes(e.tipo)) ? v.dataPor as string : null,
       tamanhoCartao: (['pequeno', 'medio', 'grande'] as const).includes(v.tamanhoCartao as 'medio') ? v.tamanhoCartao as 'medio' : 'medio',
       capaCartao: v.capaCartao !== false,
+      dataFim: esquema.some(e => e.id === v.dataFim && e.tipo === 'data') ? v.dataFim as string : null,
+      subitens: esquema.some(e => e.id === v.subitens && e.tipo === 'relacao') ? v.subitens as string : null,
     }
-    if (tipo === 'calendario' && !visao.dataPor) visao.dataPor = esquema.find(e => e.tipo === 'data')?.id ?? esquema.find(e => e.tipo === 'criado_em')?.id ?? null
+    if ((tipo === 'calendario' || tipo === 'linha_tempo') && !visao.dataPor) visao.dataPor = esquema.find(e => e.tipo === 'data')?.id ?? esquema.find(e => e.tipo === 'criado_em')?.id ?? null
     if (tipo === 'quadro' && !visao.agruparPor) visao.agruparPor = esquema.find(e => e.tipo === 'status')?.id ?? esquema.find(e => e.tipo === 'selecao')?.id ?? null
     limpas.push(visao)
   }
@@ -478,7 +490,7 @@ export function modeloDeBase(modelo: 'vazia' | 'tarefas', visaoInicial: TipoVisa
     ] },
     { id: 'tags', nome: 'Tags', tipo: 'multisselecao', opcoes: [] },
   ]
-  const nomes: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista', galeria: 'Galeria', calendario: 'Calendário' }
+  const nomes: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista', galeria: 'Galeria', calendario: 'Calendário', linha_tempo: 'Linha do tempo' }
   return {
     esquema,
     visoes: [visao(visaoInicial, nomes[visaoInicial], visaoInicial, visaoInicial === 'quadro' ? ['tags'] : ['status', 'tags'], visaoInicial === 'quadro' ? 'status' : null)],
@@ -570,4 +582,73 @@ export function computar(itens: Item[], esquema: Propriedade[], ligadas: BaseLig
     }
     return atual
   })
+}
+
+// ---------------------------------------------------------------- etapa 6: relação nos dois sentidos, subitens, linha do tempo, lembretes
+
+/** O que entrou e o que saiu de uma lista de ids (relação, pessoas). */
+export function diferencaIds(antes: unknown, depois: unknown) {
+  const a = new Set(Array.isArray(antes) ? antes as string[] : []), d = new Set(Array.isArray(depois) ? depois as string[] : [])
+  return { entraram: [...d].filter(id => !a.has(id)), sairam: [...a].filter(id => !d.has(id)) }
+}
+
+/**
+ * Subitens: árvore pela relação "Item pai" (o primeiro id da relação). Itens cuja mãe não está na lista (filtrada) vão
+ * para a raiz; ciclos são cortados. Devolve a ordem de exibição com o nível de cada um.
+ */
+export function hierarquia(itens: Item[], propPai: string): { item: Item; nivel: number; temFilhos: boolean }[] {
+  const ids = new Set(itens.map(i => i.id))
+  const pai = (i: Item) => { const v = i.propriedades[propPai]; const p = Array.isArray(v) ? v[0] as string : null; return p && ids.has(p) && p !== i.id ? p : null }
+  const filhos = new Map<string | null, Item[]>()
+  for (const i of itens) filhos.set(pai(i), [...(filhos.get(pai(i)) ?? []), i])
+  const saida: { item: Item; nivel: number; temFilhos: boolean }[] = []
+  const vistos = new Set<string>()
+  const descer = (mae: string | null, nivel: number) => {
+    for (const i of filhos.get(mae) ?? []) {
+      if (vistos.has(i.id)) continue
+      vistos.add(i.id)
+      saida.push({ item: i, nivel, temFilhos: (filhos.get(i.id) ?? []).length > 0 })
+      descer(i.id, nivel + 1)
+    }
+  }
+  descer(null, 0)
+  // Ciclo (A é mãe de B e B de A): os que sobraram entram na raiz.
+  for (const i of itens) if (!vistos.has(i.id)) { vistos.add(i.id); saida.push({ item: i, nivel: 0, temFilhos: false }) }
+  return saida
+}
+
+/** Linha do tempo: início e fim (AAAA-MM-DD) do item; sem fim, um dia; fim antes do início é corrigido. */
+export function periodoDoItem(item: Item, inicioPor: string, fimPor: string | null | undefined, esquema: Propriedade[]) {
+  const dia = (v: unknown) => typeof v === 'string' && v ? v.slice(0, 10) : null
+  const inicio = dia(valorDe(item, inicioPor, esquema))
+  if (!inicio) return null
+  const fim = fimPor ? dia(valorDe(item, fimPor, esquema)) : null
+  return { inicio, fim: fim && fim >= inicio ? fim : inicio }
+}
+
+/** Soma dias a uma data AAAA-MM-DD. */
+export function somarDias(data: string, dias: number) {
+  const d = new Date(`${data}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + dias)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Lembretes devidos hoje: datas com lembrete "no dia" iguais a hoje, ou "um dia antes" iguais a amanhã. Avisa as
+ * pessoas das propriedades de pessoa do item; se não houver, quem criou o item.
+ */
+export function lembretesDevidos(itens: Item[], esquema: Propriedade[], hoje: string) {
+  const amanha = somarDias(hoje, 1)
+  const pessoasProps = esquema.filter(p => p.tipo === 'pessoa')
+  const devidos: { item: Item; prop: Propriedade; data: string; para: string[] }[] = []
+  for (const prop of esquema.filter(p => p.tipo === 'data' && p.lembrete)) {
+    for (const item of itens) {
+      const data = item.propriedades[prop.id]
+      if (typeof data !== 'string') continue
+      if ((prop.lembrete === 'no_dia' && data === hoje) || (prop.lembrete === 'um_dia_antes' && data === amanha)) {
+        const pessoas = [...new Set(pessoasProps.flatMap(p => Array.isArray(item.propriedades[p.id]) ? item.propriedades[p.id] as string[] : []))]
+        devidos.push({ item, prop, data, para: pessoas.length ? pessoas : [item.created_by] })
+      }
+    }
+  }
+  return devidos
 }

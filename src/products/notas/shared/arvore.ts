@@ -82,6 +82,7 @@ export function textoDoConteudo(blocos: unknown, limite = 100_000): string {
     if (typeof obj.text === 'string') partes.push(obj.text)
     if (obj.props && typeof obj.props.caption === 'string') partes.push(obj.props.caption)
     if (obj.type === 'mencao' && obj.props && typeof obj.props.titulo === 'string') partes.push(obj.props.titulo)
+    if (obj.type === 'pessoa' && obj.props && typeof obj.props.nome === 'string') partes.push(`@${obj.props.nome}`)
     if (obj.content !== undefined) visitar(obj.content)
     if (obj.rows !== undefined) visitar(obj.rows)
     if (obj.cells !== undefined) visitar(obj.cells)
@@ -89,4 +90,18 @@ export function textoDoConteudo(blocos: unknown, limite = 100_000): string {
   }
   visitar(blocos)
   return partes.map(p => p.trim()).filter(Boolean).join(' ').slice(0, limite)
+}
+
+/** Pessoas mencionadas com @ no conteúdo (ids, sem repetir). */
+export function pessoasMencionadas(blocos: unknown): string[] {
+  const ids = new Set<string>()
+  const visitar = (no: unknown): void => {
+    if (no == null || typeof no !== 'object') return
+    if (Array.isArray(no)) { no.forEach(visitar); return }
+    const obj = no as { type?: string; props?: { userId?: unknown }; content?: unknown; children?: unknown; rows?: unknown; cells?: unknown }
+    if (obj.type === 'pessoa' && typeof obj.props?.userId === 'string' && obj.props.userId) ids.add(obj.props.userId)
+    for (const filho of [obj.content, obj.children, obj.rows, obj.cells]) if (filho !== undefined) visitar(filho)
+  }
+  visitar(blocos)
+  return [...ids]
 }

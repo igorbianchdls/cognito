@@ -1,6 +1,7 @@
 // Notas — comentários: discussões na página ou num bloco (com o trecho citado), respostas, resolver e reabrir.
 import { comoPessoa, NotasError, type Contexto } from './db'
 import { exigirLeitura, lerPagina, semPermissao } from './paginas'
+import { avisar } from './notificacoes'
 
 export type Comentario = {
   id: string; discussao_id: string | null; bloco_id: string | null; trecho: string | null; texto: string
@@ -31,6 +32,11 @@ export function comentar(ctx: Contexto, paginaId: string, dados: { texto: string
       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, discussao_id, bloco_id, trecho, texto, resolvido, autor, created_at, editado_em`,
     [paginaId, ctx.orgId, dados.discussao_id ?? null, dados.discussao_id ? null : dados.bloco_id ?? null,
       dados.discussao_id ? null : (dados.trecho ?? '').slice(0, 300) || null, texto]).catch(semPermissao)
+    const pagina = await lerPagina(client, ctx, paginaId)
+    const participantes = dados.discussao_id
+      ? (await client.query('SELECT DISTINCT autor FROM notas.comentarios WHERE id = $1 OR discussao_id = $1', [dados.discussao_id])).rows.map((r: { autor: string }) => r.autor)
+      : []
+    await avisar(client, ctx, [pagina.created_by, ...participantes], { tipo: 'comentario', pagina_id: paginaId, texto: texto.slice(0, 200) })
     return rows[0] as Comentario
   })
 }

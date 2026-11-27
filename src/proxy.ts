@@ -58,7 +58,7 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   // MCP verifies OAuth; internal jobs verify CRON_SECRET in their own handlers.
   if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp',
     '/api/claude/mcp', '/.well-known/oauth-protected-resource/api/claude/mcp',
-    '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes', '/api/inbox/internal/tick']
+    '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes', '/api/inbox/internal/tick', '/api/notas/internal/tarefas']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
   if (request.nextUrl.pathname.startsWith('/api/public/nfse/') || request.nextUrl.pathname.startsWith('/api/public/documentos-comerciais/')) return NextResponse.next()

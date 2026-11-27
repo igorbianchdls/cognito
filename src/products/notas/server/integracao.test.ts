@@ -14,7 +14,7 @@ const vic = { userId: 'vic', orgId: 'org_a' }   // só visualiza
 const edu = { userId: 'edu', orgId: 'org_b' }   // outra empresa
 
 type Modulos = typeof import('./paginas') & typeof import('./bases') & typeof import('./db') & typeof import('./versoes')
-  & typeof import('./compartilhamento') & typeof import('./comentarios') & typeof import('./publico')
+  & typeof import('./compartilhamento') & typeof import('./comentarios') & typeof import('./publico') & typeof import('./notificacoes')
 let m: Modulos
 
 const rejeita = async (promessa: Promise<unknown>, status: number) => {
@@ -22,7 +22,7 @@ const rejeita = async (promessa: Promise<unknown>, status: number) => {
 }
 
 describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_URL (scripts/notas/banco-local.sh)' : false }, () => {
-  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db'), ...await import('./versoes'), ...await import('./compartilhamento'), ...await import('./comentarios'), ...await import('./publico') } as Modulos })
+  before(async () => { m = { ...await import('./paginas'), ...await import('./bases'), ...await import('./db'), ...await import('./versoes'), ...await import('./compartilhamento'), ...await import('./comentarios'), ...await import('./publico'), ...await import('./notificacoes') } as Modulos })
   after(async () => { await m.encerrarConexoes?.() })
 
   test('criar, ler, editar com versão e conflito', async () => {
@@ -236,5 +236,60 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
     assert.equal(base.titulo, 'Produtos'); assert.equal(itens.length, 2)
     assert.equal(itens.find(i => i.titulo === 'Café')?.propriedades.preco, 5.5)
     await rejeita(m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', importacao: { esquema, itens: [{ titulo: 'x', propriedades: { cat: 'zzz' } }] } }), 400)
+  })
+
+  test('etapa 6: menção, comentário e atribuição avisam a pessoa uma vez; marcar como lido', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Briefing' })
+    const mencao = (id: string) => [{ type: 'paragraph', content: [{ type: 'text', text: 'Oi ', styles: {} }, { type: 'pessoa', props: { userId: id, nome: id } }] }]
+    const v1 = await m.atualizarPagina(ana, p.id, p.versao, { conteudo: mencao('bia') })
+    await m.atualizarPagina(ana, p.id, v1.versao, { conteudo: [...mencao('bia'), ...mencao('edu')] })
+    let caixa = await m.listarNotificacoes(bia)
+    assert.equal(caixa.notificacoes.filter(n => n.tipo === 'mencao' && n.pagina_id === p.id).length, 1, 'a mesma menção não repete')
+    assert.equal((await m.listarNotificacoes(edu)).notificacoes.length, 0, 'outra empresa não recebe')
+    await m.comentar(vic, p.id, { texto: 'Gostei' })
+    assert.ok((await m.listarNotificacoes(ana)).notificacoes.some(n => n.tipo === 'comentario' && n.texto === 'Gostei'))
+    const { base } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'tabela' })
+    const item = await m.criarItem(ana, base.id, { titulo: 'Revisar', propriedades: { responsavel: ['bia'] } })
+    caixa = await m.listarNotificacoes(bia)
+    assert.ok(caixa.notificacoes.some(n => n.tipo === 'atribuicao' && n.pagina_id === item.id))
+    assert.ok(caixa.nao_lidas >= 2)
+    await m.marcarLidas(bia, 'todas')
+    assert.equal((await m.listarNotificacoes(bia)).nao_lidas, 0)
+    assert.equal((await m.listarNotificacoes(ana)).notificacoes.some(n => n.autor === 'ana'), false, 'ninguém avisa a si mesmo')
+  })
+
+  test('etapa 6: relação nos dois sentidos espelha entrar e sair', async () => {
+    const { base: clientes } = await m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', titulo: 'Clientes 2' })
+    const { base: projetos } = await m.criarBase(ana, { modelo: 'vazia', visao: 'tabela', titulo: 'Projetos 2' })
+    await m.alterarBase(ana, projetos.id, { esquema: [...projetos.esquema, { id: 'cli', nome: 'Cliente', tipo: 'relacao', baseRelacionada: clientes.id, reciproca: 'proj' }] })
+    await m.alterarBase(ana, clientes.id, { esquema: [...clientes.esquema, { id: 'proj', nome: 'Projetos', tipo: 'relacao', baseRelacionada: projetos.id, reciproca: 'cli' }] })
+    const c1 = await m.criarItem(ana, clientes.id, { titulo: 'Padaria' })
+    const p1 = await m.criarItem(ana, projetos.id, { titulo: 'Site', propriedades: { cli: [c1.id] } })
+    const p2 = await m.criarItem(ana, projetos.id, { titulo: 'Logo', propriedades: { cli: [c1.id] } })
+    const lerCliente = async () => (await m.obterBase(ana, clientes.id)).itens.find(i => i.id === c1.id)!
+    assert.deepEqual([...(await lerCliente()).propriedades.proj as string[]].sort(), [p1.id, p2.id].sort())
+    await m.alterarItem(ana, p1.id, { propriedades: { cli: [] } })
+    assert.deepEqual((await lerCliente()).propriedades.proj, [p2.id])
+    await m.alterarItem(ana, p2.id, { propriedades: { cli: null } })
+    assert.equal((await lerCliente()).propriedades.proj, undefined)
+  })
+
+  test('etapa 6: canal de tempo real só para quem edita; tarefa diária manda lembretes e esvazia a lixeira antiga', async () => {
+    process.env.NOTAS_CANAL_SEGREDO = 'segredo-de-teste-123456'
+    const p = await m.criarPagina(ana, { titulo: 'Canal' })
+    assert.match((await m.obterPagina(ana, p.id)).canal ?? '', /^notas-[\w-]{32}$/)
+    assert.equal((await m.obterPagina(vic, p.id)).canal, null)
+    const { base } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'tabela' })
+    await m.alterarBase(ana, base.id, { esquema: base.esquema.map(x => x.id === 'prazo' ? { ...x, lembrete: 'no_dia' as const } : x) })
+    await m.criarItem(ana, base.id, { titulo: 'Entregar hoje', propriedades: { prazo: '2026-12-10', responsavel: ['bia'] } })
+    const r1 = await m.tarefaDiaria('2026-12-10')
+    const r2 = await m.tarefaDiaria('2026-12-10')
+    assert.equal(r1.lembretes, 1); assert.equal(r2.lembretes, 0, 'não repete')
+    assert.ok((await m.listarNotificacoes(bia)).notificacoes.some(n => n.tipo === 'lembrete'))
+    const velha = await m.criarPagina(ana, { titulo: 'Velha' })
+    await m.arquivarPagina(ana, velha.id)
+    await m.consultaDoServidor("UPDATE notas.paginas SET arquivada_em = now() - interval '31 days' WHERE id = $1", [velha.id])
+    assert.ok((await m.tarefaDiaria('2026-12-11')).apagadas >= 1)
+    assert.equal((await m.consultaDoServidor('SELECT 1 FROM notas.paginas WHERE id = $1', [velha.id])).length, 0)
   })
 })

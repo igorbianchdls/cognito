@@ -4,7 +4,8 @@
 import { randomUUID } from 'node:crypto'
 import * as Y from 'yjs'
 import type { Propriedade, Visao } from '../shared/bases'
-import { moverCriaCiclo, posicaoEntre, textoDoConteudo, type Espaco, type PaginaResumo } from '../shared/arvore'
+import { avisar, canalDaPagina } from './notificacoes'
+import { moverCriaCiclo, pessoasMencionadas, tituloExibido, posicaoEntre, textoDoConteudo, type Espaco, type PaginaResumo } from '../shared/arvore'
 import { comoPessoa, gravarArquivo, NotasError, type Client, type Contexto } from './db'
 
 const RESUMO = 'id, parent_id, espaco, titulo, icone, posicao, tipo, base_id, created_by, acesso'
@@ -14,7 +15,7 @@ export type Pagina = PaginaResumo & {
   created_at: string; updated_at: string; arquivada_em: string | null; pode_editar: boolean; favorita: boolean
   esquema: Propriedade[]; visoes: Visao[]; propriedades: Record<string, unknown>; e_modelo: boolean
   geracao_yjs: number; estado_yjs?: string | null
-  acesso: 'empresa' | 'restrito'; restricao_id: string | null; publica: boolean
+  acesso: 'empresa' | 'restrito'; restricao_id: string | null; publica: boolean; canal?: string | null
 }
 export const COMPLETA = `p.id, p.parent_id, p.espaco, p.titulo, p.icone, p.posicao, p.tipo, p.base_id, p.e_modelo, p.geracao_yjs, p.esquema, p.visoes, p.propriedades, p.capa, p.capa_posicao, p.conteudo, p.largura_total, p.texto_pequeno,
   p.fonte, p.bloqueada, p.versao, p.created_by, p.updated_by, p.created_at, p.updated_at, p.arquivada_em,
@@ -60,7 +61,8 @@ export function arvore(ctx: Contexto) {
 /** Junta o documento colaborativo (estado Yjs) à página. */
 async function comEstado(client: Client, pagina: Pagina): Promise<Pagina> {
   const { rows } = await client.query('SELECT estado_yjs FROM notas.paginas WHERE id = $1', [pagina.id])
-  return { ...pagina, estado_yjs: rows[0]?.estado_yjs ?? null }
+  // O canal de tempo real só vai para quem pode editar (quem só lê vê as mudanças ao abrir de novo).
+  return { ...pagina, estado_yjs: rows[0]?.estado_yjs ?? null, canal: pagina.pode_editar ? canalDaPagina(pagina.id, pagina.geracao_yjs) : null }
 }
 
 /** Uma página inteira (com o documento colaborativo); registra que a pessoa a abriu (recentes). */
@@ -145,6 +147,12 @@ export function atualizarPagina(ctx: Contexto, id: string, versaoPedida: number 
       WHERE id = $1 AND versao = $2 AND arquivada_em IS NULL`, params)
     if (!rowCount) throw new NotasError(409, 'Esta página foi alterada em outro lugar. Recarregue para ver a versão atual.', await lerPagina(client, ctx, id))
     const salva = await lerPagina(client, ctx, id)
+    // Pessoas mencionadas agora (e não antes) recebem aviso, uma vez por página.
+    if (alteracao.conteudo !== undefined) {
+      const antes = new Set(pessoasMencionadas(atual.conteudo))
+      const novas = pessoasMencionadas(alteracao.conteudo).filter(p => !antes.has(p))
+      if (novas.length) await avisar(client, ctx, novas, { tipo: 'mencao', pagina_id: id, texto: tituloExibido(salva.titulo), chave: p => `mencao:${id}:${p}` })
+    }
     return colaborativa ? comEstado(client, salva) : salva
   })
 }

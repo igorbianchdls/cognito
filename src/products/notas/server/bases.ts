@@ -1,10 +1,11 @@
 // Notas — bases de dados no servidor. Tudo roda como a pessoa (comoPessoa), então quem vê e quem altera continua
 // decidido pelas políticas das páginas. As regras de tipos, valores e conversões vêm de shared/bases.ts.
 import {
-  COM_OPCOES, converterValor, modeloDeBase, validarEsquema, validarValor, validarVisoes,
+  COM_OPCOES, converterValor, diferencaIds, modeloDeBase, validarEsquema, validarValor, validarVisoes,
   type BaseLigada, type Item, type Propriedade, type TipoVisao, type Visao,
 } from '../shared/bases'
-import { posicaoEntre, textoDoConteudo, type Espaco } from '../shared/arvore'
+import { posicaoEntre, textoDoConteudo, tituloExibido, type Espaco } from '../shared/arvore'
+import { avisar } from './notificacoes'
 import { comoPessoa, NotasError, type Client, type Contexto } from './db'
 import { exigirEdicao, exigirLeitura, lerPagina, proximaPosicao, semPermissao, type Pagina } from './paginas'
 
@@ -168,6 +169,28 @@ export function alterarBase(ctx: Contexto, id: string, dados: { esquema?: unknow
   })
 }
 
+/**
+ * Depois de criar ou mudar um item: avisa quem foi atribuído (propriedade de pessoa) e espelha as relações nos dois
+ * sentidos (o item entra ou sai da relação recíproca dos itens ligados na outra base).
+ */
+async function depoisDeMudarItem(client: Client, ctx: Contexto, base: Pagina, item: Item, antes: Record<string, unknown>) {
+  for (const prop of base.esquema) {
+    const { entraram, sairam } = diferencaIds(antes[prop.id], item.propriedades[prop.id])
+    if (prop.tipo === 'pessoa' && entraram.length) {
+      await avisar(client, ctx, entraram, { tipo: 'atribuicao', pagina_id: item.id, texto: `${prop.nome}: ${tituloExibido(item.titulo)}`, chave: p => `atribuicao:${item.id}:${prop.id}:${p}` })
+    }
+    if (prop.tipo === 'relacao' && prop.reciproca && (entraram.length || sairam.length)) {
+      for (const outro of entraram) await client.query(`UPDATE notas.paginas SET propriedades = jsonb_set(propriedades, ARRAY[$2::text],
+          (SELECT to_jsonb(array(SELECT DISTINCT x FROM unnest(coalesce(array(SELECT jsonb_array_elements_text(propriedades->$2)), '{}') || ARRAY[$3::text]) x))))
+        WHERE id = $1 AND base_id = $4`, [outro, prop.reciproca, item.id, prop.baseRelacionada]).catch(semPermissao)
+      for (const outro of sairam) await client.query(`UPDATE notas.paginas SET propriedades = CASE
+          WHEN (SELECT count(*) FROM jsonb_array_elements_text(propriedades->$2) x WHERE x <> $3) = 0 THEN propriedades - $2
+          ELSE jsonb_set(propriedades, ARRAY[$2::text], (SELECT jsonb_agg(x) FROM jsonb_array_elements_text(propriedades->$2) x WHERE x <> $3)) END
+        WHERE id = $1 AND base_id = $4 AND propriedades ? $2`, [outro, prop.reciproca, item.id, prop.baseRelacionada]).catch(semPermissao)
+    }
+  }
+}
+
 /** Os ids ligados numa relação precisam ser itens da base ligada. */
 async function conferirRelacoes(client: Client, esquema: Propriedade[], valores: Record<string, unknown>) {
   for (const prop of esquema.filter(p => p.tipo === 'relacao')) {
@@ -200,7 +223,9 @@ export function criarItem(ctx: Contexto, baseId: string, dados: { titulo?: strin
       VALUES ($1, $2, $3, $3, $4, $5, $6::jsonb, $7, $8::jsonb, $9, $10, $11) RETURNING ${ITEM}`,
     [ctx.orgId, base.espaco, baseId, posicao, titulo, JSON.stringify(valores), modelo?.icone ?? null, JSON.stringify(modelo?.conteudo ?? []),
       modelo?.conteudo_texto ?? '', Boolean(dados.e_modelo), base.restricao_id]).catch(semPermissao)
-    return rows[0] as Item
+    const criado = rows[0] as Item
+    if (!criado.e_modelo) await depoisDeMudarItem(client, ctx, base, criado, {})
+    return criado
   })
 }
 
@@ -222,7 +247,9 @@ export function alterarItem(ctx: Contexto, id: string, dados: { titulo?: string;
         titulo = coalesce($4, titulo), posicao = coalesce($5, posicao), updated_by = editor.uid()
       WHERE id = $1 RETURNING ${ITEM}`,
     [id, JSON.stringify(gravar), apagar, dados.titulo === undefined ? null : dados.titulo.slice(0, 500), Number.isFinite(dados.posicao) ? dados.posicao : null]).catch(semPermissao)
-    return rows[0] as Item
+    const salvo = rows[0] as Item
+    await depoisDeMudarItem(client, ctx, base, salvo, item.propriedades ?? {})
+    return salvo
   })
 }
 

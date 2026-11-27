@@ -140,3 +140,19 @@ test('relação, agregação e fórmula calculadas juntas (e fórmula que usa ou
   assert.equal(validarEsquema([{ id: 'f', nome: 'F', tipo: 'formula', expressao: 'prop("X" +' }]).ok, false)
   assert.equal(validarEsquema([{ id: 'r', nome: 'R', tipo: 'relacao' }]).ok, false)
 })
+
+test('etapa 6: diferença de ids, subitens, período da linha do tempo e lembretes', async () => {
+  const { diferencaIds, hierarquia, periodoDoItem, lembretesDevidos, somarDias } = await import('./bases')
+  assert.deepEqual(diferencaIds(['a', 'b'], ['b', 'c']), { entraram: ['c'], sairam: ['a'] })
+  const a = item('a', 'Projeto', {}, 1), b = item('b', 'Fase 1', { pai: ['a'] }, 2), c = item('c', 'Tarefa', { pai: ['b'] }, 3), d = item('d', 'Solta', { pai: ['x'] }, 4)
+  assert.deepEqual(hierarquia([a, b, c, d], 'pai').map(h => [h.item.id, h.nivel, h.temFilhos]), [['a', 0, true], ['b', 1, true], ['c', 2, false], ['d', 0, false]])
+  const ciclo = hierarquia([item('p', 'P', { pai: ['q'] }), item('q', 'Q', { pai: ['p'] })], 'pai')
+  assert.equal(ciclo.length, 2, 'ciclo não some com itens')
+  const esq: Propriedade[] = [{ id: 'ini', nome: 'Início', tipo: 'data' }, { id: 'fim', nome: 'Fim', tipo: 'data', lembrete: 'um_dia_antes' }, { id: 'resp', nome: 'Resp', tipo: 'pessoa' }]
+  assert.deepEqual(periodoDoItem(item('1', 'x', { ini: '2026-12-01', fim: '2026-12-05' }), 'ini', 'fim', esq), { inicio: '2026-12-01', fim: '2026-12-05' })
+  assert.deepEqual(periodoDoItem(item('1', 'x', { ini: '2026-12-05', fim: '2026-12-01' }), 'ini', 'fim', esq), { inicio: '2026-12-05', fim: '2026-12-05' })
+  assert.equal(periodoDoItem(item('1', 'x', {}), 'ini', 'fim', esq), null)
+  assert.equal(somarDias('2026-12-31', 1), '2027-01-01')
+  const devidos = lembretesDevidos([item('1', 'Entrega', { fim: '2026-12-02', resp: ['bia'] }), item('2', 'Outra', { fim: '2026-12-09' })], esq, '2026-12-01')
+  assert.deepEqual(devidos.map(x => [x.item.id, x.para]), [['1', ['bia']]])
+})
