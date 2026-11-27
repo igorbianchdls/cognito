@@ -128,16 +128,28 @@ export async function restaurarVersaoArtefato(ctx: Contexto, id: string, versao:
 }
 
 /** Os artefatos que a pessoa vê, os editados mais recentemente primeiro; `busca` filtra pelo título ou pelo texto. */
-export function listarArtefatos(ctx: Contexto, opcoes: { busca?: string; limite?: number } = {}) {
-  const limite = Math.min(Math.max(1, Math.trunc(opcoes.limite ?? 30)), 100)
+export type ArtefatoResumo = {
+  id: string; titulo: string; icone: string | null; espaco: Espaco; parent_id: string | null; versao: number; atualizado_em: string
+  atualizado_por: string; criado_por: string; tamanho: number; publica: boolean; pode_editar: boolean
+}
+
+/**
+ * Os artefatos que a pessoa vê. `busca` filtra pelo nome ou pelo texto; `filtro`: meus (criados por mim), equipe (do
+ * espaço da equipe) ou todos; `ordem`: recentes (padrão) ou nome.
+ */
+export function listarArtefatos(ctx: Contexto, opcoes: { busca?: string; limite?: number; filtro?: 'todos' | 'meus' | 'equipe'; ordem?: 'recentes' | 'nome' } = {}) {
+  const limite = Math.min(Math.max(1, Math.trunc(opcoes.limite ?? 30)), 200)
   const termo = opcoes.busca?.trim().slice(0, 200) ?? ''
+  const filtro = opcoes.filtro === 'meus' ? 'AND p.created_by = editor.uid()' : opcoes.filtro === 'equipe' ? "AND p.espaco = 'equipe'" : ''
+  const ordem = opcoes.ordem === 'nome' ? 'lower(p.titulo), a.updated_at DESC' : 'a.updated_at DESC'
   return comoPessoa(ctx, async client => {
     await exigirLeitura(client, ctx)
-    const { rows } = await client.query(`SELECT p.id, p.titulo, p.icone, p.espaco, p.parent_id, a.versao, a.updated_at AS atualizado_em, octet_length(a.html) AS tamanho
+    const { rows } = await client.query(`SELECT p.id, p.titulo, p.icone, p.espaco, p.parent_id, a.versao, a.updated_at AS atualizado_em, a.updated_by AS atualizado_por,
+        p.created_by AS criado_por, octet_length(a.html) AS tamanho, p.publica, notas.pode_editar(p.workspace_id, p.espaco, p.created_by, p.restricao_id) AS pode_editar
       FROM notas.paginas p JOIN notas.artefatos a ON a.pagina_id = p.id
-      WHERE p.workspace_id = $1 AND p.tipo = 'artefato' AND p.arquivada_em IS NULL
+      WHERE p.workspace_id = $1 AND p.tipo = 'artefato' AND p.arquivada_em IS NULL ${filtro}
         AND ($2 = '' OR p.titulo ILIKE '%' || $3 || '%' OR p.conteudo_texto ILIKE '%' || $3 || '%')
-      ORDER BY a.updated_at DESC LIMIT $4`, [ctx.orgId, termo, termo.replace(/[%_\\]/g, m => `\\${m}`), limite])
-    return rows as { id: string; titulo: string; icone: string | null; espaco: Espaco; parent_id: string | null; versao: number; atualizado_em: string; tamanho: number }[]
+      ORDER BY ${ordem} LIMIT $4`, [ctx.orgId, termo, termo.replace(/[%_\\]/g, m => `\\${m}`), limite])
+    return rows as ArtefatoResumo[]
   })
 }

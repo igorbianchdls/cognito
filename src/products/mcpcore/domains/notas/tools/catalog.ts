@@ -8,7 +8,8 @@ import { NotasError, type Contexto } from '@/products/notas/server/db'
 import { company, tool, uuid, type ToolContext, type WorkspaceTool } from '../../workspace/context'
 
 const base = () => ({ empresa_id: company() })
-const link = (ctx: ToolContext, id: string) => `${ctx.origin}/notas/${id}`
+/** Artefato solto abre na aba Artefatos; dentro de uma página, nas Notas. */
+const link = (ctx: ToolContext, id: string, dentroDePagina = false) => `${ctx.origin}/${dentroDePagina ? 'notas' : 'artefatos'}/${id}`
 const PARTE = 150_000
 
 /** A pessoa conectada como contexto das Notas (confere que ela é da empresa; escrever exige perfil que edita). */
@@ -25,14 +26,14 @@ async function nasNotas<T>(fn: () => Promise<T>): Promise<T> {
 
 const resumo = (a: Artefato, ctx: ToolContext) => ({
   id: a.id, titulo: a.titulo, icone: a.icone ?? undefined, espaco: a.espaco, pagina_mae_id: a.parent_id ?? undefined,
-  versao: a.versao, tamanho_kb: Math.ceil(new TextEncoder().encode(a.html).length / 1024), atualizado_em: a.atualizado_em, link: link(ctx, a.id),
+  versao: a.versao, tamanho_kb: Math.ceil(new TextEncoder().encode(a.html).length / 1024), atualizado_em: a.atualizado_em, link: link(ctx, a.id, Boolean(a.parent_id)),
 })
 
 const html = () => z.string().min(1).max(LIMITE_HTML).describe('Documento HTML completo e autossuficiente (CSS e JS inline). Bibliotecas só de cdnjs.cloudflare.com, cdn.jsdelivr.net ou unpkg.com; sem fetch/XHR (a rede fica bloqueada): coloque os dados no próprio HTML. Até 1 MB.')
 
 const criar = tool({
   name: 'notas_criar_artefato', title: 'Criar artefato nas Notas', write: true,
-  description: 'Cria um artefato nas Notas do Otto: uma página em HTML interativo (painel, calculadora, relatório, apresentação, protótipo) que a equipe abre nas Notas. '
+  description: 'Cria um artefato no Otto: uma página em HTML interativo (painel, calculadora, relatório, apresentação, protótipo) que a equipe abre na aba Artefatos (ou dentro de uma página das Notas, com pagina_mae_id). '
     + 'Ele roda isolado e sem acesso à rede: os dados vão escritos no próprio HTML (estático). Devolve o link. Para mudar depois, use notas_atualizar_artefato.',
   schema: z.object({
     ...base(),
@@ -116,7 +117,7 @@ const listar = tool({
     const lista = await nasNotas(() => listarArtefatos(quem, { busca: i.busca, limite: i.limite }))
     return {
       artefatos: lista.map(a => ({ id: a.id, titulo: a.titulo, icone: a.icone ?? undefined, espaco: a.espaco, pagina_mae_id: a.parent_id ?? undefined,
-        versao: a.versao, tamanho_kb: Math.ceil(Number(a.tamanho) / 1024), atualizado_em: a.atualizado_em, link: link(ctx, a.id) })),
+        versao: a.versao, tamanho_kb: Math.ceil(Number(a.tamanho) / 1024), atualizado_em: a.atualizado_em, link: link(ctx, a.id, Boolean(a.parent_id)) })),
     }
   },
 })

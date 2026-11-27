@@ -17,8 +17,8 @@ function Aviso() {
 
 /** Banco ainda sem as tabelas das Notas: aviso amigável no lugar da tela. */
 function Conteudo({ children }: { children: ReactNode }) {
-  const { preparacao } = useNotas()
-  if (!preparacao) return <><Sidebar />{children}</>
+  const { preparacao, semBarraLateral } = useNotas()
+  if (!preparacao) return <>{!semBarraLateral && <Sidebar />}{children}</>
   return <div className={x.main}><div className={x.home} style={{ textAlign: 'center', paddingTop: '18vh' }}>
     <div style={{ fontSize: 48 }}>🛠️</div>
     <h1>Notas em preparação</h1>
@@ -27,8 +27,8 @@ function Conteudo({ children }: { children: ReactNode }) {
 }
 
 /** Moldura das Notas dentro do Otto: barra lateral própria (como no Notion) e a página à direita. */
-export function NotasApp({ children }: { children: ReactNode }) {
-  return <NotasProvider>
+export function NotasApp({ children, semBarraLateral }: { children: ReactNode; semBarraLateral?: boolean }) {
+  return <NotasProvider semBarraLateral={semBarraLateral}>
     <div className={x.app}>
       <Conteudo>{children}</Conteudo>
       <Busca />

@@ -105,7 +105,7 @@ export function useBase(id: string) {
     try {
       await fila.current
       const salvo = await notasApi<Item>(`/itens/${itemId}`, { method: 'PATCH', json: mudanca })
-      setDados(d => d && { ...d, itens: d.itens.map(i => i.id === itemId ? salvo : i) })
+      setDados(d => d && { ...d, itens: d.itens.map(i => i.id === itemId ? { ...i, ...salvo } : i) })
       if (mudanca.titulo !== undefined) void recarregarArvore()
     } catch (e) { falhar(e) }
   }, [falhar, recarregarArvore])

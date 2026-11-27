@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, type ReactNode } from 'react'
-import {
-  ArrowUpRight, AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, Phone, Sigma, SquareFunction, Tags, Type, User, UserPlus, X,
-  type LucideIcon,
-} from 'lucide-react'
+import { ArrowUpRight, AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, MessageSquare, Phone, Sigma, SquareFunction, Tags, Type, User, UserPlus, X, type LucideIcon } from 'lucide-react'
 import {
   AUTOMATICOS, formatarData, formatarNumero, NOME_GRUPO_STATUS, validarValor, valorDe, type Item, type Opcao, type Propriedade, type TipoPropriedade,
 } from '@/products/notas/shared/bases'
@@ -223,6 +220,7 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
         {/* O nome em edição fica no lugar do texto (o ícone e o recuo continuam onde estão). */}
         {editando && textual ? caixaDeTexto(x.cellEditorNome)
           : <span className={quebrar ? x.cellWrap : x.cellText}>{item.titulo || <span className={x.placeholder}>{tituloExibido('')}</span>}</span>}
+        {!editando && <ContaComentarios n={item.comentarios} />}
         {onAbrir && !editando && <button type="button" className={x.open} onClick={e => { e.stopPropagation(); onAbrir() }}><Maximize2 size={12} />ABRIR</button>}</>}
     {vazio && (valor === null || valor === undefined || valor === '' || (Array.isArray(valor) && !valor.length)) && prop?.tipo !== 'checkbox' && vazio}
     {editando && textual && prop && caixaDeTexto(x.cellEditor)}
@@ -232,4 +230,10 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
     {editando instanceof HTMLElement && prop?.tipo === 'relacao' && <EditorRelacao prop={prop} valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}
     {editando instanceof HTMLElement && prop?.tipo === 'pessoa' && <EditorPessoas valor={valor} pessoas={pessoas} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}
   </div>
+}
+
+/** Número de discussões abertas num item (ao lado do nome, como no Notion). */
+export function ContaComentarios({ n }: { n?: number }) {
+  if (!n) return null
+  return <span className={x.contaComentarios} title={`${n} ${n === 1 ? 'comentário aberto' : 'comentários abertos'}`}><MessageSquare size={12} />{n}</span>
 }

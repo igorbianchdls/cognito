@@ -200,11 +200,14 @@ export const FUNCOES_FORMULA = ['prop', 'if', 'concat', 'length', 'lower', 'uppe
 function avaliar(no: No, ctx: Contexto): ValorFormula {
   switch (no.t) {
     case 'num': case 'txt': case 'bool': return no.v
-    case 'un': { const v = avaliar(no.a, ctx); return no.op === '-' ? -comoNumero(v) : vazio(v) }
+    case 'un': { const v = avaliar(no.a, ctx); return no.op === '-' ? (v === null ? null : -comoNumero(v)) : vazio(v) }
     case 'bin': {
       if (no.op === '&&') return !vazio(avaliar(no.a, ctx)) && !vazio(avaliar(no.b, ctx))
       if (no.op === '||') return !vazio(avaliar(no.a, ctx)) || !vazio(avaliar(no.b, ctx))
       const a = avaliar(no.a, ctx), b = avaliar(no.b, ctx)
+      // Conta com um campo vazio fica vazia (como no Notion), em vez de tratar o vazio como zero. Texto + vazio junta.
+      const conta = ['+', '-', '*', '/', '%', '^'].includes(no.op)
+      if (conta && (a === null || b === null) && !(no.op === '+' && (typeof a === 'string' || typeof b === 'string'))) return null
       switch (no.op) {
         case '+':
           if (ehData(a) && typeof b === 'number') return new Date(a.getTime() + b * 864e5)

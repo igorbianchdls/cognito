@@ -38,7 +38,8 @@ export const Destaque = createReactBlockSpec(
  * marcam a estrutura; o CSS põe as colunas lado a lado.
  */
 export const Colunas = createReactBlockSpec(
-  { type: 'colunas', propSchema: {}, content: 'none' },
+  // larguras: proporções das colunas ("0.6,0.4"); vazio = iguais. As alças do editor (ColunasVivas) ajustam.
+  { type: 'colunas', propSchema: { larguras: { default: '' } }, content: 'none' },
   { render: () => <div className={x.colunasMarca} contentEditable={false} /> },
 )
 export const Coluna = createReactBlockSpec(

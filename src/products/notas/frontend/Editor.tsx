@@ -10,6 +10,7 @@ import * as Y from 'yjs'
 import type { Awareness } from 'y-protocols/awareness'
 import { DICIONARIO, arrumarMenu } from './menuBarra'
 import { IconePagina } from './IconePagina'
+import { ColunasVivas } from './ColunasVivas'
 import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
@@ -165,11 +166,17 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     else editor.insertBlocks([novo as never], atual, 'after')
   }
 
+  const caixa = useRef<HTMLDivElement>(null)
+  // Testes de tela (só em desenvolvimento): o documento do editor fica acessível para conferir a estrutura.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return
+    ;(window as unknown as { __notasEditor?: unknown }).__notasEditor = editor
+  }, [editor])
   const carregou = useRef(aoCarregar)
   useEffect(() => { carregou.current = aoCarregar })
   useEffect(() => { const t = setTimeout(() => carregou.current?.(), 0); return () => clearTimeout(t) }, [editor])
 
-  return <div onKeyDown={e => {
+  return <div ref={caixa} className={x.editorCaixa} onKeyDown={e => {
     if (!onComentar || !(e.ctrlKey || e.metaKey) || !e.altKey || e.code !== 'KeyM') return
     e.preventDefault()
     try { const b = editor.getTextCursorPosition().block; onComentar(b.id, textoDoBloco(b)) } catch { /* sem cursor */ }
@@ -254,6 +261,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
       ])
     }} />
   </BlockNoteView>
+  <ColunasVivas editor={editor as never} editavel={editavel} caixa={caixa} />
   </div>
 }
 

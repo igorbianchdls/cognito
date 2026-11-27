@@ -27,7 +27,7 @@ export function Inicio() {
   const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite'
   const espaco = arvore?.pode_editar_equipe === false ? 'particular' : 'equipe'
   const recentes = (arvore?.recentes ?? []).map(id => arvore?.paginas.find(p => p.id === id)).filter((p): p is PaginaResumo => Boolean(p))
-  const daEquipe = (arvore?.paginas ?? []).filter(p => !p.parent_id && !p.base_id)
+  const daEquipe = (arvore?.paginas ?? []).filter(p => !p.parent_id && !p.base_id && p.tipo !== 'artefato')
     .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? '')).slice(0, 8)
   const cartoes = recentes.length ? recentes : daEquipe
   const vazio = arvore !== null && !arvore.paginas.length

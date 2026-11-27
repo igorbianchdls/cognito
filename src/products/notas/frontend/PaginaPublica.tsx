@@ -5,6 +5,7 @@ import '@blocknote/core/fonts/inter.css'
 import '@blocknote/mantine/style.css'
 import { BlockNoteSchema, defaultBlockSpecs, defaultInlineContentSpecs, type PartialBlock } from '@blocknote/core'
 import { pt } from '@blocknote/core/locales'
+import { useRef } from 'react'
 import { createReactBlockSpec, createReactInlineContentSpec, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import { tituloExibido } from '@/products/notas/shared/arvore'
@@ -13,6 +14,7 @@ import type { PaginaPublica as Dados } from '@/products/notas/server/publico'
 import { estiloCapa } from './catalogo'
 import { Coluna, Colunas, Destaque, Incorporar } from './blocos'
 import { MolduraArtefato } from './ArtefatoView'
+import { ColunasVivas } from './ColunasVivas'
 import x from './notas.module.css'
 
 // Na versão pública, menção vira só o nome (sem link para dentro do Otto) e base embutida vira um aviso.
@@ -39,7 +41,11 @@ const schema = BlockNoteSchema.create({
 
 function Conteudo({ conteudo }: { conteudo: unknown[] }) {
   const editor = useCreateBlockNote({ schema, initialContent: conteudo.length ? conteudo as PartialBlock[] as never : undefined, dictionary: pt })
-  return <BlockNoteView editor={editor} editable={false} theme="light" />
+  const caixa = useRef<HTMLDivElement>(null)
+  return <div ref={caixa} className={x.editorCaixa}>
+    <BlockNoteView editor={editor} editable={false} theme="light" />
+    <ColunasVivas editor={editor as never} editavel={false} caixa={caixa} />
+  </div>
 }
 
 function valorTexto(item: Omit<Item, 'created_by' | 'updated_by'>, p: Propriedade, esquema: Propriedade[]) {

@@ -385,11 +385,83 @@ describe('Notas — telas de ponta a ponta', () => {
     await moldura.getByText('Painel versão um').waitFor()
     await page.getByRole('button', { name: 'Código' }).click()
     await page.locator('pre').getByText('Painel versão um').waitFor()
-    // Na barra lateral; e a página não oferece editor nem comentários.
-    await page.locator('[role=treeitem]', { hasText: 'Painel do agente' }).waitFor()
+    // A página não oferece editor nem comentários; artefato solto fica fora da barra lateral das Notas.
     assert.equal(await page.locator('.bn-editor').count(), 0)
     assert.equal(await page.getByRole('button', { name: 'Comentários' }).count(), 0)
+    assert.equal(await page.locator('[role=treeitem]', { hasText: 'Painel do agente' }).count(), 0)
   })
+
+  test('aba Artefatos: galeria com miniatura, busca e abrir com o caminho de volta', async () => {
+    await page.goto(`${BASE}/artefatos`, { waitUntil: 'domcontentloaded' })
+    const cartao = page.getByRole('link', { name: 'Abrir Painel do agente' })
+    await cartao.waitFor()
+    await cartao.locator('iframe').waitFor()
+    await page.getByLabel('Buscar artefatos').fill('não existe nada assim')
+    await page.getByText('Nenhum artefato encontrado').waitFor()
+    await page.getByLabel('Buscar artefatos').fill('Painel')
+    await foto('ui-20-artefatos')
+    await cartao.click()
+    await page.waitForURL(/\/artefatos\/[0-9a-f-]{36}$/)
+    await page.frameLocator('iframe[title="Painel do agente"]').getByText('Painel versão um').waitFor()
+    await page.getByRole('link', { name: 'Artefatos' }).first().click()
+    await page.waitForURL(/\/artefatos$/)
+  })
+
+  test('etapa C: largura das colunas fica guardada; bloco solto entre colunas vira coluna nova', async () => {
+    await novaPagina()
+    await page.getByLabel('Título da página').fill('Colunas largas')
+    await page.waitForFunction(() => Boolean(window.__notasEditor))
+    await page.evaluate(() => {
+      const e = window.__notasEditor
+      const p = t => ({ type: 'paragraph', content: t })
+      e.replaceBlocks(e.document, [{ type: 'colunas', children: [{ type: 'coluna', children: [p('Esquerda')] }, { type: 'coluna', children: [p('Direita')] }] }])
+    })
+    const alca = page.getByRole('separator', { name: 'Ajustar a largura das colunas' }).first()
+    await alca.waitFor()
+    const r = await alca.boundingBox()
+    await page.mouse.move(r.x + 6, r.y + 10); await page.mouse.down(); await page.mouse.move(r.x + 140, r.y + 10, { steps: 6 }); await page.mouse.up()
+    const larguras = () => page.evaluate(() => [...document.querySelectorAll('.bn-block:has(> * > .bn-block-content[data-content-type=colunas]) > .bn-block-group > .bn-block-outer')].map(e => Math.round(e.getBoundingClientRect().width)))
+    const antes = await larguras()
+    assert.ok(antes[0] > antes[1] + 100, `a esquerda cresceu: ${antes}`)
+    await salvo()
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.locator('.bn-editor').getByText('Direita').waitFor()
+    await page.waitForFunction(() => { const c = [...document.querySelectorAll('.bn-block:has(> * > .bn-block-content[data-content-type=colunas]) > .bn-block-group > .bn-block-outer')].map(e => e.getBoundingClientRect().width); return c.length === 2 && c[0] > c[1] + 100 })
+    // Um bloco solto direto entre as colunas (como fica ao soltar ali) vira uma terceira coluna, e nada se perde.
+    await page.locator('.bn-editor').getByText('Direita').click()
+    await page.evaluate(() => {
+      const e = window.__notasEditor
+      const colunas = e.document.find(b => b.type === 'colunas')
+      e.insertBlocks([{ type: 'paragraph', content: 'Meio' }], colunas.children[0], 'after')
+    })
+    await page.waitForFunction(() => { const c = window.__notasEditor.document.find(b => b.type === 'colunas'); return c && c.children.length === 3 && c.children.every(k => k.type === 'coluna') })
+    await page.locator('.bn-editor').getByText('Meio').waitFor()
+  })
+
+  test('etapa B e A: comentar dentro do item da base (contador na tabela) e linha do tempo por meses', async () => {
+    await novaPagina()
+    await page.getByRole('button', { name: 'Tarefas' }).click()
+    await page.getByRole('tab', { name: 'Tabela' }).click()
+    await page.keyboard.press('Escape')
+    const linha = page.locator('[role=row]', { hasText: 'Tarefa 1' })
+    await linha.hover()
+    await linha.getByRole('button', { name: /ABRIR/ }).click()
+    await page.getByPlaceholder('Adicionar um comentário…').fill('Precisa de revisão')
+    await page.keyboard.press('Enter')
+    await page.getByText('Precisa de revisão').waitFor()
+    await foto('ui-21-comentario-item')
+    await page.keyboard.press('Escape')
+    await page.keyboard.press('Escape')
+    await page.locator('[role=dialog][aria-label="Item da base"]').waitFor({ state: 'detached' })
+    await linha.getByTitle('1 comentário aberto').waitFor()
+    await page.getByRole('button', { name: 'Nova visão' }).click()
+    await page.getByRole('menuitem', { name: 'Linha do tempo' }).click()
+    await page.getByLabel('Escala').selectOption('meses')
+    await page.getByLabel('Escala').selectOption('trimestres')
+    await page.getByText(/º trimestre de/).first().waitFor()
+    await foto('ui-22-trimestres')
+  })
+
 
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui

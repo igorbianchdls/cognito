@@ -92,7 +92,7 @@ describe('Artefatos no banco (integração)', { skip: url ? false : 'defina NOTA
     }
     const grande = `<html><body><h1>Relatório MCP</h1>${'<p>linha</p>'.repeat(20000)}</body></html>`
     const { artefato } = await rodar('notas_criar_artefato', { html: grande, icone: '📊', resumo: 'Primeira versão' })
-    assert.equal(artefato.titulo, 'Artefato'); assert.equal(artefato.versao, 1); assert.match(artefato.link, /^https:\/\/otto\.test\/notas\//)
+    assert.equal(artefato.titulo, 'Artefato'); assert.equal(artefato.versao, 1); assert.match(artefato.link, /^https:\/\/otto\.test\/artefatos\//)
     const parte1 = await rodar('notas_ler_artefato', { artefato_id: artefato.id })
     assert.ok(parte1.proximo_inicio > 0, 'HTML grande vem em partes')
     const parte2 = await rodar('notas_ler_artefato', { artefato_id: artefato.id, inicio: parte1.proximo_inicio })

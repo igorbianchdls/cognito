@@ -304,4 +304,16 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
     const final = new Y.Doc(); Y.applyUpdate(final, Buffer.from((await m.obterPagina(ana, p.id)).estado_yjs!, 'base64'))
     assert.match(final.getText('t').toString(), /A/); assert.match(final.getText('t').toString(), /B/)
   })
+
+  test('itens da base trazem o número de discussões abertas (resolvidas e respostas não contam)', async () => {
+    const { base, itens } = await m.criarBase(ana, { modelo: 'tarefas', visao: 'quadro' })
+    const alvo = itens[0]
+    const d1 = await m.comentar(bia, alvo.id, { texto: 'Pode revisar?' }) as { id: string }
+    await m.comentar(ana, alvo.id, { texto: 'Revisei', discussao_id: d1.id })
+    const d2 = await m.comentar(ana, alvo.id, { texto: 'Outra coisa' }) as { id: string }
+    await m.alterarComentario(ana, d2.id, { resolvido: true })
+    const completa = await m.obterBase(ana, base.id) as { itens: { id: string; comentarios?: number }[] }
+    assert.equal(completa.itens.find(i => i.id === alvo.id)?.comentarios, 1)
+    assert.equal(completa.itens.find(i => i.id !== alvo.id)?.comentarios, 0)
+  })
 })

@@ -34,9 +34,11 @@ function Caixa({ placeholder, onEnviar, inicial = '', autoFocus }: { placeholder
  * Comentários da página: discussões (na página ou num bloco, com o trecho citado), respostas, resolver/reabrir,
  * editar e apagar os próprios. Ctrl+Alt+M no texto comenta o bloco do cursor.
  */
-export function Comentarios({ paginaId, euId, rascunho, onFechar, onIrPara, onMudou }: {
+export function Comentarios({ paginaId, euId, rascunho, onFechar, onIrPara, onMudou, embutido }: {
   paginaId: string; euId: string | null; rascunho: { bloco_id: string; trecho: string } | null
-  onFechar: () => void; onIrPara: (blocoId: string) => void; onMudou: (lista: Comentario[]) => void
+  onFechar?: () => void; onIrPara: (blocoId: string) => void; onMudou: (lista: Comentario[]) => void
+  /** Dentro do item de uma base, logo abaixo das propriedades (como no Notion), em vez do painel lateral. */
+  embutido?: boolean
 }) {
   const { avisar } = useNotas()
   const pessoas = usePessoas()
@@ -73,23 +75,34 @@ export function Comentarios({ paginaId, euId, rascunho, onFechar, onIrPara, onMu
       : <p className={x.commentText}>{c.texto}</p>}
   </div>
 
-  return <aside className={x.comments} aria-label="Comentários">
-    <div className={x.historyHead}>
-      <b><MessageSquare size={14} style={{ display: 'inline', marginRight: 6 }} />Comentários</b>
-      <button type="button" className={x.topBtn} aria-label="Fechar comentários" onClick={onFechar}><X size={16} /></button>
-    </div>
-    <div className={x.pickerTabs} style={{ padding: '0 12px 6px' }}>
-      <button type="button" className={aba === 'abertos' ? x.tabOn : ''} onClick={() => setAba('abertos')}>Abertos</button>
-      <button type="button" className={aba === 'resolvidos' ? x.tabOn : ''} onClick={() => setAba('resolvidos')}>Resolvidos</button>
-    </div>
-    <div className={x.commentList}>
+  const resolvidas = (lista ?? []).filter(c => !c.discussao_id && c.resolvido).length
+  const Moldura = embutido ? 'section' : 'aside'
+  return <Moldura className={embutido ? x.comentariosItem : x.comments} aria-label="Comentários">
+    {embutido
+      ? <div className={x.comentariosItemTopo}>
+        <b>Comentários</b>
+        {(resolvidas > 0 || aba === 'resolvidos') && <button type="button" className={x.barBtn} onClick={() => setAba(aba === 'abertos' ? 'resolvidos' : 'abertos')}>
+          {aba === 'abertos' ? `Ver resolvidos (${resolvidas})` : 'Ver abertos'}
+        </button>}
+      </div>
+      : <>
+        <div className={x.historyHead}>
+          <b><MessageSquare size={14} style={{ display: 'inline', marginRight: 6 }} />Comentários</b>
+          <button type="button" className={x.topBtn} aria-label="Fechar comentários" onClick={onFechar}><X size={16} /></button>
+        </div>
+        <div className={x.pickerTabs} style={{ padding: '0 12px 6px' }}>
+          <button type="button" className={aba === 'abertos' ? x.tabOn : ''} onClick={() => setAba('abertos')}>Abertos</button>
+          <button type="button" className={aba === 'resolvidos' ? x.tabOn : ''} onClick={() => setAba('resolvidos')}>Resolvidos</button>
+        </div>
+      </>}
+    <div className={embutido ? x.comentariosItemLista : x.commentList}>
       {aba === 'abertos' && <div className={x.thread}>
         {rascunho && <blockquote className={x.commentQuote}>{rascunho.trecho || 'Bloco selecionado'}</blockquote>}
-        <Caixa key={rascunho?.bloco_id ?? 'pagina'} autoFocus={Boolean(rascunho)} placeholder={rascunho ? 'Comentar este trecho…' : 'Comentar a página…'}
+        <Caixa key={rascunho?.bloco_id ?? 'pagina'} autoFocus={Boolean(rascunho)} placeholder={rascunho ? 'Comentar este trecho…' : embutido ? 'Adicionar um comentário…' : 'Comentar a página…'}
           onEnviar={t => enviar({ texto: t, ...(rascunho ? { bloco_id: rascunho.bloco_id, trecho: rascunho.trecho } : {}) })} />
       </div>}
       {lista === null && <div className={x.muted} style={{ padding: 16 }}>Carregando…</div>}
-      {lista && !discussoes.length && <div className={x.muted} style={{ padding: 16, fontSize: 13 }}>
+      {lista && !discussoes.length && !(embutido && aba === 'abertos') && <div className={x.muted} style={{ padding: 16, fontSize: 13 }}>
         {aba === 'abertos' ? 'Nenhuma discussão aberta. Dica: Ctrl+Alt+M comenta o bloco onde está o cursor.' : 'Nenhuma discussão resolvida.'}
       </div>}
       {discussoes.map(d => <div key={d.id} className={x.thread}>
@@ -109,5 +122,5 @@ export function Comentarios({ paginaId, euId, rascunho, onFechar, onIrPara, onMu
       <ItemMenu onClick={() => { setEditando(menu.c.id); setMenu(null) }}>Editar</ItemMenu>
       <ItemMenu perigo onClick={() => { const c = menu.c; setMenu(null); if (window.confirm('Apagar este comentário?')) void apagar(c.id) }}>Apagar</ItemMenu>
     </Menu>}
-  </aside>
+  </Moldura>
 }

@@ -47,3 +47,16 @@ test('erros claros', () => {
   assert.equal(validarFormula('if(prop("A") > 1, "x", "y")'), null)
   assert.equal(calc(''), null)
 })
+
+test('fórmula: conta com campo vazio fica vazia; texto com vazio junta; if trata o vazio', async () => {
+  const { calcularFormula } = await import('./formula')
+  const props: Record<string, unknown> = { Horas: null, Preco: 10, Nome: 'Café' }
+  const calc = (e: string) => calcularFormula(e, n => (props[n] ?? null) as never)
+  assert.deepEqual(calc('prop("Horas") * 150'), calc('prop("Horas") * 150'))
+  const r = calc('prop("Horas") * 150') as { valor?: unknown; ok?: boolean }
+  assert.equal(r.valor ?? null, null)
+  assert.equal((calc('prop("Preco") * 2') as { valor: unknown }).valor, 20)
+  assert.equal((calc('prop("Nome") + prop("Horas")') as { valor: unknown }).valor, 'Café')
+  assert.equal((calc('if(empty(prop("Horas")), 0, prop("Horas") * 150)') as { valor: unknown }).valor, 0)
+  assert.equal((calc('-prop("Horas")') as { valor?: unknown }).valor ?? null, null)
+})

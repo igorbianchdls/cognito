@@ -19,7 +19,9 @@ async function exigirBase(client: Client, ctx: Contexto, id: string, editar = fa
 }
 
 async function lerItens(client: Client, baseId: string) {
-  return (await client.query(`SELECT ${ITEM} FROM notas.paginas WHERE base_id = $1 AND arquivada_em IS NULL ORDER BY posicao LIMIT ${LIMITE_ITENS}`, [baseId])).rows as Item[]
+  // Com o número de discussões abertas de cada item (a tabela e os cartões mostram).
+  return (await client.query(`SELECT ${ITEM}, (SELECT count(*)::int FROM notas.comentarios c WHERE c.pagina_id = p.id AND c.discussao_id IS NULL AND NOT c.resolvido) AS comentarios
+    FROM notas.paginas p WHERE base_id = $1 AND arquivada_em IS NULL ORDER BY posicao LIMIT ${LIMITE_ITENS}`, [baseId])).rows as Item[]
 }
 
 /** Bases ligadas por relação (as que a pessoa enxerga), com esquema e itens, para títulos e agregações. */

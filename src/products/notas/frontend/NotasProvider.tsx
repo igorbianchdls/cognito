@@ -29,6 +29,8 @@ type Estado = {
   setBuscaAberta: (aberta: boolean) => void
   /** Barra lateral recolhida (o botão de mostrar fica no topo da página, como no Notion). */
   recolhida: boolean
+  /** Tela sem a barra lateral das Notas (a aba Artefatos): não mostra o botão de abrir a barra. */
+  semBarraLateral: boolean
   setRecolhida: (recolhida: boolean) => void
 }
 
@@ -48,7 +50,7 @@ export const useNotas = () => {
 }
 
 /** Estado das Notas compartilhado entre a barra lateral e a página: a árvore, favoritos, recentes e as ações. */
-export function NotasProvider({ children }: { children: ReactNode }) {
+export function NotasProvider({ children, semBarraLateral = false }: { children: ReactNode; semBarraLateral?: boolean }) {
   const router = useRouter()
   const [arvore, setArvore] = useState<Arvore | null>(null)
   const [erro, setErro] = useState('')
@@ -88,7 +90,7 @@ export function NotasProvider({ children }: { children: ReactNode }) {
   }, [recarregar, setAviso])
 
   const valor = useMemo<Estado>(() => ({
-    arvore, erro, preparacao, recarregar, ajustarLocal, aviso, avisar: setAviso, buscaAberta, setBuscaAberta, recolhida, setRecolhida,
+    arvore, erro, preparacao, recarregar, ajustarLocal, aviso, avisar: setAviso, buscaAberta, setBuscaAberta, recolhida, setRecolhida, semBarraLateral,
     criar: async destino => {
       try {
         const nova = await notasApi<Pagina>('/paginas', { method: 'POST', json: destino })
@@ -111,7 +113,7 @@ export function NotasProvider({ children }: { children: ReactNode }) {
       if (!aberta.detail.tratado) await acao(() => notasApi(`/paginas/${id}`, { method: 'PATCH', json: { titulo } }))
     },
     favoritar: (id, favorita) => acao(() => notasApi(`/paginas/${id}/favorito`, { method: favorita ? 'PUT' : 'DELETE' })),
-  }), [arvore, erro, preparacao, recarregar, ajustarLocal, aviso, setAviso, buscaAberta, recolhida, setRecolhida, router, acao])
+  }), [arvore, erro, preparacao, recarregar, ajustarLocal, aviso, setAviso, buscaAberta, recolhida, setRecolhida, semBarraLateral, router, acao])
 
   // Atalhos do Notion: Ctrl+K busca, Ctrl+\\ mostra/esconde a barra lateral, Ctrl+Alt+N nova página.
   // (Ctrl+Shift+N é do navegador — janela anônima —, por isso a nova página usa Ctrl+Alt+N.)

@@ -83,6 +83,8 @@ export type Item = {
   id: string; titulo: string; icone: string | null; posicao: number; propriedades: Record<string, unknown>
   created_at: string; updated_at: string; created_by: string; updated_by: string | null
   capa?: string | null
+  /** Discussões abertas no item (comentários). */
+  comentarios?: number
   /** Modelo de item da base (não aparece nas visões; usado no "Novo ▾"). */
   e_modelo?: boolean
 }

@@ -2,7 +2,7 @@
 import {
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBookFilled, IconBriefcaseFilled,
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconClipboardListFilled, IconCoinFilled,
-  IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
+  IconAppWindowFilled, IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
   IconReceiptFilled, IconSendFilled, IconShoppingCartFilled,
   IconBriefcase2Filled, IconCategoryFilled, IconFileImport, IconHeadphonesFilled, IconTagFilled, IconTruckFilled, IconUserFilled, IconVideoFilled, IconSparkles2Filled,
 } from "@tabler/icons-react"
@@ -110,6 +110,7 @@ export const sections: Section[] = [
   ...(RECURSOS.notas ? [{
     id: "notas" as const, title: "Notas", items: [
       { title: "Notas", url: "/notas", icon: IconFileTextFilled },
+      { title: "Artefatos", url: "/artefatos", icon: IconAppWindowFilled },
     ],
   }] : []),
   {

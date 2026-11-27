@@ -12,7 +12,7 @@ import { posicaoEntre, tituloExibido } from '@/products/notas/shared/arvore'
 import type { Pagina } from '../api'
 import { IconePagina } from '../IconePagina'
 import { ItemMenu, Menu } from '../Menu'
-import { Celula, ICONE_TIPO, Valor } from './Celula'
+import { Celula, ContaComentarios, ICONE_TIPO, Valor } from './Celula'
 import { ListaTipos, MenuPropriedade } from './MenuPropriedade'
 import type { Pessoa } from './pessoas'
 import type { BaseApi } from './useBase'
@@ -251,7 +251,7 @@ export function Quadro({ api, base, visao, itens, pessoas, editavel, abrir, valo
             const antesDe = e.clientY < r.top + r.height / 2 ? item.id : g.itens[g.itens.indexOf(item) + 1]?.id ?? null
             if (alvo?.grupo !== g.id || alvo.antesDe !== antesDe) setAlvo({ grupo: g.id, antesDe })
           }}>
-          <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span>
+          <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span><ContaComentarios n={item.comentarios} />
             <button type="button" className={x.cardMais} aria-label="Ações do cartão" draggable={false}
               onClick={e => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setMenuCartao({ ancora: { x: r.left, y: r.bottom + 4 }, id: item.id }) }}><MoreHorizontal size={15} /></button>
           </div>
@@ -308,7 +308,7 @@ export function Galeria({ api, base, visao, itens, pessoas, editavel, abrir, val
       onContextMenu={e => { e.preventDefault(); setMenu({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
       {visao.capaCartao !== false && item.capa && <div className={x.galleryCover} style={estiloCapa(item.capa, 50)} />}
       <div className={x.galleryBody}>
-        <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span></div>
+        <div className={x.cardItemTitle}>{item.icone && <span>{item.icone}</span>}<span>{tituloExibido(item.titulo)}</span><ContaComentarios n={item.comentarios} /></div>
         <ValoresVisiveis item={item} visao={visao} esquema={base.esquema} pessoas={pessoas} className={x.cardProps} />
       </div>
     </div>)}
@@ -398,7 +398,15 @@ export function Calendario({ api, base, visao, itens, editavel, abrir, valoresNo
   </div>
 }
 
-const LARGURA_DIA = { dias: 36, semanas: 14 } as const
+/** Escalas da linha do tempo: largura de um dia (px), quantos dias aparecem, quanto as setas andam e quanto do passado o "Hoje" mostra. */
+const ESCALAS = {
+  dias: { nome: 'Dias', largura: 36, total: 42, passo: 14, antes: 7 },
+  semanas: { nome: 'Semanas', largura: 14, total: 120, passo: 56, antes: 14 },
+  meses: { nome: 'Meses', largura: 4, total: 400, passo: 91, antes: 30 },
+  trimestres: { nome: 'Trimestres', largura: 1.6, total: 760, passo: 182, antes: 60 },
+} as const
+type Escala = keyof typeof ESCALAS
+const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
 /**
  * Linha do tempo (Gantt): uma barra por item, do início ao fim (as propriedades de data da visão). Arrastar a barra
@@ -407,13 +415,14 @@ const LARGURA_DIA = { dias: 36, semanas: 14 } as const
 export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valoresNovos }: VistaProps) {
   const hojeDia = diaLocal(new Date())
   const [inicio, setInicio] = useState(() => somarDias(diaLocal(new Date()), -7))
-  const [escala, setEscala] = useState<'dias' | 'semanas'>('dias')
+  const [escala, setEscala] = useState<Escala>('dias')
   const [arrasto, setArrasto] = useState<{ id: string; modo: 'mover' | 'fim'; x: number; dias: number } | null>(null)
   const prop = base.esquema.find(p => p.id === visao.dataPor && p.tipo === 'data')
   if (!prop) return <div className={x.empty} style={{ padding: '24px 4px', height: 'auto' }}>Para a linha do tempo, crie uma propriedade de data e escolha-a em “Propriedades → Início”.</div>
   const fimProp = base.esquema.find(p => p.id === visao.dataFim && p.tipo === 'data')
-  const largura = LARGURA_DIA[escala]
-  const totalDias = escala === 'dias' ? 42 : 120
+  const cfg = ESCALAS[escala]
+  const largura = cfg.largura
+  const totalDias = cfg.total
   const dias = Array.from({ length: totalDias }, (_, i) => somarDias(inicio, i))
   const indice = (data: string) => Math.round((Date.parse(`${data}T12:00:00Z`) - Date.parse(`${inicio}T12:00:00Z`)) / 864e5)
   const comData = itens.map(item => ({ item, periodo: periodoDoItem(item, prop.id, fimProp?.id, base.esquema) }))
@@ -443,8 +452,10 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
     void api.mudarItem(id, { propriedades: { [prop.id]: dia, ...(fimProp ? { [fimProp.id]: dia } : {}) } })
   }
   const comPeriodo = comData.filter(c => c.periodo)
+  // Faixa de cima: meses (ou trimestres, na escala de trimestres).
   const meses = dias.reduce<{ nome: string; n: number }[]>((lista, d) => {
-    const bruto = new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const bruto = escala === 'trimestres' ? `${Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1}º trimestre de ${d.slice(0, 4)}`
+      : new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { month: escala === 'meses' ? 'short' : 'long', year: 'numeric', timeZone: 'UTC' }).replace('.', '')
     const nome = bruto.charAt(0).toUpperCase() + bruto.slice(1)
     if (lista.at(-1)?.nome === nome) lista[lista.length - 1].n++; else lista.push({ nome, n: 1 })
     return lista
@@ -453,12 +464,12 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
   return <div className={x.timeline} onMouseMove={mover} onMouseUp={terminar} onMouseLeave={terminar}>
     <div className={x.calendarHead}>
       <span className={x.barSpacer} />
-      <select className={x.barBtn} value={escala} aria-label="Escala" onChange={e => setEscala(e.target.value as 'dias' | 'semanas')}>
-        <option value="dias">Dias</option><option value="semanas">Semanas</option>
+      <select className={x.barBtn} value={escala} aria-label="Escala" onChange={e => { const nova = e.target.value as Escala; setEscala(nova); setInicio(somarDias(hojeDia, -ESCALAS[nova].antes)) }}>
+        {(Object.keys(ESCALAS) as Escala[]).map(k => <option key={k} value={k}>{ESCALAS[k].nome}</option>)}
       </select>
-      <button type="button" className={x.barBtn} aria-label="Voltar" onClick={() => setInicio(somarDias(inicio, escala === 'dias' ? -14 : -56))}><ChevronLeft size={16} /></button>
-      <button type="button" className={x.barBtn} onClick={() => setInicio(somarDias(hojeDia, -7))}>Hoje</button>
-      <button type="button" className={x.barBtn} aria-label="Avançar" onClick={() => setInicio(somarDias(inicio, escala === 'dias' ? 14 : 56))}><ChevronRight size={16} /></button>
+      <button type="button" className={x.barBtn} aria-label="Voltar" onClick={() => setInicio(somarDias(inicio, -cfg.passo))}><ChevronLeft size={16} /></button>
+      <button type="button" className={x.barBtn} onClick={() => setInicio(somarDias(hojeDia, -cfg.antes))}>Hoje</button>
+      <button type="button" className={x.barBtn} aria-label="Avançar" onClick={() => setInicio(somarDias(inicio, cfg.passo))}><ChevronRight size={16} /></button>
     </div>
     <div className={x.timelineGrade}>
       <div className={x.timelineNomes}>
@@ -470,9 +481,15 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
         <div style={{ width: totalDias * largura, position: 'relative', minHeight: comPeriodo.length ? undefined : 96 }}
           onDragOver={e => { if (editavel && e.dataTransfer.types.includes('text/x-notas-item')) e.preventDefault() }} onDrop={soltarSemData}>
           <div className={x.timelineMeses}>{meses.map((m, i) => <span key={i} style={{ width: m.n * largura }}>{m.nome}</span>)}</div>
-          <div className={x.timelineDias}>{dias.map(d => <span key={d} style={{ width: largura }} className={`${d === hojeDia ? x.timelineHoje : ''} ${[0, 6].includes(new Date(`${d}T12:00:00Z`).getUTCDay()) ? x.timelineFds : ''}`}>
-            {escala === 'dias' || d.endsWith('-01') || new Date(`${d}T12:00:00Z`).getUTCDay() === 1 ? Number(d.slice(8)) : ''}
-          </span>)}</div>
+          <div className={`${x.timelineDias} ${largura < 10 ? x.timelineDiasCompacto : ''}`}>{dias.map(d => {
+            const semana = new Date(`${d}T12:00:00Z`).getUTCDay()
+            // Dias: todo dia; semanas: segundas e dia 1; meses: segundas; trimestres: o mês no dia 1.
+            const rotulo = escala === 'dias' ? Number(d.slice(8))
+              : escala === 'semanas' ? (d.endsWith('-01') || semana === 1 ? Number(d.slice(8)) : '')
+                : escala === 'meses' ? (semana === 1 ? Number(d.slice(8)) : '')
+                  : d.endsWith('-01') ? MES_CURTO[Number(d.slice(5, 7)) - 1] : ''
+            return <span key={d} style={{ width: largura }} className={`${d === hojeDia && largura >= 10 ? x.timelineHoje : ''} ${largura >= 10 && [0, 6].includes(semana) ? x.timelineFds : ''}`}>{rotulo}</span>
+          })}</div>
           {indice(hojeDia) >= 0 && indice(hojeDia) < totalDias && <div className={x.timelineLinhaHoje} style={{ left: indice(hojeDia) * largura + largura / 2 }} />}
           {!comPeriodo.length && <div className={x.timelineVazia}>
             {semData.length && editavel ? 'Arraste um item de “Sem data” para um dia, ou clique em Novo.' : 'Nenhum item com data. Clique em Novo para criar um.'}
@@ -483,7 +500,7 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
             const dur = indice(periodo!.fim) - indice(periodo!.inicio) + 1 + (a?.modo === 'fim' ? a.dias : 0)
             return <div key={item.id} className={x.timelineLinha}>
               <div className={x.timelineBarra} role="button" tabIndex={0} title={`${tituloExibido(item.titulo)} — ${periodo!.inicio} a ${periodo!.fim}`}
-                style={{ left: ini * largura + 2, width: Math.max(1, dur) * largura - 4 }}
+                style={{ left: ini * largura + (largura >= 10 ? 2 : 0), width: Math.max(6, Math.max(1, dur) * largura - (largura >= 10 ? 4 : 1)) }}
                 onClick={() => { if (!arrasto) abrir(item.id) }} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
                 onMouseDown={e => { if (!editavel) return; e.preventDefault(); setArrasto({ id: item.id, modo: 'mover', x: e.clientX, dias: 0 }) }}>
                 <span className={x.cellText}>{tituloExibido(item.titulo)}</span>

@@ -47,7 +47,9 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
     const fechar = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
       const alvo = document.activeElement as HTMLElement | null
-      if (alvo?.closest('input, textarea, select, [contenteditable=true]')) return
+      // Num campo (comentário, filtro): o primeiro Esc sai do campo; o segundo fecha o item.
+      if (alvo?.closest('input, textarea, select')) { alvo.blur(); return }
+      if (alvo?.closest('[contenteditable=true]')) return
       if (document.querySelector('[role=menu], [role=listbox], .bn-suggestion-menu, [role=dialog][aria-modal=true]')) return
       setAberto(null); void api.carregar()
     }

@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronsRight, Columns3, Copy, Download, Globe, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, MessageSquare, Printer, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2, UserPlus,
+  ChevronsRight, Columns3, Copy, Download, Globe, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, MessageSquare, Printer, Maximize2, MoreHorizontal, MoveVertical, Smile, Sparkles, Star, Table2, UserPlus,
   Trash2, Undo2, Unlock,
 } from 'lucide-react'
 import { caminho, textoDoConteudo, tituloExibido } from '@/products/notas/shared/arvore'
@@ -77,7 +77,7 @@ function EditorColaborativo({ pagina, aoConectar, aoPresentes, ...props }: Omit<
  */
 export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: boolean; onFechar?: () => void }) {
   const router = useRouter()
-  const { arvore, ajustarLocal, recarregar, favoritar, duplicar, arquivar, avisar, recolhida, setRecolhida } = useNotas()
+  const { arvore, ajustarLocal, recarregar, favoritar, duplicar, arquivar, avisar, recolhida, setRecolhida, semBarraLateral } = useNotas()
   const [pagina, setPagina] = useState<Pagina | null>(null)
   const [erro, setErro] = useState('')
   const [estado, setEstado] = useState<Estado>('salvo')
@@ -322,8 +322,9 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
           <span style={{ flex: 1 }} />
         </>
         : <>
-          {recolhida && <button type="button" className={`${x.topBtn} ${x.soComputadorFlex}`} aria-label="Mostrar a barra lateral" title="Mostrar a barra lateral (Ctrl+\)" onClick={() => setRecolhida(false)}><ChevronsRight size={18} /></button>}
+          {recolhida && !semBarraLateral && <button type="button" className={`${x.topBtn} ${x.soComputadorFlex}`} aria-label="Mostrar a barra lateral" title="Mostrar a barra lateral (Ctrl+\)" onClick={() => setRecolhida(false)}><ChevronsRight size={18} /></button>}
           <nav className={x.crumbs} aria-label="Caminho">
+            {semBarraLateral && <><Link href="/artefatos" className={x.crumb}><Sparkles size={14} /><span>Artefatos</span></Link><span className={x.crumbSep}>/</span></>}
             {trilhaVisivel.map((item, i, lista) => <span key={item?.id ?? 'reticencias'} style={{ display: 'contents' }}>
               {item
                 ? <Link href={`/notas/${item.id}`} className={x.crumb}><IconePagina icone={item.icone} tipo={item.tipo} tamanho={14} /><span>{tituloExibido(item.titulo)}</span></Link>
@@ -345,7 +346,12 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
         <UserPlus size={17} className={x.soCelular} /><span className={x.soComputador}>Compartilhar</span>
       </button>}
       {!ehBase && !ehArtefato && <button type="button" className={x.topBtn} aria-label="Comentários" title="Comentários (Ctrl+Alt+M comenta o bloco)"
-        onClick={() => setComentarios(comentarios ? null : { rascunho: null })}><MessageSquare size={17} />{abertas.length > 0 && <small>{abertas.length}</small>}</button>}
+        onClick={e => {
+          // No item de uma base, os comentários já estão na página: o botão leva até eles.
+          const embutidos = pagina.base_id ? e.currentTarget.closest(`.${x.main}`)?.querySelector<HTMLTextAreaElement>(`.${x.comentariosItem} textarea`) : null
+          if (embutidos) { embutidos.scrollIntoView({ block: 'center', behavior: 'smooth' }); embutidos.focus(); return }
+          setComentarios(comentarios ? null : { rascunho: null })
+        }}><MessageSquare size={17} />{abertas.length > 0 && <small>{abertas.length}</small>}</button>}
       <button type="button" className={`${x.topBtn} ${pagina.favorita ? x.starOn : ''}`} aria-label={pagina.favorita ? 'Remover dos favoritos' : 'Favoritar'}
         onClick={() => { setPagina({ ...pagina, favorita: !pagina.favorita }); void favoritar(id, !pagina.favorita) }}>
         <Star size={18} fill={pagina.favorita ? 'currentColor' : 'none'} />
@@ -430,6 +436,9 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
               if (editor) editor.focus(); else { focarEditor.current = true; e.currentTarget.blur() }
             }} />
           {pagina.base_id && <PropriedadesItem pagina={pagina} editavel={editavel} />}
+          {/* Item de base: os comentários ficam aqui, logo abaixo das propriedades (como no Notion). */}
+          {pagina.base_id && !pagina.e_modelo && <Comentarios embutido paginaId={id} euId={user?.id ?? null} rascunho={null}
+            onIrPara={b => controle.current?.irPara(b)} onMudou={setDiscussoes} />}
           {editavel && vazia && !ehBase && !pagina.base_id && <div className={x.starter}>
             Pressione Enter para escrever, ou comece com:
             <div>

@@ -643,7 +643,7 @@
 .comecos .comecoEmoji { font-size: 20px; line-height: 1; color: inherit; }
 
 /* Quadro: ⋯ no cartão (no computador aparece ao passar o mouse; no toque fica sempre). No celular, as colunas encaixam ao rolar. */
-.cardItemTitle > span:nth-last-child(2) { flex: 1; min-width: 0; }
+.cardItemTitle > span { min-width: 0; }
 .cardMais { flex-shrink: 0; align-self: flex-start; margin: -2px -4px 0 auto; width: 24px; height: 24px; border-radius: 5px; display: grid; place-items: center; color: var(--n-muted); opacity: 0; }
 .cardItem:hover .cardMais, .cardMais:focus-visible { opacity: 1; }
 .cardMais:hover { background: var(--n-hover); }
@@ -693,3 +693,47 @@
 }
 /* Foco pelo teclado nas abas das visões: contorno por dentro (a faixa das abas corta o que fica para fora). */
 .viewTab:focus-visible { outline: 2px solid rgba(35, 131, 226, .6); outline-offset: -2px; }
+/* Escalas largas (meses, trimestres): o rótulo passa por cima dos dias vizinhos, sem quebrar. */
+.timelineDiasCompacto span { overflow: visible; justify-content: start; place-items: center start; white-space: nowrap; font-size: 10px; }
+
+/* Comentários dentro do item de uma base: abaixo das propriedades, discussões primeiro e o campo no fim. */
+.comentariosItem { margin: 6px 0 4px; padding: 10px 0 2px; border-top: 1px solid var(--n-line); }
+.comentariosItemTopo { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin-bottom: 4px; }
+.comentariosItemTopo b { font-size: 13px; font-weight: 600; color: var(--n-muted); }
+.comentariosItemLista { display: flex; flex-direction: column; gap: 6px; }
+.comentariosItemLista > :first-child { order: 99; }
+.comentariosItemLista .thread { margin: 0; }
+.contaComentarios { flex-shrink: 0; display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; color: var(--n-faint); font-size: 12px; font-weight: 400; }
+
+/* Colunas: alça entre elas para ajustar a largura (aparece ao passar o mouse). */
+.editorCaixa { position: relative; }
+.alcaColuna { position: absolute; z-index: 3; width: 12px; cursor: col-resize; }
+.alcaColuna::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; border-radius: 1px; background: rgba(35, 131, 226, .55); opacity: 0; transition: opacity .12s; }
+.alcaColuna:hover::after, .alcaColunaAtiva::after { opacity: 1; }
+
+/* ---------- aba Artefatos: galeria */
+.artefatosPagina { max-width: 1180px; margin: 0 auto; padding: 56px 48px 96px; }
+.artefatosTopo h1 { display: flex; align-items: center; gap: 10px; font-size: 30px; font-weight: 700; margin: 0 0 6px; }
+.artefatosTopo h1 svg { color: #a855f7; }
+.artefatosTopo p { margin: 0; font-size: 15px; }
+.artefatosFerramentas { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 24px 0 18px; }
+.artefatosBusca { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 8px; background: var(--n-hover); color: var(--n-muted); width: min(320px, 100%); }
+.artefatosBusca input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--n-text); font: inherit; font-size: 14px; }
+.artefatosGrade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.artefatoCartao { position: relative; border-radius: 12px; overflow: hidden; background: var(--n-bg); box-shadow: rgba(15, 15, 15, .1) 0 0 0 1px, rgba(15, 15, 15, .05) 0 2px 6px; transition: box-shadow .15s, transform .15s; min-height: 236px; }
+.artefatoCartao:hover { box-shadow: rgba(15, 15, 15, .14) 0 0 0 1px, rgba(15, 15, 15, .1) 0 6px 18px; transform: translateY(-1px); }
+.artefatoCartaoCarregando { background: var(--n-hover); animation: pulse 1.4s ease-in-out infinite; }
+.artefatoCartaoLink { display: block; color: var(--n-text); text-decoration: none; }
+.miniatura { position: relative; height: 170px; overflow: hidden; background: #f7f7f5; border-bottom: 1px solid var(--n-line); pointer-events: none; }
+.miniaturaPalco { position: absolute; left: 0; top: 0; width: 1280px; height: 800px; transform-origin: 0 0; }
+.miniaturaMoldura { width: 1280px; height: 800px; border: 0; display: block; background: #fff; }
+.miniaturaVazia { height: 100%; display: grid; place-items: center; color: #c4b5fd; }
+.artefatoCartaoInfo { display: grid; gap: 3px; padding: 12px 40px 14px 14px; }
+.artefatoCartaoInfo b { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.artefatoCartaoInfo small { color: var(--n-faint); font-size: 12px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.artefatoCartaoMais { position: absolute; right: 8px; bottom: 16px; width: 28px; height: 28px; border-radius: 6px; display: grid; place-items: center; color: var(--n-muted); }
+.artefatoCartaoMais:hover { background: var(--n-hover); }
+.artefatosVazio { display: grid; justify-items: center; gap: 10px; max-width: 460px; margin: 64px auto; text-align: center; color: var(--n-muted); font-size: 14px; line-height: 1.55; }
+.artefatosVazio svg { color: #c4b5fd; }
+.artefatosVazio b { color: var(--n-text); font-size: 16px; }
+@media (max-width: 700px) { .artefatosPagina { padding: 24px 16px 64px; } .artefatosGrade { grid-template-columns: 1fr; } }

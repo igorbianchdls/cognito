@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { useOrganization } from '@clerk/nextjs'
 import {
-  ChevronRight, ChevronsLeft, Copy, LayoutGrid, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Trash2, Undo2,
+  ChevronRight, ChevronsLeft, Copy, LayoutGrid, Sparkles, FileText, FileUp, House, Link2, Lock, MoreHorizontal, PenLine, Plus, Search, Star, StarOff, Trash2, Undo2,
 } from 'lucide-react'
 import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore } from '@/products/notas/shared/arvore'
 import { notasApi, type ItemLixeira } from './api'
@@ -188,9 +188,11 @@ export function Sidebar() {
     salvarAbertas([...nova])
   }
 
-  const equipe = useMemo(() => arvore ? montarArvore(arvore.paginas, 'equipe') : [], [arvore])
+  // Artefatos soltos (sem página-mãe) ficam na aba Artefatos, não na árvore; os que estão dentro de uma página aparecem nela.
+  const paginasDaArvore = useMemo(() => (arvore?.paginas ?? []).filter(p => !(p.tipo === 'artefato' && !p.parent_id)), [arvore])
+  const equipe = useMemo(() => arvore ? montarArvore(paginasDaArvore, 'equipe') : [], [arvore, paginasDaArvore])
   // Particular: as minhas. Particulares de outras pessoas que eu enxergo foram compartilhadas comigo.
-  const minhas = useMemo(() => (arvore?.paginas ?? []).filter(p => p.espaco !== 'particular' || !eu || !p.created_by || p.created_by === eu), [arvore, eu])
+  const minhas = useMemo(() => paginasDaArvore.filter(p => p.espaco !== 'particular' || !eu || !p.created_by || p.created_by === eu), [paginasDaArvore, eu])
   const particular = useMemo(() => montarArvore(minhas, 'particular'), [minhas])
   const compartilhadas = useMemo(() => {
     if (!arvore || !eu) return []
@@ -265,6 +267,7 @@ export function Sidebar() {
       <button type="button" className={x.navItem} onClick={() => setBuscaAberta(true)}><Search size={16} />Buscar<kbd>Ctrl+K</kbd></button>
       <Link href="/notas" className={`${x.navItem} ${pathname === '/notas' ? x.navOn : ''}`} onClick={() => { if (ehCelular()) setRecolhida(true) }}><House size={16} />Início</Link>
       <CaixaDeEntrada classe={x.navItem} />
+      <Link href="/artefatos" className={x.navItem}><Sparkles size={16} />Artefatos</Link>
 
       {erro && <div className={x.empty} style={{ padding: '0 16px', height: 'auto' }}>
         <span>{erro} <button type="button" onClick={() => void recarregar()} style={{ textDecoration: 'underline' }}>Tentar de novo</button></span>
