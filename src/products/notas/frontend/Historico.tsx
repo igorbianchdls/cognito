@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Loader2, X } from 'lucide-react'
+import { History, Loader2, X } from 'lucide-react'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { notasApi, type Pagina } from './api'
 import { usePessoas } from './base/pessoas'
@@ -56,7 +56,11 @@ export function Historico({ pagina, podeRestaurar, onFechar, onRestaurada }: {
     <div className={x.historyDialog} role="dialog" aria-label="Histórico de versões">
       <div className={x.historyPreview}>
         {!versoes ? <Loader2 size={18} className={x.spin} />
-          : !versoes.length ? <div className={x.muted} style={{ padding: 24 }}>Ainda não há versões anteriores. Elas aparecem conforme a página é editada (no máximo uma a cada 10 minutos por pessoa) e ficam por 30 dias.</div>
+          : !versoes.length ? <div className={x.artefatoVazio} style={{ height: '100%' }}>
+            <History size={30} strokeWidth={1.5} />
+            <b>Nenhuma versão anterior ainda</b>
+            <span style={{ maxWidth: 380 }}>Conforme a página é editada, o Otto guarda versões (no máximo uma a cada 10 minutos por pessoa) por 30 dias. Daqui dá para ver e restaurar qualquer uma.</span>
+          </div>
             : !mostrada ? <Loader2 size={18} className={x.spin} />
               : <div className={x.doc} style={{ paddingTop: 32 }}>
                 {mostrada.icone && <div style={{ fontSize: 56, lineHeight: 1 }}>{mostrada.icone}</div>}

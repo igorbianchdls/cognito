@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpDown, CalendarDays, GanttChart, ChevronDown, Columns3, Copy, FileText, Filter, LayoutGrid, List, Loader2, PenLine, Plus, Search, SlidersHorizontal, Table2, Trash2, type LucideIcon } from 'lucide-react'
 import { computar, filtrar, novoId, ordenar, SEM_VALOR, TIPOS_VISAO, TITULO, type TipoVisao, type Visao } from '@/products/notas/shared/bases'
@@ -41,6 +41,19 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   const [menu, setMenu] = useState<{ tipo: 'filtros' | 'ordenacao' | 'propriedades' | 'novaVisao' | 'visao' | 'modelos'; ancora: HTMLElement } | null>(null)
   const [busca, setBusca] = useState<string | null>(null)
   const [aberto, setAberto] = useState<string | null>(null)
+  // Esc fecha o item aberto ao lado (como no Notion), se não estiver digitando nem com um menu aberto.
+  useEffect(() => {
+    if (!aberto) return
+    const fechar = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return
+      const alvo = document.activeElement as HTMLElement | null
+      if (alvo?.closest('input, textarea, select, [contenteditable=true]')) return
+      if (document.querySelector('[role=menu], [role=listbox], .bn-suggestion-menu, [role=dialog][aria-modal=true]')) return
+      setAberto(null); void api.carregar()
+    }
+    window.addEventListener('keydown', fechar)
+    return () => window.removeEventListener('keydown', fechar)
+  }, [aberto, api])
   const dados = api.dados
 
   const visao = dados?.base.visoes.find(v => v.id === visaoSalva) ?? dados?.base.visoes[0]

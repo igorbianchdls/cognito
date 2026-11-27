@@ -239,7 +239,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         .sort((a, b) => (recentes.get(a.id) ?? 99) - (recentes.get(b.id) ?? 99) || tituloExibido(a.titulo).localeCompare(tituloExibido(b.titulo), 'pt-BR'))
         .slice(0, MAX_MENCOES)
       const local = (id: string) => arvore ? caminho(arvore.paginas, id).slice(0, -1).map(p => tituloExibido(p.titulo)).join(' / ') : ''
-      return [
+      return titulosUnicos([
         ...listaPessoas,
         ...paginas.map(p => ({
           title: tituloExibido(p.titulo), subtext: local(p.id) || (p.espaco === 'particular' ? 'Particular' : 'Equipe'), group: 'Mencionar página',
@@ -251,10 +251,23 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
           icon: <Plus size={16} />,
           onItemClick: () => { void criarSubpagina(query.trim()).then(nova => { if (nova) editor.insertInlineContent([mencao(nova), ' ']) }) },
         }] : []),
-      ]
+      ])
     }} />
   </BlockNoteView>
   </div>
+}
+
+/**
+ * O menu de sugestões do editor usa o título como chave: duas páginas com o mesmo nome (ou duas "Sem título")
+ * colidiam e o React podia esconder ou trocar itens. Repetidos ganham espaços invisíveis no fim (a tela não muda).
+ */
+function titulosUnicos<T extends { title: string }>(itens: T[]): T[] {
+  const vistos = new Map<string, number>()
+  return itens.map(item => {
+    const n = vistos.get(item.title) ?? 0
+    vistos.set(item.title, n + 1)
+    return n ? { ...item, title: item.title + '\u200b'.repeat(n) } : item
+  })
 }
 
 /** Conteúdo da menção para inserir no texto. */

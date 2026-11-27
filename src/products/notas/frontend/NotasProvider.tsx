@@ -123,8 +123,9 @@ export function NotasProvider({ children }: { children: ReactNode }) {
       else if (e.key === '\\') { e.preventDefault(); setRecolhida(!recolhida) }
       else if (e.altKey && (tecla === 'n' || e.code === 'KeyN')) { e.preventDefault(); void valor.criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' }) }
     }
-    window.addEventListener('keydown', atalho)
-    return () => window.removeEventListener('keydown', atalho)
+    // Na captura: roda antes do atalho do Otto (busca geral), que vê o evento já tratado e não abre uma segunda busca.
+    window.addEventListener('keydown', atalho, true)
+    return () => window.removeEventListener('keydown', atalho, true)
   }, [recolhida, setRecolhida, valor, arvore?.pode_editar_equipe])
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>
