@@ -1,6 +1,6 @@
 // Sample notifications until they come from the backend (phase 2).
 
-export type NotificationKind = 'publicado' | 'erro' | 'comentario' | 'agendado' | 'armazenamento' | 'conta' | 'plugin' | 'arquivos'
+export type NotificationKind = 'publicado' | 'erro' | 'comentario' | 'agendado' | 'armazenamento' | 'conta' | 'plugin' | 'arquivos' | 'notas'
 export type AppNotification = { id: string; kind: NotificationKind; title: string; text: string; date: string; read: boolean; href?: string; action?: string }
 
 export const kindInfo: Record<NotificationKind, { label: string; group: 'Publicações' | 'Comentários' | 'Contas' | 'Arquivos' | 'Sistema' }> = {
@@ -12,6 +12,7 @@ export const kindInfo: Record<NotificationKind, { label: string; group: 'Publica
   plugin: { label: 'Ações do ChatGPT e do Claude', group: 'Sistema' },
   armazenamento: { label: 'Armazenamento', group: 'Arquivos' },
   arquivos: { label: 'Envio de arquivos', group: 'Arquivos' },
+  notas: { label: 'Notas: menções, comentários e lembretes', group: 'Comentários' },
 }
 
 export const seedNotifications: AppNotification[] = [

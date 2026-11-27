@@ -10,6 +10,7 @@ import {
 } from '@/products/notas/shared/bases'
 import { posicaoEntre, tituloExibido } from '@/products/notas/shared/arvore'
 import type { Pagina } from '../api'
+import { IconePagina } from '../IconePagina'
 import { ItemMenu, Menu } from '../Menu'
 import { Celula, ICONE_TIPO, Valor } from './Celula'
 import { ListaTipos, MenuPropriedade } from './MenuPropriedade'
@@ -390,6 +391,15 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
     if (dias !== arrasto.dias) setArrasto({ ...arrasto, dias })
   }
   const terminar = () => { if (arrasto) soltar(arrasto.id, arrasto.dias, arrasto.modo); setArrasto(null) }
+  /** Item sem data arrastado para a grade: ganha a data do dia onde caiu (e o fim no mesmo dia). */
+  const soltarSemData = (e: React.DragEvent<HTMLDivElement>) => {
+    const id = e.dataTransfer.getData('text/x-notas-item')
+    if (!id || !editavel) return
+    e.preventDefault()
+    const dia = somarDias(inicio, Math.floor((e.clientX - e.currentTarget.getBoundingClientRect().left) / largura))
+    void api.mudarItem(id, { propriedades: { [prop.id]: dia, ...(fimProp ? { [fimProp.id]: dia } : {}) } })
+  }
+  const comPeriodo = comData.filter(c => c.periodo)
   const meses = dias.reduce<{ nome: string; n: number }[]>((lista, d) => {
     const bruto = new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
     const nome = bruto.charAt(0).toUpperCase() + bruto.slice(1)
@@ -414,12 +424,16 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
           onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}>{item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span></div>)}
       </div>
       <div className={x.timelineArea}>
-        <div style={{ width: totalDias * largura, position: 'relative' }}>
+        <div style={{ width: totalDias * largura, position: 'relative', minHeight: comPeriodo.length ? undefined : 96 }}
+          onDragOver={e => { if (editavel && e.dataTransfer.types.includes('text/x-notas-item')) e.preventDefault() }} onDrop={soltarSemData}>
           <div className={x.timelineMeses}>{meses.map((m, i) => <span key={i} style={{ width: m.n * largura }}>{m.nome}</span>)}</div>
           <div className={x.timelineDias}>{dias.map(d => <span key={d} style={{ width: largura }} className={`${d === hojeDia ? x.timelineHoje : ''} ${[0, 6].includes(new Date(`${d}T12:00:00Z`).getUTCDay()) ? x.timelineFds : ''}`}>
             {escala === 'dias' || d.endsWith('-01') || new Date(`${d}T12:00:00Z`).getUTCDay() === 1 ? Number(d.slice(8)) : ''}
           </span>)}</div>
           {indice(hojeDia) >= 0 && indice(hojeDia) < totalDias && <div className={x.timelineLinhaHoje} style={{ left: indice(hojeDia) * largura + largura / 2 }} />}
+          {!comPeriodo.length && <div className={x.timelineVazia}>
+            {semData.length && editavel ? 'Arraste um item de “Sem data” para um dia, ou clique em Novo.' : 'Nenhum item com data. Clique em Novo para criar um.'}
+          </div>}
           {comData.filter(c => c.periodo).map(({ item, periodo }) => {
             const a = arrasto?.id === item.id ? arrasto : null
             const ini = indice(periodo!.inicio) + (a?.modo === 'mover' ? a.dias : 0)
@@ -439,8 +453,10 @@ export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valores
     </div>
     {semData.length > 0 && <div className={x.timelineSem}>
       <div className={x.menuLabel}>Sem data ({semData.length})</div>
-      {semData.map(({ item }) => <div key={item.id} className={x.calendarItem} role="button" tabIndex={0} onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}>
-        {item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span>
+      {semData.map(({ item }) => <div key={item.id} className={x.calendarItem} role="button" tabIndex={0} onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
+        draggable={editavel} onDragStart={e => { e.dataTransfer.setData('text/x-notas-item', item.id); e.dataTransfer.effectAllowed = 'move' }}
+        title={editavel ? 'Arraste para um dia da linha do tempo' : undefined}>
+        <IconePagina icone={item.icone} tamanho={14} className={x.timelineSemIcone} /><span className={x.cellText}>{tituloExibido(item.titulo)}</span>
       </div>)}
     </div>}
     {editavel && <button type="button" className={x.newRow} onClick={() => void api.novoItem({ ...valoresNovos, [prop.id]: hojeDia }).then(i => i && abrir(i.id))}><Plus size={16} />Novo</button>}

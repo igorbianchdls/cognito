@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   ArrowUpRight, AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, Phone, Sigma, SquareFunction, Tags, Type, User, UserPlus, X,
   type LucideIcon,
@@ -184,7 +184,8 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
   const { avisar } = useNotas()
   const [editando, setEditando] = useState<HTMLElement | true | null>(comecarEditando ? true : null)
   // A linha pode aparecer antes de saber que é a recém-criada (subitem): abre o título quando o pedido chega.
-  useEffect(() => { if (comecarEditando) setEditando(true) }, [comecarEditando])
+  const [pedido, setPedido] = useState(Boolean(comecarEditando))
+  if (Boolean(comecarEditando) !== pedido) { setPedido(Boolean(comecarEditando)); if (comecarEditando) setEditando(true) }
   const tipo = prop?.tipo ?? 'titulo'
   const valor = prop ? valorDe(item, prop.id, [prop]) : item.titulo
   const automatico = prop ? AUTOMATICOS.includes(prop.tipo) : false
@@ -203,14 +204,7 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
     setEditando(e.currentTarget)
   }
 
-  return <div className={className} style={style} onClick={abrir} role="gridcell"
-    tabIndex={editavel && !automatico ? 0 : undefined} onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) { e.preventDefault(); (e.currentTarget as HTMLElement).click() } }}>
-    {prop ? <Valor prop={prop} valor={valor} pessoas={pessoas} quebrar={quebrar} />
-      : <>{antes}{item.icone ? <span>{item.icone}</span> : <FileText size={16} style={{ flexShrink: 0, marginTop: 2, opacity: .6 }} />}
-        <span className={quebrar ? x.cellWrap : x.cellText}>{item.titulo || <span className={x.placeholder}>{tituloExibido('')}</span>}</span>
-        {onAbrir && <button type="button" className={x.open} onClick={e => { e.stopPropagation(); onAbrir() }}><Maximize2 size={12} />ABRIR</button>}</>}
-    {vazio && (valor === null || valor === undefined || valor === '' || (Array.isArray(valor) && !valor.length)) && prop?.tipo !== 'checkbox' && vazio}
-    {editando && textual && <textarea autoFocus className={x.cellEditor} rows={1}
+  const caixaDeTexto = (classe: string) => <textarea autoFocus className={classe} rows={1}
       defaultValue={prop?.tipo === 'numero' && typeof valor === 'number' ? String(valor).replace('.', ',') : (valor as string) ?? ''}
       onClick={e => e.stopPropagation()} onFocus={e => { const t = e.currentTarget; t.setSelectionRange(t.value.length, t.value.length) }}
       onKeyDown={e => {
@@ -218,7 +212,18 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
         if (e.key === 'Escape') setEditando(null)
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); gravar(e.currentTarget.value) }
       }}
-      onBlur={e => gravar(e.currentTarget.value)} />}
+      onBlur={e => gravar(e.currentTarget.value)} />
+
+  return <div className={className} style={style} onClick={abrir} role="gridcell"
+    tabIndex={editavel && !automatico ? 0 : undefined} onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) { e.preventDefault(); (e.currentTarget as HTMLElement).click() } }}>
+    {prop ? <Valor prop={prop} valor={valor} pessoas={pessoas} quebrar={quebrar} />
+      : <>{antes}{item.icone ? <span>{item.icone}</span> : <FileText size={16} style={{ flexShrink: 0, marginTop: 2, opacity: .6 }} />}
+        {/* O nome em edição fica no lugar do texto (o ícone e o recuo continuam onde estão). */}
+        {editando && textual ? caixaDeTexto(x.cellEditorNome)
+          : <span className={quebrar ? x.cellWrap : x.cellText}>{item.titulo || <span className={x.placeholder}>{tituloExibido('')}</span>}</span>}
+        {onAbrir && !editando && <button type="button" className={x.open} onClick={e => { e.stopPropagation(); onAbrir() }}><Maximize2 size={12} />ABRIR</button>}</>}
+    {vazio && (valor === null || valor === undefined || valor === '' || (Array.isArray(valor) && !valor.length)) && prop?.tipo !== 'checkbox' && vazio}
+    {editando && textual && prop && caixaDeTexto(x.cellEditor)}
     {editando instanceof HTMLElement && prop && (prop.tipo === 'selecao' || prop.tipo === 'multisselecao' || prop.tipo === 'status')
       && <EditorOpcoes prop={prop} valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} criarOpcao={criarOpcao} />}
     {editando instanceof HTMLElement && prop?.tipo === 'data' && <EditorData valor={valor} ancora={editando} onFechar={() => setEditando(null)} onMudar={onMudar} />}

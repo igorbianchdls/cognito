@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { ChevronsRight, Clock, Plus } from 'lucide-react'
 import { tituloExibido } from '@/products/notas/shared/arvore'
+import { IconePagina } from './IconePagina'
 import { useNotas } from './NotasProvider'
 import { useTituloDaAba } from './local'
 import x from './notas.module.css'
@@ -23,7 +24,7 @@ export function Inicio() {
         <div className={x.cards}>
           {recentes.map(p => <Link key={p!.id} href={`/notas/${p!.id}`} className={x.card}>
             <span className={x.cardTop} />
-            <span className={x.cardIcon}>{p!.icone ?? '📄'}</span>
+            <span className={x.cardIcon}><IconePagina icone={p!.icone} tipo={p!.tipo} tamanho={p!.icone ? 26 : 22} /></span>
             <span className={x.cardTitle}>{tituloExibido(p!.titulo)}</span>
           </Link>)}
           <button type="button" className={`${x.card} ${x.cardNew}`} onClick={() => void criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' })}>

@@ -3,7 +3,7 @@
 // Blocos próprios das Notas no editor: destaque (callout), colunas, incorporar, botão e menção de pessoa (@).
 import { useState } from 'react'
 import { createReactBlockSpec, createReactInlineContentSpec } from '@blocknote/react'
-import { ExternalLink, Play, Settings2 } from 'lucide-react'
+import { ExternalLink, Globe, Play, Settings2 } from 'lucide-react'
 import { incorporacao, incorporarArquivo } from '@/products/notas/shared/incorporar'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { notasApi } from './api'
@@ -55,10 +55,7 @@ export const Incorporar = createReactBlockSpec(
       if (!url) return <FormIncorporar editavel={editor.isEditable} onUsar={u => editor.updateBlock(block, { props: { url: u } })} />
       const quadro = incorporarArquivo(url) ?? incorporacao(url)
       if (quadro?.tipo === 'quadro') {
-        return <div className={x.incorporado} contentEditable={false} style={{ aspectRatio: String(quadro.proporcao) }}>
-          <iframe src={quadro.src} title={quadro.servico} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-forms" />
-        </div>
+        return <QuadroIncorporado src={quadro.src} servico={quadro.servico} proporcao={quadro.proporcao} url={url} />
       }
       return <a className={x.cartaoLink} href={quadro?.tipo === 'link' ? quadro.url : '#'} target="_blank" rel="noreferrer" contentEditable={false}>
         <ExternalLink size={16} /><span>{quadro?.tipo === 'link' ? quadro.url : url}</span>
@@ -66,6 +63,22 @@ export const Incorporar = createReactBlockSpec(
     },
   },
 )
+
+/** Quadro incorporado: enquanto carrega mostra o serviço; embaixo, o nome e o link para abrir fora (se o site bloquear). */
+function QuadroIncorporado({ src, servico, proporcao, url }: { src: string; servico: string; proporcao: number; url: string }) {
+  const [carregou, setCarregou] = useState(false)
+  return <figure className={x.incorporadoCaixa} contentEditable={false}>
+    <div className={x.incorporado} style={{ aspectRatio: String(proporcao) }}>
+      {!carregou && <div className={x.incorporadoCarregando}><Globe size={22} /><span>Carregando {servico}…</span></div>}
+      <iframe src={src} title={servico} loading="lazy" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" onLoad={() => setCarregou(true)}
+        sandbox="allow-scripts allow-same-origin allow-popups allow-presentation allow-forms" style={{ opacity: carregou ? 1 : 0 }} />
+    </div>
+    <figcaption className={x.incorporadoRodape}>
+      <span>{servico}</span>
+      <a href={url} target="_blank" rel="noreferrer">Abrir em nova aba<ExternalLink size={12} /></a>
+    </figcaption>
+  </figure>
+}
 
 function FormIncorporar({ editavel, onUsar }: { editavel: boolean; onUsar: (url: string) => void }) {
   const [url, setUrl] = useState('')

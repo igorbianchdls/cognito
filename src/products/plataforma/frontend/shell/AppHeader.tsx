@@ -9,6 +9,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { cn } from "@/lib/utils"
 import { AuthUserMenu } from "@/products/auth/frontend/components/AuthUserMenu"
 import { useNotifications } from "@/products/marketing/frontend/notifications/store"
+import { useAvisosNotas } from "@/products/notas/frontend/avisos"
 import { roleLabel } from "../empresa/Seletor"
 import { OPEN_SEARCH_EVENT } from "../nav/Sidebar"
 
@@ -21,7 +22,8 @@ const button = "relative grid size-9 place-items-center rounded-xl text-[#1d1d1f
 export function AppHeader({ className }: { className?: string }) {
   const pathname = usePathname()
   const { membership } = useOrganization()
-  const unread = useNotifications().filter((n) => !n.read).length
+  // O sino conta tudo: notificações do Otto e avisos das Notas (a caixa de entrada das Notas mostra os mesmos).
+  const unread = useNotifications().filter((n) => !n.read).length + useAvisosNotas().nao_lidas
   const on = (url: string) => pathname === url || pathname.startsWith(url + "/")
 
   return (

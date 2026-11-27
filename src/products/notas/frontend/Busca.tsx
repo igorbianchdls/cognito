@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { FileText, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { IconePagina } from './IconePagina'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
 import { notasApi, type ResultadoBusca } from './api'
 import { useNotas } from './NotasProvider'
@@ -13,6 +14,10 @@ export function Busca() {
   const { buscaAberta } = useNotas()
   return buscaAberta ? <JanelaBusca /> : null
 }
+
+/** O servidor marca o trecho encontrado com «…»: vira destaque. */
+const destacar = (trecho: string) => trecho.split(/(«[^»]*»)/g).map((parte, i) =>
+  parte.startsWith('«') ? <mark key={i}>{parte.slice(1, -1)}</mark> : parte)
 
 function JanelaBusca() {
   const { setBuscaAberta, arvore } = useNotas()
@@ -59,10 +64,10 @@ function JanelaBusca() {
         {!lista.length && <div className={x.searchEmpty}>{buscando ? (resultados ? 'Nenhum resultado.' : 'Buscando…') : 'Abra uma página para ela aparecer aqui.'}</div>}
         {lista.map((item, i) => <button key={item.id} type="button" role="option" aria-selected={i === indice} data-selected={i === indice}
           className={x.searchItem} onMouseEnter={() => setIndice(i)} onClick={() => abrir(item.id)}>
-          <span>{item.icone ?? <FileText size={18} />}</span>
+          <span><IconePagina icone={item.icone} tipo={arvore?.paginas.find(p => p.id === item.id)?.tipo} tamanho={18} /></span>
           <div>
             <b>{tituloExibido(item.titulo)}</b>
-            {item.trecho ? <small>{item.trecho.replace(/[«»]/g, '')}</small> : local(item.id) && <small>{local(item.id)}</small>}
+            {item.trecho ? <small>{destacar(item.trecho)}</small> : local(item.id) && <small>{local(item.id)}</small>}
           </div>
         </button>)}
       </div>

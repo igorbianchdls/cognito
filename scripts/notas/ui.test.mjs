@@ -216,7 +216,7 @@ describe('Notas — telas de ponta a ponta', () => {
 
   test('etapa 5: restringir, publicar na web e abrir o link público sem login', async () => {
     await page.getByRole('button', { name: 'Compartilhar' }).click()
-    await page.getByLabel('Acesso geral').selectOption('restrito')
+    await page.getByRole('radio', { name: /Só quem foi convidado/ }).click()
     await page.locator('header').getByTitle('Acesso restrito').waitFor()
     await page.getByRole('button', { name: /Publicar na web/ }).click()
     const link = await page.getByLabel('Link público').inputValue()
@@ -299,12 +299,12 @@ describe('Notas — telas de ponta a ponta', () => {
     const sql = "INSERT INTO notas.notificacoes (workspace_id, user_id, tipo, pagina_id, autor, texto) SELECT 'org_a', 'ana', 'comentario', id, 'bia', 'Pode revisar?' FROM notas.paginas WHERE titulo = 'Blocos novos' LIMIT 1"
     execFileSync('psql', ['-q', process.env.NOTAS_TEST_DB_URL ?? 'postgresql://postgres@localhost:54329/postgres', '-c', sql])
     await page.goto(`${BASE}/notas`, { waitUntil: 'domcontentloaded' })
-    await page.getByRole('button', { name: /Caixa de entrada\s*1/ }).click()
+    await page.getByRole('button', { name: /Atualizações\s*1/ }).click()
     await page.getByText('Pode revisar?').waitFor()
     await foto('ui-16-caixa')
     await page.getByText('Pode revisar?').click()
     await page.waitForURL(/\/notas\/[0-9a-f-]{36}$/)
-    await page.getByRole('button', { name: /^Caixa de entrada$/ }).first().waitFor()
+    await page.getByRole('button', { name: /^Atualizações$/ }).first().waitFor()
   })
 
   test('etapa 6: importar ZIP do Notion (página, subpágina, base e imagem)', async () => {

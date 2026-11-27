@@ -21,7 +21,7 @@ export const defaults: Settings = {
   workspace: { name: 'Otto ERP', timezone: 'America/Sao_Paulo', language: 'pt-BR' },
   appearance: { theme: 'claro', compact: false },
   notifications: {
-    kinds: { publicado: true, erro: true, comentario: true, agendado: true, armazenamento: true, conta: true, plugin: true, arquivos: false },
+    kinds: { publicado: true, erro: true, comentario: true, agendado: true, armazenamento: true, conta: true, plugin: true, arquivos: false, notas: true },
     email: false, push: true, daily: true, quietFrom: '22:00', quietTo: '07:00',
   },
   posting: { accountIds: remoteMode ? [] : ['ig-otto'], format: 'reel', time: '19:00', confirm: true, hashtags: '' },

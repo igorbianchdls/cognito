@@ -8,7 +8,8 @@ import { BlockNoteEditor, BlockNoteSchema, defaultBlockSpecs, defaultInlineConte
 import { blocksToYXmlFragment, CollaborationExtension } from '@blocknote/core/yjs'
 import * as Y from 'yjs'
 import type { Awareness } from 'y-protocols/awareness'
-import { pt } from '@blocknote/core/locales'
+import { DICIONARIO, arrumarMenu } from './menuBarra'
+import { IconePagina } from './IconePagina'
 import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
@@ -137,7 +138,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     ...(colaboracao
       ? { extensions: [CollaborationExtension({ fragment: colaboracao.fragment, user: colaboracao.usuario, provider: { awareness: colaboracao.awareness }, showCursorLabels: 'activity' })] }
       : { initialContent: inicial as never }),
-    dictionary: { ...pt, placeholders: { ...pt.placeholders, default: "Digite '/' para ver os comandos" } },
+    dictionary: DICIONARIO,
     uploadFile: enviarArquivoNotas,
   }, [chave])
 
@@ -176,10 +177,10 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   {destaques && destaques.length > 0 && <style>{destaques.map(id => `.bn-block[data-id="${CSS.escape(id)}"] > .bn-block-content`).join(',') + '{background:rgba(255,212,0,.16);border-bottom:2px solid rgba(255,212,0,.6)}'}</style>}
   <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
     onChange={() => onMudar(editor.document)}>
-    <SuggestionMenuController triggerCharacter="/" getItems={async query => agruparItens(filterSuggestionItems([
+    <SuggestionMenuController triggerCharacter="/" getItems={async query => arrumarMenu(filterSuggestionItems([
       ...getDefaultReactSlashMenuItems(editor),
       {
-        title: 'Página', subtext: 'Cria uma subpágina dentro desta', group: 'Básicos', aliases: ['pagina', 'page', 'subpagina'],
+        title: 'Página', subtext: 'Uma página dentro desta', group: 'Básicos', aliases: ['pagina', 'page', 'subpagina'],
         icon: <FileText size={18} />,
         onItemClick: () => {
           void criarSubpagina().then(nova => {
@@ -190,8 +191,8 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         },
       },
       ...([
-        ['Tabela (base de dados)', 'Base de dados em tabela, dentro desta página', 'vazia', 'tabela', Table2, ['tabela', 'table', 'base', 'database', 'banco']],
-        ['Quadro (base de dados)', 'Base de dados em quadro (kanban)', 'vazia', 'quadro', Columns3, ['quadro', 'kanban', 'board']],
+        ['Tabela (base de dados)', 'Base com colunas tipadas, filtros e visões', 'vazia', 'tabela', Table2, ['tabela', 'table', 'base', 'database', 'banco']],
+        ['Quadro (base de dados)', 'Cartões em colunas, como um kanban', 'vazia', 'quadro', Columns3, ['quadro', 'kanban', 'board']],
         ['Lista de tarefas', 'Base com status, responsável, prazo e prioridade', 'tarefas', 'quadro', ListChecks, ['tarefas', 'tasks', 'todo']],
       ] as const).map(([title, subtext, modelo, visao, Icone, aliases]) => ({
         title, subtext, group: 'Bases de dados', aliases: [...aliases], icon: <Icone size={18} />,
@@ -201,11 +202,11 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         },
       })),
       {
-        title: 'Destaque', subtext: 'Texto em evidência, com ícone e cor', group: 'Básicos', aliases: ['destaque', 'callout', 'aviso', 'nota'],
+        title: 'Destaque', subtext: 'Texto em evidência, com ícone e cor de fundo', group: 'Básicos', aliases: ['destaque', 'callout', 'aviso', 'nota'],
         icon: <MessageSquareWarning size={18} />, onItemClick: () => trocarBloco({ type: 'destaque' }),
       },
       ...([2, 3] as const).map(n => ({
-        title: `${n} colunas`, subtext: `Divide o espaço em ${n} colunas lado a lado`, group: 'Layout', aliases: ['colunas', 'columns', `${n}`],
+        title: `${n} colunas`, subtext: `Blocos lado a lado em ${n} colunas`, group: 'Layout', aliases: ['colunas', 'columns', `${n}`],
         icon: n === 2 ? <Columns2 size={18} /> : <Columns3 size={18} />,
         onItemClick: () => {
           trocarBloco({ type: 'colunas', children: Array.from({ length: n }, () => ({ type: 'coluna', children: [{ type: 'paragraph' }] })) })
@@ -216,18 +217,18 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         },
       })),
       {
-        title: 'Incorporar', subtext: 'YouTube, Vimeo, Loom, Figma, Google Maps ou PDF', group: 'Mídia', aliases: ['incorporar', 'embed', 'youtube', 'video', 'figma', 'mapa'],
+        title: 'Incorporar', subtext: 'YouTube, Vimeo, Loom, Figma, Google Maps ou PDF por link', group: 'Mídia', aliases: ['incorporar', 'embed', 'youtube', 'video', 'figma', 'mapa'],
         icon: <Globe size={18} />, onItemClick: () => trocarBloco({ type: 'incorporar' }),
       },
       {
-        title: 'Botão', subtext: 'Insere um texto pronto ou cria um item numa base', group: 'Avançados', aliases: ['botao', 'button', 'acao'],
+        title: 'Botão', subtext: 'Um clique insere texto pronto ou cria um item', group: 'Avançados', aliases: ['botao', 'button', 'acao'],
         icon: <MousePointerClick size={18} />, onItemClick: () => trocarBloco({ type: 'botao' }),
       },
     ], query))} />
     <SuggestionMenuController triggerCharacter="@" getItems={async query => {
       const termoPessoa = query.trim().toLowerCase()
       const listaPessoas = pessoas.filter(p => p.nome.toLowerCase().includes(termoPessoa)).slice(0, 6).map(p => ({
-        title: p.nome, subtext: 'Avisa a pessoa na caixa de entrada', group: 'Pessoas', aliases: [],
+        title: p.nome, subtext: 'Avisa a pessoa em Atualizações', group: 'Pessoas', aliases: [],
         icon: <span className={x.avatar}>{p.nome.slice(0, 1).toUpperCase()}</span>,
         onItemClick: () => editor.insertInlineContent([{ type: 'pessoa', props: { userId: p.id, nome: p.nome } }, ' ']),
       }))
@@ -242,7 +243,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         ...listaPessoas,
         ...paginas.map(p => ({
           title: tituloExibido(p.titulo), subtext: local(p.id) || (p.espaco === 'particular' ? 'Particular' : 'Equipe'), group: 'Mencionar página',
-          icon: <span style={{ fontSize: 16 }}>{p.icone ?? '📄'}</span>,
+          icon: <IconePagina icone={p.icone} tipo={p.tipo} tamanho={16} />,
           onItemClick: () => editor.insertInlineContent([mencao(p), ' ']),
         })),
         ...(editavel ? [{
@@ -254,13 +255,6 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     }} />
   </BlockNoteView>
   </div>
-}
-
-/** Itens do mesmo grupo ficam juntos (o menu mostra um título por grupo; grupo repetido aparece duas vezes). */
-function agruparItens<T extends { group?: string }>(itens: T[]): T[] {
-  const ordem = new Map<string, number>()
-  itens.forEach(i => { if (!ordem.has(i.group ?? '')) ordem.set(i.group ?? '', ordem.size) })
-  return itens.map((item, i) => ({ item, i })).sort((a, b) => ordem.get(a.item.group ?? '')! - ordem.get(b.item.group ?? '')! || a.i - b.i).map(x => x.item)
 }
 
 /** Conteúdo da menção para inserir no texto. */

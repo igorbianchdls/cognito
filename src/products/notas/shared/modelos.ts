@@ -11,13 +11,22 @@ const todo = (texto: string): Bloco => ({ type: 'checkListItem', props: { checke
 const cit = (texto: string): Bloco => ({ type: 'quote', content: [t(texto)] })
 const vazio: Bloco = { type: 'paragraph', content: [] }
 
+/** Trocado pela data do dia ao aplicar o modelo. */
+export const HOJE = '{{hoje}}'
+
+/** Conteúdo do modelo pronto para a página: a data de hoje no lugar de {{hoje}}. */
+export function conteudoDoModelo(modelo: ModeloPagina, hoje = new Date()) {
+  const data = hoje.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return JSON.parse(JSON.stringify(modelo.conteudo).split(HOJE).join(data)) as ModeloPagina['conteudo']
+}
+
 export type ModeloPagina = { id: string; nome: string; descricao: string; icone: string; titulo: string; conteudo: Bloco[] }
 
 export const MODELOS_PAGINA: ModeloPagina[] = [
   {
     id: 'reuniao', nome: 'Ata de reunião', descricao: 'Pauta, decisões e próximos passos', icone: '🗓️', titulo: 'Reunião',
     conteudo: [
-      p(t('Data: ', { bold: true }), '  ·  ', t('Participantes: ', { bold: true })),
+      p(t('Data: ', { bold: true }), HOJE, '   ', t('Participantes: ', { bold: true }), 'mencione com @'),
       h(2, 'Pauta'), num('Assunto 1'), num('Assunto 2'),
       h(2, 'Anotações'), vazio,
       h(2, 'Decisões'), li('…'),

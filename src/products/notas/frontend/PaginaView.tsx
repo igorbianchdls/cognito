@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  ChevronsRight, Columns3, Copy, Download, FileText, Globe, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, MessageSquare, Printer, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2,
+  ChevronsRight, Columns3, Copy, Download, Globe, History, ImageIcon, LayoutTemplate, List, ListChecks, Link2, Lock, MessageSquare, Printer, Maximize2, MoreHorizontal, MoveVertical, Smile, Star, Table2, UserPlus,
   Trash2, Undo2, Unlock,
 } from 'lucide-react'
 import { caminho, textoDoConteudo, tituloExibido } from '@/products/notas/shared/arvore'
@@ -17,13 +17,14 @@ import { deBase64, ORIGEM_SERVIDOR, paraBase64 } from '@/products/notas/shared/c
 import { type BaseCompleta } from './api'
 import { Comentarios, type Comentario } from './Comentarios'
 import { Compartilhar } from './Compartilhar'
+import { IconePagina } from './IconePagina'
 import { useColaboracao, type Colaboracao, type Presente } from './tempoReal'
 import type { ControleEditor } from './Editor'
 import { editadoHa, ErroNotas, notasApi, type Pagina } from './api'
 import { BaseView } from './base/BaseView'
 import { PropriedadesItem } from './base/PropriedadesItem'
 import { avisarItem } from './base/useBase'
-import { MODELOS_PAGINA, type ModeloPagina } from '@/products/notas/shared/modelos'
+import { MODELOS_PAGINA, conteudoDoModelo, type ModeloPagina } from '@/products/notas/shared/modelos'
 import { Historico } from './Historico'
 import { estiloCapa } from './catalogo'
 import { Chave, ItemMenu, Menu } from './Menu'
@@ -247,7 +248,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     try {
       // A versão do servidor muda com as gravações do editor em conjunto: lê a atual para não dar conflito.
       const agora = await notasApi<Pagina>(`/paginas/${id}`)
-      await notasApi(`/paginas/${id}`, { method: 'PATCH', json: { versao: agora.versao, conteudo: modelo.conteudo,
+      await notasApi(`/paginas/${id}`, { method: 'PATCH', json: { versao: agora.versao, conteudo: conteudoDoModelo(modelo),
         ...(pagina.titulo ? {} : { titulo: modelo.titulo }), ...(pagina.icone ? {} : { icone: modelo.icone }) } })
       await Promise.all([carregar(), recarregar()])
     } catch (e) { avisar((e as Error).message) }
@@ -323,20 +324,24 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
           <nav className={x.crumbs} aria-label="Caminho">
             {trilhaVisivel.map((item, i, lista) => <span key={item?.id ?? 'reticencias'} style={{ display: 'contents' }}>
               {item
-                ? <Link href={`/notas/${item.id}`} className={x.crumb}>{item.icone ? <span>{item.icone}</span> : <FileText size={14} />}<span>{tituloExibido(item.titulo)}</span></Link>
+                ? <Link href={`/notas/${item.id}`} className={x.crumb}><IconePagina icone={item.icone} tipo={item.tipo} tamanho={14} /><span>{tituloExibido(item.titulo)}</span></Link>
                 : <span className={x.crumb} title={itensTrilha.slice(1, -2).map(p => tituloExibido(p.titulo)).join(' / ')}>…</span>}
               {i < lista.length - 1 && <span className={x.crumbSep}>/</span>}
             </span>)}
           </nav>
         </>}
-      <span className={x.saving} aria-live="polite">{estado === 'salvando' || estado === 'pendente' ? 'Salvando…' : estado === 'erro' && !conflito ? 'Não salvo' : ''}</span>
-      <span className={x.edited}>{editadoHa(pagina.updated_at)}</span>
+      {/* Um texto só: "Salvando…" enquanto grava, depois "Editado agora". */}
+      <span className={estado === 'erro' && !conflito ? x.saving : x.edited} aria-live="polite">
+        {estado === 'salvando' || estado === 'pendente' ? 'Salvando…' : estado === 'erro' && !conflito ? 'Não salvo' : editadoHa(pagina.updated_at)}
+      </span>
       {presentes.length > 0 && <span className={x.presence} aria-label={`Também aqui: ${presentes.map(p => p.nome).join(', ')}`}>
         {presentes.slice(0, 5).map(p => <span key={p.clientId} title={p.nome} style={{ background: p.cor }}>{p.nome.slice(0, 1).toUpperCase()}</span>)}
       </span>}
       {(pagina.acesso === 'restrito' || pagina.restricao_id) && <span className={x.topBtn} title="Acesso restrito"><Lock size={14} /></span>}
       {pagina.publica && <span className={x.topBtn} title="Publicada na web"><Globe size={14} /></span>}
-      {!lateral && <button type="button" className={x.topBtn} onClick={e => setCompartilhar(e.currentTarget)}>Compartilhar</button>}
+      {!lateral && <button type="button" className={x.topBtn} aria-label="Compartilhar" onClick={e => setCompartilhar(e.currentTarget)}>
+        <UserPlus size={17} className={x.soCelular} /><span className={x.soComputador}>Compartilhar</span>
+      </button>}
       {!ehBase && <button type="button" className={x.topBtn} aria-label="Comentários" title="Comentários (Ctrl+Alt+M comenta o bloco)"
         onClick={() => setComentarios(comentarios ? null : { rascunho: null })}><MessageSquare size={17} />{abertas.length > 0 && <small>{abertas.length}</small>}</button>}
       <button type="button" className={`${x.topBtn} ${pagina.favorita ? x.starOn : ''}`} aria-label={pagina.favorita ? 'Remover dos favoritos' : 'Favoritar'}

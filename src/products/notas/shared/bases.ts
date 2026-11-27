@@ -42,7 +42,7 @@ export type Propriedade = {
   expressao?: string
   /** Relação nos dois sentidos: a propriedade de relação na outra base que espelha esta. */
   reciproca?: string
-  /** Data: avisar na caixa de entrada no dia ou um dia antes. */
+  /** Data: avisar em Atualizações no dia ou um dia antes. */
   lembrete?: 'no_dia' | 'um_dia_antes'
 }
 
