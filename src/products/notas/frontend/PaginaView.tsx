@@ -60,7 +60,7 @@ function EditorColaborativo({ pagina, aoConectar, aoPresentes, ...props }: Omit<
 }) {
   const { user } = useUser()
   const pessoa = { id: user?.id ?? 'eu', nome: user?.fullName || user?.firstName || 'Alguém' }
-  const c = useColaboracao(pagina.id, pagina.geracao_yjs, pagina.estado_yjs, pessoa)
+  const c = useColaboracao(pagina.id, pagina.geracao_yjs, pagina.estado_yjs, pessoa, pagina.canal)
   useEffect(() => { aoConectar(c); return () => aoConectar(null) }, [c.sincronizador, aoConectar]) // eslint-disable-line react-hooks/exhaustive-deps -- reconecta quando o canal fica pronto
   useEffect(() => { aoPresentes(c.presentes) }, [c.presentes, aoPresentes])
   const [usuario] = useState(() => ({ name: pessoa.nome, color: '#2383e2' }))
@@ -102,7 +102,8 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const [discussoes, setDiscussoes] = useState<Comentario[]>([])
   const [compartilhar, setCompartilhar] = useState<HTMLElement | null>(null)
   const [sincronizador, setSincronizador] = useState<Colaboracao['sincronizador']>(null)
-  const aoConectar = useCallback((c: Colaboracao | null) => { colab.current = c; setSincronizador(c?.sincronizador ?? null) }, [])
+  // Ao desligar, o documento continua guardado: a última gravação (ao sair da página ou fechar a aba) ainda o envia.
+  const aoConectar = useCallback((c: Colaboracao | null) => { if (c) colab.current = c; setSincronizador(c?.sincronizador ?? null) }, [])
   const { user } = useUser()
   useTituloDaAba(!lateral && pagina ? `${pagina.icone ? `${pagina.icone} ` : ''}${tituloExibido(pagina.titulo)} · Notas` : null)
 
@@ -126,6 +127,8 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   const salvar = useCallback(async () => {
     if (timer.current) { clearTimeout(timer.current); timer.current = null }
     const campos = pendente.current
+    // Base de dados não tem texto: um conteúdo que chegue atrasado do editor (logo depois de virar base) é descartado.
+    if (!ehColaborativa.current && pagina?.tipo === 'base') delete campos.conteudo
     if (!Object.keys(campos).length || conflito) return
     pendente.current = {}
     setEstado('salvando')
@@ -148,7 +151,7 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
       pendente.current = { ...campos, ...pendente.current }
       setEstado('erro'); avisar((e as Error).message)
     }
-  }, [id, conflito, recarregar, avisar])
+  }, [id, conflito, recarregar, avisar, pagina?.tipo])
   useEffect(() => { salvarDeNovo.current = salvar }, [salvar])
 
   const mudar = useCallback((campos: Partial<Pagina>, imediato = false) => {
@@ -242,7 +245,9 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
     setMenuModelos(null)
     await salvar()
     try {
-      await notasApi(`/paginas/${id}`, { method: 'PATCH', json: { versao: versao.current, conteudo: modelo.conteudo,
+      // A versão do servidor muda com as gravações do editor em conjunto: lê a atual para não dar conflito.
+      const agora = await notasApi<Pagina>(`/paginas/${id}`)
+      await notasApi(`/paginas/${id}`, { method: 'PATCH', json: { versao: agora.versao, conteudo: modelo.conteudo,
         ...(pagina.titulo ? {} : { titulo: modelo.titulo }), ...(pagina.icone ? {} : { icone: modelo.icone }) } })
       await Promise.all([carregar(), recarregar()])
     } catch (e) { avisar((e as Error).message) }
@@ -251,6 +256,9 @@ export function PaginaView({ id, lateral, onFechar }: { id: string; lateral?: bo
   /** Página vazia → base ("Comece com: Tabela, Quadro, Lista, Tarefas"). */
   const virarBase = async (modelo: 'vazia' | 'tarefas', visao: TipoVisao) => {
     await salvar()
+    // O que o editor ainda ia gravar perde o sentido: a página vira base (sem texto).
+    if (timer.current) { clearTimeout(timer.current); timer.current = null }
+    pendente.current = {}
     try { await notasApi('/bases', { method: 'POST', json: { converter: id, modelo, visao } }); await Promise.all([carregar(), recarregar()]) } catch (e) { avisar((e as Error).message) }
   }
 

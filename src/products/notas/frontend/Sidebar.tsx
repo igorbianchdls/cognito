@@ -11,6 +11,7 @@ import { montarArvore, posicaoEntre, tituloExibido, type Espaco, type NoArvore }
 import { notasApi, type ItemLixeira } from './api'
 import { ItemMenu, Menu } from './Menu'
 import { useLocal } from './local'
+import { CaixaDeEntrada } from './CaixaDeEntrada'
 import { useNotas } from './NotasProvider'
 import x from './notas.module.css'
 
@@ -191,7 +192,7 @@ export function Sidebar() {
   }, [arvore, eu])
   const importar = async (arquivo: File) => {
     setImportando(true)
-    try { const { importarArquivo } = await import('./importar'); const id = await importarArquivo(arquivo, arvore?.pode_editar_equipe === false ? 'particular' : 'equipe'); await recarregar(); router.push(`/notas/${id}`) }
+    try { const { importarArquivo } = await import('./importar'); const id = await importarArquivo(arquivo, arvore?.pode_editar_equipe === false ? 'particular' : 'equipe', (feitas, total) => avisar(`Importando ${feitas} de ${total}…`)); await recarregar(); router.push(`/notas/${id}`) }
     catch (e) { avisar((e as Error).message) } finally { setImportando(false) }
   }
   const favoritos = useMemo(() => {
@@ -252,6 +253,7 @@ export function Sidebar() {
       </div>
       <button type="button" className={x.navItem} onClick={() => setBuscaAberta(true)}><Search size={16} />Buscar<kbd>Ctrl+K</kbd></button>
       <Link href="/notas" className={`${x.navItem} ${pathname === '/notas' ? x.navOn : ''}`} onClick={() => { if (ehCelular()) setRecolhida(true) }}><House size={16} />Início</Link>
+      <CaixaDeEntrada classe={x.navItem} />
 
       {erro && <div className={x.empty} style={{ padding: '0 16px', height: 'auto' }}>
         <span>{erro} <button type="button" onClick={() => void recarregar()} style={{ textDecoration: 'underline' }}>Tentar de novo</button></span>
@@ -271,9 +273,9 @@ export function Sidebar() {
     </div>
     <div className={x.sideFoot}>
       <button type="button" className={x.navItem} disabled={importando} onClick={() => entradaArquivo.current?.click()}>
-        <FileUp size={16} />{importando ? 'Importando…' : 'Importar'}
+        <FileUp size={16} />{importando ? 'Importando…' : 'Importar'}<small className={x.navDica}>Markdown, CSV, Notion</small>
       </button>
-      <input ref={entradaArquivo} type="file" accept=".md,.markdown,.txt,.html,.htm,.csv" hidden aria-label="Arquivo para importar"
+      <input ref={entradaArquivo} type="file" accept=".md,.markdown,.txt,.html,.htm,.csv,.zip" hidden aria-label="Arquivo para importar"
         onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void importar(f) }} />
       <button type="button" className={x.navItem} onClick={e => setLixeira(e.currentTarget)}><Trash2 size={16} />Lixeira</button>
       <button type="button" className={x.navItem} title="Nova página (Ctrl+Alt+N)" onClick={() => void criar({ espaco: arvore?.pode_editar_equipe === false ? 'particular' : 'equipe' })}><Plus size={16} />Nova página</button>

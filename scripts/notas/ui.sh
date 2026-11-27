@@ -11,7 +11,7 @@ pkill -f "next dev -p $porta" 2>/dev/null || true
 rm -rf .next/dev
 if [ -f .next/BUILD_ID ]; then echo "Há uma compilação de produção em .next; mova a pasta antes de rodar os testes de tela." >&2; exit 1; fi
 log="$(mktemp)"
-NODE_ENV=development NEXT_PUBLIC_NOTAS_TEMPO_REAL=local NOTAS_TESTE_USUARIO=ana:org_a SUPABASE_DB_URL="$url_banco" npx next dev -p "$porta" >"$log" 2>&1 &
+NODE_ENV=development NEXT_PUBLIC_NOTAS_TEMPO_REAL=local NOTAS_TESTE_USUARIO=ana:org_a NOTAS_CANAL_SEGREDO=segredo-dos-testes-de-tela SUPABASE_DB_URL="$url_banco" npx next dev -p "$porta" >"$log" 2>&1 &
 servidor=$!
 trap 'kill $servidor 2>/dev/null || true; pkill -f "next dev -p $porta" 2>/dev/null || true' EXIT
 for _ in $(seq 1 90); do curl -sf -o /dev/null "http://localhost:$porta/api/notas/arvore" && break; sleep 2; done

@@ -34,7 +34,8 @@ export function abrirCanal(topico: string): Transporte {
   }
   const db = supabase()
   if (!db) return { enviar: () => undefined, ouvir: () => () => undefined, fechar: () => undefined }
-  const canal = db.channel(topico, { config: { private: true, broadcast: { self: false } } })
+  // "notas-<chave>": canal cujo nome só o servidor sabe gerar (entregue a quem pode editar); os demais, privados.
+  const canal = db.channel(topico, { config: { private: !topico.startsWith('notas-'), broadcast: { self: false } } })
   const fila: [string, string][] = []
   let conectado = false
   let ouvinte: ((e: string, d: string) => void) | null = null
@@ -62,7 +63,7 @@ export const corDaPessoa = (id: string) => CORES[[...id].reduce((s, c) => s + c.
  * Edição simultânea de uma página: o documento (começa com o estado salvo no servidor), a presença e o sincronizador
  * ligado ao canal da página nesta geração do documento.
  */
-export function useColaboracao(paginaId: string, geracao: number, estado: string | null | undefined, pessoa: { id: string; nome: string }) {
+export function useColaboracao(paginaId: string, geracao: number, estado: string | null | undefined, pessoa: { id: string; nome: string }, canal?: string | null) {
   const [base] = useState(() => {
     const doc = new Y.Doc()
     if (estado) Y.applyUpdate(doc, deBase64(estado))
@@ -76,14 +77,16 @@ export function useColaboracao(paginaId: string, geracao: number, estado: string
   }, [base, pessoa.id, pessoa.nome])
 
   useEffect(() => {
-    const s = new Sincronizador(base.doc, abrirCanal(`notas:pagina:${paginaId}:${geracao}`), base.awareness)
+    // Sem canal (quem só visualiza): documento sem tempo real; as mudanças aparecem ao abrir de novo.
+    const transporte: Transporte = canal ? abrirCanal(canal) : { enviar: () => undefined, ouvir: () => () => undefined, fechar: () => undefined }
+    const s = new Sincronizador(base.doc, transporte, base.awareness)
     const atualizar = () => setPresentes([...base.awareness.getStates().entries()]
       .filter(([id, estado]) => id !== base.doc.clientID && (estado as { user?: unknown }).user)
       .map(([clientId, estado]) => { const u = (estado as { user: { id: string; name: string; color: string } }).user; return { id: u.id, nome: u.name, cor: u.color, clientId } }))
     base.awareness.on('change', atualizar)
     const t = setTimeout(() => setSincronizador(s), 0)
     return () => { clearTimeout(t); base.awareness.off('change', atualizar); s.destruir() }
-  }, [base, paginaId, geracao])
+  }, [base, paginaId, geracao, canal])
 
   useEffect(() => () => base.awareness.destroy(), [base])
   return { doc: base.doc, awareness: base.awareness, fragment: base.doc.getXmlFragment('conteudo'), sincronizador, presentes }

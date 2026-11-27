@@ -292,4 +292,16 @@ describe('Notas no banco (integração)', { skip: pular ? 'defina NOTAS_TEST_DB_
     assert.ok((await m.tarefaDiaria('2026-12-11')).apagadas >= 1)
     assert.equal((await m.consultaDoServidor('SELECT 1 FROM notas.paginas WHERE id = $1', [velha.id])).length, 0)
   })
+
+  test('etapa 6: duas gravações colaborativas ao mesmo tempo não dão conflito e nada se perde', async () => {
+    const p = await m.criarPagina(ana, { titulo: 'Simultânea' })
+    const doc = (t: string) => { const d = new Y.Doc(); d.getText('t').insert(0, t); return Buffer.from(Y.encodeStateAsUpdate(d)).toString('base64') }
+    const [a, b] = await Promise.all([
+      m.atualizarPagina(ana, p.id, null, { estado_yjs: doc('A '), geracao_yjs: p.geracao_yjs, conteudo: [] }),
+      m.atualizarPagina(bia, p.id, null, { estado_yjs: doc('B '), geracao_yjs: p.geracao_yjs, conteudo: [] }),
+    ])
+    assert.ok(a && b)
+    const final = new Y.Doc(); Y.applyUpdate(final, Buffer.from((await m.obterPagina(ana, p.id)).estado_yjs!, 'base64'))
+    assert.match(final.getText('t').toString(), /A/); assert.match(final.getText('t').toString(), /B/)
+  })
 })

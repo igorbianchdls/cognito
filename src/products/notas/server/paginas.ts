@@ -135,6 +135,8 @@ export function atualizarPagina(ctx: Contexto, id: string, versaoPedida: number 
     }
     if (alteracao.conteudo !== undefined) sets.push(`conteudo_texto = $${params.push(textoDoConteudo(alteracao.conteudo))}`)
     if (colaborativa) {
+      // A linha fica travada até o fim: duas gravações ao mesmo tempo se fundem uma depois da outra, sem conflito de
+      // versão (o documento colaborativo não depende da ordem).
       const { rows } = await client.query('SELECT estado_yjs FROM notas.paginas WHERE id = $1 FOR UPDATE', [id])
       sets.push(`estado_yjs = $${params.push(fundirEstados(rows[0]?.estado_yjs ?? null, alteracao.estado_yjs!))}`)
     } else if (alteracao.conteudo !== undefined) {
@@ -144,7 +146,7 @@ export function atualizarPagina(ctx: Contexto, id: string, versaoPedida: number 
     if (!sets.length) return atual
     if (alteracao.conteudo !== undefined || alteracao.titulo !== undefined || alteracao.icone !== undefined) await fotografar(client, ctx, atual)
     const { rowCount } = await client.query(`UPDATE notas.paginas SET ${sets.join(', ')}, versao = versao + 1, updated_by = editor.uid()
-      WHERE id = $1 AND versao = $2 AND arquivada_em IS NULL`, params)
+      WHERE id = $1 AND (versao = $2 OR $${params.push(colaborativa)}) AND arquivada_em IS NULL`, params)
     if (!rowCount) throw new NotasError(409, 'Esta página foi alterada em outro lugar. Recarregue para ver a versão atual.', await lerPagina(client, ctx, id))
     const salva = await lerPagina(client, ctx, id)
     // Pessoas mencionadas agora (e não antes) recebem aviso, uma vez por página.

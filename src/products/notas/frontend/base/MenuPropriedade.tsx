@@ -21,15 +21,19 @@ import x from '../notas.module.css'
 export function ListaTipos({ atual, onEscolher }: { atual?: TipoPropriedade; onEscolher: (tipo: TipoPropriedade, extra?: Partial<Propriedade>) => void }) {
   const { arvore } = useNotas()
   const [escolhendoBase, setEscolhendoBase] = useState(false)
+  const [dupla, setDupla] = useState(true)
   if (escolhendoBase) {
     const bases = (arvore?.paginas ?? []).filter(p => p.tipo === 'base')
     return <div className={x.optList}>
       <ItemMenu icone={ChevronLeft} onClick={() => setEscolhendoBase(false)}>Voltar</ItemMenu>
       <div className={x.menuLabel}>Ligar a qual base?</div>
       {!bases.length && <div className={x.menuLabel}>Crie outra base primeiro.</div>}
-      {bases.map(b => <ItemMenu key={b.id} icone={b.icone ? undefined : Table2} onClick={() => onEscolher('relacao', { baseRelacionada: b.id })}>
+      {bases.map(b => <ItemMenu key={b.id} icone={b.icone ? undefined : Table2} onClick={() => onEscolher('relacao', { baseRelacionada: b.id, ...(dupla ? { reciproca: '__nova__' } : {}) })}>
         {b.icone ? `${b.icone} ` : ''}{tituloExibido(b.titulo)}
       </ItemMenu>)}
+      <label className={x.filterRow} style={{ fontSize: 13, cursor: 'pointer' }}>
+        <input type="checkbox" checked={dupla} onChange={e => setDupla(e.target.checked)} />Mostrar também na outra base (nos dois sentidos)
+      </label>
     </div>
   }
   return <div className={x.optList}>
@@ -153,6 +157,12 @@ export function MenuPropriedade({ ancora, prop, esquema, visao, editavel, onFech
       </select>
     </div>}
     {prop && editavel && COM_OPCOES.includes(prop.tipo) && <><div className={x.menuSep} /><EditorDeOpcoes prop={prop} onMudar={opcoes => onMudar({ opcoes })} /></>}
+    {prop?.tipo === 'data' && editavel && <div className={x.filterRow}>
+      <span className={x.muted} style={{ fontSize: 13 }}>Lembrete</span>
+      <select value={prop.lembrete ?? ''} aria-label="Lembrete" style={{ flex: 1 }} onChange={e => onMudar({ lembrete: (e.target.value || undefined) as Propriedade['lembrete'] })}>
+        <option value="">Sem lembrete</option><option value="no_dia">No dia</option><option value="um_dia_antes">Um dia antes</option>
+      </select>
+    </div>}
     {onMudarVisao && <>
       <div className={x.menuSep} />
       <ItemMenu icone={ArrowUp} onClick={() => ordenar('asc')}>Ordenar crescente</ItemMenu>

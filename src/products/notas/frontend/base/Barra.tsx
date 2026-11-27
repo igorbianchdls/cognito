@@ -1,10 +1,10 @@
 'use client'
 
-import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react'
+import { Eye, EyeOff, ListTree, Plus, Trash2 } from 'lucide-react'
 import {
   NOME_OPERADOR, operadoresDe, SEM_VALOR, TITULO, type Filtro, type Propriedade, type Visao,
 } from '@/products/notas/shared/bases'
-import { ItemMenu, Menu } from '../Menu'
+import { Chave, ItemMenu, Menu } from '../Menu'
 import { ICONE_TIPO } from './Celula'
 import x from '../notas.module.css'
 
@@ -77,9 +77,11 @@ export function MenuOrdenacao({ ancora, visao, esquema, onFechar, onMudar }: {
 }
 
 /** Propriedades mostradas na visão (e a coluna do quadro). */
-export function MenuPropriedades({ ancora, visao, esquema, onFechar, onMudar }: {
+export function MenuPropriedades({ ancora, visao, esquema, onFechar, onMudar, onSubitens }: {
   ancora: HTMLElement; visao: Visao; esquema: Propriedade[]; onFechar: () => void; onMudar: (mudanca: Partial<Visao>) => void
+  onSubitens?: (ligar: boolean) => void
 }) {
+  const datas = esquema.filter(p => p.tipo === 'data')
   const agrupaveis = esquema.filter(p => p.tipo === 'selecao' || p.tipo === 'status')
   return <Menu ancora={ancora} onFechar={onFechar} className={x.menuWide} alinhar="fim">
     {visao.tipo === 'quadro' && <>
@@ -93,6 +95,24 @@ export function MenuPropriedades({ ancora, visao, esquema, onFechar, onMudar }: 
       <div className={x.menuLabel}>Mostrar no calendário por</div>
       {esquema.filter(p => ['data', 'criado_em', 'editado_em'].includes(p.tipo)).map(p => <ItemMenu key={p.id} icone={ICONE_TIPO[p.tipo]} onClick={() => onMudar({ dataPor: p.id })}
         direita={visao.dataPor === p.id ? <span style={{ marginLeft: 'auto' }}>✓</span> : undefined}>{p.nome}</ItemMenu>)}
+      <div className={x.menuSep} />
+    </>}
+    {visao.tipo === 'linha_tempo' && <>
+      <div className={x.menuLabel}>Datas da linha do tempo</div>
+      <div className={x.filterRow}><span className={x.muted} style={{ width: 52, fontSize: 13 }}>Início</span>
+        <select style={{ flex: 1 }} value={visao.dataPor ?? ''} aria-label="Data de início" onChange={e => onMudar({ dataPor: e.target.value || null })}>
+          <option value="">Escolha…</option>{datas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+        </select></div>
+      <div className={x.filterRow}><span className={x.muted} style={{ width: 52, fontSize: 13 }}>Fim</span>
+        <select style={{ flex: 1 }} value={visao.dataFim ?? ''} aria-label="Data de fim" onChange={e => onMudar({ dataFim: e.target.value || null })}>
+          <option value="">Sem fim (um dia)</option>{datas.filter(p => p.id !== visao.dataPor).map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+        </select></div>
+      <div className={x.menuSep} />
+    </>}
+    {visao.tipo === 'tabela' && onSubitens && <>
+      <button type="button" className={x.menuItem} onClick={() => onSubitens(!visao.subitens)}>
+        <ListTree size={16} /><span>Subitens</span><Chave ligada={Boolean(visao.subitens)} />
+      </button>
       <div className={x.menuSep} />
     </>}
     {visao.tipo === 'galeria' && <>

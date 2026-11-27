@@ -13,9 +13,11 @@ import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlas
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Columns3, FileText, ListChecks, Plus, Table2 } from 'lucide-react'
+import { Columns2, Columns3, FileText, Globe, ListChecks, MessageSquareWarning, MousePointerClick, Plus, Table2 } from 'lucide-react'
 import type { TipoVisao } from '@/products/notas/shared/bases'
 import { BaseView } from './base/BaseView'
+import { Botao, Coluna, Colunas, Destaque, Incorporar, MencaoPessoa } from './blocos'
+import { usePessoas } from './base/pessoas'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
 import { enviarArquivoNotas } from './api'
 import { useNotas } from './NotasProvider'
@@ -50,8 +52,10 @@ const BaseBloco = createReactBlockSpec(
   { render: ({ block }) => block.props.baseId ? <div style={{ width: '100%' }}><BaseView id={block.props.baseId} embutida /></div> : null },
 )
 const schema = BlockNoteSchema.create({
-  blockSpecs: { ...defaultBlockSpecs, base: BaseBloco() },
-  inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: MencaoPagina },
+  blockSpecs: {
+    ...defaultBlockSpecs, base: BaseBloco(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: Botao(),
+  },
+  inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: MencaoPagina, pessoa: MencaoPessoa },
 })
 const MAX_MENCOES = 10
 
@@ -121,6 +125,7 @@ function semear(fragment: Y.XmlFragment, conteudo: unknown[]) {
 
 export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpagina, paginaId, criarBase, aoCarregar, colaboracao, controle, onComentar, destaques }: EditorProps) {
   const escuro = useTemaEscuro()
+  const pessoas = usePessoas()
   const { arvore } = useNotas()
   const inicial = useMemo(() => (Array.isArray(conteudo) && conteudo.length ? conteudo as PartialBlock[] : undefined),
     // eslint-disable-next-line react-hooks/exhaustive-deps -- o conteúdo inicial só vale quando a página (chave) muda
@@ -151,6 +156,14 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     return () => { controle.current = null }
   }, [editor, controle])
 
+  /** Troca o bloco vazio do cursor (onde se digitou "/") pelo novo, ou insere abaixo. */
+  const trocarBloco = (novo: Record<string, unknown>) => {
+    const atual = editor.getTextCursorPosition().block
+    const vazio = atual.type === 'paragraph' && !(atual.content as unknown[]).length
+    if (vazio) editor.replaceBlocks([atual], [novo as never])
+    else editor.insertBlocks([novo as never], atual, 'after')
+  }
+
   const carregou = useRef(aoCarregar)
   useEffect(() => { carregou.current = aoCarregar })
   useEffect(() => { const t = setTimeout(() => carregou.current?.(), 0); return () => clearTimeout(t) }, [editor])
@@ -163,7 +176,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   {destaques && destaques.length > 0 && <style>{destaques.map(id => `.bn-block[data-id="${CSS.escape(id)}"] > .bn-block-content`).join(',') + '{background:rgba(255,212,0,.16);border-bottom:2px solid rgba(255,212,0,.6)}'}</style>}
   <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false}
     onChange={() => onMudar(editor.document)}>
-    <SuggestionMenuController triggerCharacter="/" getItems={async query => filterSuggestionItems([
+    <SuggestionMenuController triggerCharacter="/" getItems={async query => agruparItens(filterSuggestionItems([
       ...getDefaultReactSlashMenuItems(editor),
       {
         title: 'Página', subtext: 'Cria uma subpágina dentro desta', group: 'Básicos', aliases: ['pagina', 'page', 'subpagina'],
@@ -187,8 +200,37 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
           void criarBase(modelo, visao).then(nova => { if (nova) editor.insertBlocks([{ type: 'base', props: { baseId: nova.id } }, { type: 'paragraph' }], atual, 'after') })
         },
       })),
-    ], query)} />
+      {
+        title: 'Destaque', subtext: 'Texto em evidência, com ícone e cor', group: 'Básicos', aliases: ['destaque', 'callout', 'aviso', 'nota'],
+        icon: <MessageSquareWarning size={18} />, onItemClick: () => trocarBloco({ type: 'destaque' }),
+      },
+      ...([2, 3] as const).map(n => ({
+        title: `${n} colunas`, subtext: `Divide o espaço em ${n} colunas lado a lado`, group: 'Layout', aliases: ['colunas', 'columns', `${n}`],
+        icon: n === 2 ? <Columns2 size={18} /> : <Columns3 size={18} />,
+        onItemClick: () => {
+          trocarBloco({ type: 'colunas', children: Array.from({ length: n }, () => ({ type: 'coluna', children: [{ type: 'paragraph' }] })) })
+          // O cursor vai para o texto da primeira coluna.
+          const colunas = editor.document.find(b => b.type === 'colunas' && b.children.length === n && b.children.every(c => c.children.length === 1 && !(c.children[0].content as unknown[]).length))
+          const primeiro = colunas?.children[0]?.children[0]
+          if (primeiro) editor.setTextCursorPosition(primeiro.id, 'start')
+        },
+      })),
+      {
+        title: 'Incorporar', subtext: 'YouTube, Vimeo, Loom, Figma, Google Maps ou PDF', group: 'Mídia', aliases: ['incorporar', 'embed', 'youtube', 'video', 'figma', 'mapa'],
+        icon: <Globe size={18} />, onItemClick: () => trocarBloco({ type: 'incorporar' }),
+      },
+      {
+        title: 'Botão', subtext: 'Insere um texto pronto ou cria um item numa base', group: 'Avançados', aliases: ['botao', 'button', 'acao'],
+        icon: <MousePointerClick size={18} />, onItemClick: () => trocarBloco({ type: 'botao' }),
+      },
+    ], query))} />
     <SuggestionMenuController triggerCharacter="@" getItems={async query => {
+      const termoPessoa = query.trim().toLowerCase()
+      const listaPessoas = pessoas.filter(p => p.nome.toLowerCase().includes(termoPessoa)).slice(0, 6).map(p => ({
+        title: p.nome, subtext: 'Avisa a pessoa na caixa de entrada', group: 'Pessoas', aliases: [],
+        icon: <span className={x.avatar}>{p.nome.slice(0, 1).toUpperCase()}</span>,
+        onItemClick: () => editor.insertInlineContent([{ type: 'pessoa', props: { userId: p.id, nome: p.nome } }, ' ']),
+      }))
       // Páginas que a pessoa vê, recentes primeiro; o texto filtra pelo título.
       const termo = query.trim().toLowerCase()
       const recentes = new Map((arvore?.recentes ?? []).map((id, i) => [id, i]))
@@ -197,6 +239,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         .slice(0, MAX_MENCOES)
       const local = (id: string) => arvore ? caminho(arvore.paginas, id).slice(0, -1).map(p => tituloExibido(p.titulo)).join(' / ') : ''
       return [
+        ...listaPessoas,
         ...paginas.map(p => ({
           title: tituloExibido(p.titulo), subtext: local(p.id) || (p.espaco === 'particular' ? 'Particular' : 'Equipe'), group: 'Mencionar página',
           icon: <span style={{ fontSize: 16 }}>{p.icone ?? '📄'}</span>,
@@ -211,6 +254,13 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     }} />
   </BlockNoteView>
   </div>
+}
+
+/** Itens do mesmo grupo ficam juntos (o menu mostra um título por grupo; grupo repetido aparece duas vezes). */
+function agruparItens<T extends { group?: string }>(itens: T[]): T[] {
+  const ordem = new Map<string, number>()
+  itens.forEach(i => { if (!ordem.has(i.group ?? '')) ordem.set(i.group ?? '', ordem.size) })
+  return itens.map((item, i) => ({ item, i })).sort((a, b) => ordem.get(a.item.group ?? '')! - ordem.get(b.item.group ?? '')! || a.i - b.i).map(x => x.item)
 }
 
 /** Conteúdo da menção para inserir no texto. */

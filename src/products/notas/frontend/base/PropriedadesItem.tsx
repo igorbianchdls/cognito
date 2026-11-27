@@ -10,7 +10,7 @@ import { useNotas } from '../NotasProvider'
 import { Celula, ICONE_TIPO } from './Celula'
 import { ListaTipos, MenuPropriedade } from './MenuPropriedade'
 import { usePessoas } from './pessoas'
-import { avisarItem } from './useBase'
+import { avisarItem, prepararRelacoes } from './useBase'
 import x from '../notas.module.css'
 
 /** Propriedades do item, no topo da página dele (como no Notion): nome à esquerda, valor editável à direita. */
@@ -30,7 +30,8 @@ export function PropriedadesItem({ pagina, editavel }: { pagina: Pagina; editave
     return () => { ativo = false }
   }, [baseId, avisar])
 
-  const salvarEsquema = async (novo: Propriedade[]) => {
+  const salvarEsquema = async (pedido: Propriedade[]) => {
+    const novo = pedido.some(p => p.reciproca === '__nova__') ? await prepararRelacoes(pedido, baseId, '', avisar) : pedido
     setEsquema(novo)
     try {
       const d = await notasApi<BaseCompleta>(`/bases/${baseId}`, { method: 'PATCH', json: { esquema: novo } })

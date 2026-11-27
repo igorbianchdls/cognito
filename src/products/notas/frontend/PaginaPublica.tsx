@@ -11,6 +11,7 @@ import { tituloExibido } from '@/products/notas/shared/arvore'
 import { textoDoValor, formatarData, formatarNumero, valorDe, type Item, type Propriedade } from '@/products/notas/shared/bases'
 import type { PaginaPublica as Dados } from '@/products/notas/server/publico'
 import { estiloCapa } from './catalogo'
+import { Coluna, Colunas, Destaque, Incorporar } from './blocos'
 import x from './notas.module.css'
 
 // Na versão pública, menção vira só o nome (sem link para dentro do Otto) e base embutida vira um aviso.
@@ -22,7 +23,18 @@ const BaseEmbutida = createReactBlockSpec(
   { type: 'base', propSchema: { baseId: { default: '' } }, content: 'none' },
   { render: () => <div className={x.muted} style={{ padding: '8px 0' }}>Base de dados (disponível só para quem tem acesso).</div> },
 )
-const schema = BlockNoteSchema.create({ blockSpecs: { ...defaultBlockSpecs, base: BaseEmbutida() }, inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: Mencao } })
+const BotaoPublico = createReactBlockSpec(
+  { type: 'botao', propSchema: { rotulo: { default: '' }, acao: { default: '' }, texto: { default: '' }, baseId: { default: '' }, titulo: { default: '' } }, content: 'none' },
+  { render: () => null },
+)
+const PessoaPublica = createReactInlineContentSpec(
+  { type: 'pessoa', propSchema: { userId: { default: '' }, nome: { default: '' } }, content: 'none' },
+  { render: ({ inlineContent }) => <span className={x.mencaoPessoa}>@{inlineContent.props.nome || 'pessoa'}</span> },
+)
+const schema = BlockNoteSchema.create({
+  blockSpecs: { ...defaultBlockSpecs, base: BaseEmbutida(), destaque: Destaque(), colunas: Colunas(), coluna: Coluna(), incorporar: Incorporar(), botao: BotaoPublico() },
+  inlineContentSpecs: { ...defaultInlineContentSpecs, mencao: Mencao, pessoa: PessoaPublica },
+})
 
 function Conteudo({ conteudo }: { conteudo: unknown[] }) {
   const editor = useCreateBlockNote({ schema, initialContent: conteudo.length ? conteudo as PartialBlock[] as never : undefined, dictionary: pt })

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { ArrowUpDown, CalendarDays, ChevronDown, Columns3, Copy, FileText, Filter, LayoutGrid, List, Loader2, PenLine, Plus, Search, SlidersHorizontal, Table2, Trash2, type LucideIcon } from 'lucide-react'
+import { ArrowUpDown, CalendarDays, GanttChart, ChevronDown, Columns3, Copy, FileText, Filter, LayoutGrid, List, Loader2, PenLine, Plus, Search, SlidersHorizontal, Table2, Trash2, type LucideIcon } from 'lucide-react'
 import { computar, filtrar, novoId, ordenar, SEM_VALOR, TIPOS_VISAO, TITULO, type TipoVisao, type Visao } from '@/products/notas/shared/bases'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { ItemMenu, Menu } from '../Menu'
@@ -11,12 +11,12 @@ import { PaginaView } from '../PaginaView'
 import { MenuFiltros, MenuOrdenacao, MenuPropriedades } from './Barra'
 import { usePessoas } from './pessoas'
 import { useBase } from './useBase'
-import { Calendario, Galeria, Lista, Quadro, Tabela, type VistaProps } from './Vistas'
+import { Calendario, Galeria, LinhaDoTempo, Lista, Quadro, Tabela, type VistaProps } from './Vistas'
 import { LigadasContexto } from './ligadas'
 import x from '../notas.module.css'
 
-export const ICONE_VISAO: Record<TipoVisao, LucideIcon> = { tabela: Table2, quadro: Columns3, lista: List, galeria: LayoutGrid, calendario: CalendarDays }
-const NOME_VISAO: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista', galeria: 'Galeria', calendario: 'Calendário' }
+export const ICONE_VISAO: Record<TipoVisao, LucideIcon> = { tabela: Table2, quadro: Columns3, lista: List, galeria: LayoutGrid, calendario: CalendarDays, linha_tempo: GanttChart }
+const NOME_VISAO: Record<TipoVisao, string> = { tabela: 'Tabela', quadro: 'Quadro', lista: 'Lista', galeria: 'Galeria', calendario: 'Calendário', linha_tempo: 'Linha do tempo' }
 
 /** Valores que um item novo recebe para continuar aparecendo na visão filtrada (filtros "é", "contém" e "marcado"). */
 function valoresDosFiltros(visao: Visao) {
@@ -59,13 +59,13 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
   const props: VistaProps = { api, base, visao, itens, pessoas, editavel, abrir: setAberto, valoresNovos: valoresDosFiltros(visao) }
   // Só conta filtro completo (com valor, ou "está vazio"/"marcado"): o que ainda está sendo montado não filtra nada.
   const filtrosAtivos = visao.filtros.filter(f => SEM_VALOR.includes(f.operador) || (f.valor !== undefined && f.valor !== null && f.valor !== '')).length
-  const Vista = { tabela: Tabela, quadro: Quadro, lista: Lista, galeria: Galeria, calendario: Calendario }[visao.tipo]
+  const Vista = { tabela: Tabela, quadro: Quadro, lista: Lista, galeria: Galeria, calendario: Calendario, linha_tempo: LinhaDoTempo }[visao.tipo]
 
   const novaVisao = (tipo: TipoVisao) => {
     const nova: Visao = {
       id: novoId(), nome: NOME_VISAO[tipo], tipo, filtros: [], juncao: 'e', ordenacao: [], visiveis: base.esquema.map(p => p.id).slice(0, 6),
       agruparPor: tipo === 'quadro' ? base.esquema.find(p => p.tipo === 'status')?.id ?? base.esquema.find(p => p.tipo === 'selecao')?.id ?? null : null,
-      dataPor: tipo === 'calendario' ? base.esquema.find(p => p.tipo === 'data')?.id ?? null : null,
+      dataPor: tipo === 'calendario' || tipo === 'linha_tempo' ? base.esquema.find(p => p.tipo === 'data')?.id ?? null : null,
       larguras: {}, calculos: {}, colunasOcultas: [], tamanhoCartao: 'medio', capaCartao: true,
     }
     void api.salvarBase({ visoes: [...base.visoes, nova] }); setVisaoSalva(nova.id); setMenu(null)
@@ -111,7 +111,20 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
 
     {menu?.tipo === 'filtros' && <MenuFiltros ancora={menu.ancora} visao={visao} esquema={base.esquema} onFechar={() => setMenu(null)} onMudar={mudarVisao} />}
     {menu?.tipo === 'ordenacao' && <MenuOrdenacao ancora={menu.ancora} visao={visao} esquema={base.esquema} onFechar={() => setMenu(null)} onMudar={mudarVisao} />}
-    {menu?.tipo === 'propriedades' && <MenuPropriedades ancora={menu.ancora} visao={visao} esquema={base.esquema} onFechar={() => setMenu(null)} onMudar={mudarVisao} />}
+    {menu?.tipo === 'propriedades' && <MenuPropriedades ancora={menu.ancora} visao={visao} esquema={base.esquema} onFechar={() => setMenu(null)} onMudar={mudarVisao}
+      onSubitens={editavel ? ligar => {
+        // Subitens = relação da base com ela mesma ("Item pai" ↔ "Subitens"); a visão usa "Item pai" para a árvore.
+        if (!ligar) { mudarVisao({ subitens: null }); return }
+        const existente = base.esquema.find(p => p.tipo === 'relacao' && p.baseRelacionada === base.id && p.reciproca)
+        if (existente) { mudarVisao({ subitens: existente.id }); return }
+        const pai = novoId(), filhos = novoId()
+        void api.salvarBase({
+          esquema: [...base.esquema,
+            { id: pai, nome: 'Item pai', tipo: 'relacao', baseRelacionada: base.id, reciproca: filhos },
+            { id: filhos, nome: 'Subitens', tipo: 'relacao', baseRelacionada: base.id, reciproca: pai }],
+          visoes: base.visoes.map(v => v.id === visao.id ? { ...v, subitens: pai } : v),
+        })
+      } : undefined} />}
     {menu?.tipo === 'novaVisao' && <Menu ancora={menu.ancora} onFechar={() => setMenu(null)}>
       <div className={x.menuLabel}>Nova visão</div>
       {TIPOS_VISAO.map(t => <ItemMenu key={t} icone={ICONE_VISAO[t]} onClick={() => novaVisao(t)}>{NOME_VISAO[t]}</ItemMenu>)}
@@ -123,7 +136,7 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
       <div className={x.menuLabel}>Mostrar como</div>
       {TIPOS_VISAO.map(t => <ItemMenu key={t} icone={ICONE_VISAO[t]} direita={visao.tipo === t ? <span style={{ marginLeft: 'auto' }}>✓</span> : undefined}
         onClick={() => {
-          mudarVisao({ tipo: t, ...(t === 'calendario' && !visao.dataPor ? { dataPor: base.esquema.find(p => p.tipo === 'data')?.id ?? null } : {}) }); setMenu(null)
+          mudarVisao({ tipo: t, ...((t === 'calendario' || t === 'linha_tempo') && !visao.dataPor ? { dataPor: base.esquema.find(p => p.tipo === 'data')?.id ?? null } : {}) }); setMenu(null)
         }}>{NOME_VISAO[t]}</ItemMenu>)}
       <div className={x.menuSep} />
       <ItemMenu icone={PenLine} onClick={() => setMenu(null)}>Concluir</ItemMenu>

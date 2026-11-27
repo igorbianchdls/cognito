@@ -16,6 +16,14 @@ export function useBase(id: string) {
   const [dados, setDados] = useState<BaseCompleta | null>(null)
   const [erro, setErro] = useState('')
   const atual = useRef<BaseCompleta | null>(null)
+  const fila = useRef<Promise<void>>(Promise.resolve())
+  const pendentes = useRef(0)
+  // Fechar a aba com mudança de coluna ainda gravando: o navegador pergunta antes de sair (senão ela se perde).
+  useEffect(() => {
+    const antesDeSair = (e: BeforeUnloadEvent) => { if (pendentes.current > 0) e.preventDefault() }
+    window.addEventListener('beforeunload', antesDeSair)
+    return () => window.removeEventListener('beforeunload', antesDeSair)
+  }, [])
   useEffect(() => { atual.current = dados }, [dados])
 
   const carregar = useCallback(() => notasApi<BaseCompleta>(`/bases/${id}`).then(setDados).catch(e => setErro((e as Error).message)), [id])
@@ -45,9 +53,18 @@ export function useBase(id: string) {
 
   /** Esquema e/ou visões. Mudança de esquema volta com os itens convertidos pelo servidor. */
   const salvarBase = useCallback(async (mudanca: { esquema?: Propriedade[]; visoes?: Visao[] }) => {
+    if (mudanca.esquema?.some(p => p.reciproca === '__nova__')) {
+      mudanca = { ...mudanca, esquema: await prepararRelacoes(mudanca.esquema, id, atual.current?.base.titulo ?? '', avisar) }
+    }
     setDados(d => d && { ...d, base: { ...d.base, ...mudanca } })
-    try { setDados(await notasApi<BaseCompleta>(`/bases/${id}`, { method: 'PATCH', json: mudanca })) } catch (e) { falhar(e) }
-  }, [id, falhar])
+    // Mudanças nas colunas vão em fila; células esperam a fila (uma coluna recém-criada já existe no servidor).
+    const envio = fila.current.then(async () => {
+      try { setDados(await notasApi<BaseCompleta>(`/bases/${id}`, { method: 'PATCH', json: mudanca })) } catch (e) { falhar(e) }
+    })
+    fila.current = envio
+    pendentes.current++
+    try { await envio } finally { pendentes.current-- }
+  }, [id, falhar, avisar])
 
   const mudarVisao = useCallback((visaoId: string, mudanca: Partial<Visao>) => {
     const d = atual.current; if (!d) return
@@ -71,6 +88,7 @@ export function useBase(id: string) {
 
   const novoItem = useCallback(async (valores: Record<string, unknown> = {}, posicao?: number, titulo = '', extra: { modelo_id?: string; e_modelo?: boolean } = {}) => {
     try {
+      await fila.current
       const item = await notasApi<Item>(`/bases/${id}/itens`, { method: 'POST', json: { propriedades: valores, ...(posicao !== undefined ? { posicao } : {}), titulo, ...extra } })
       setDados(d => d && { ...d, itens: [...d.itens, item] })
       return item
@@ -85,6 +103,7 @@ export function useBase(id: string) {
       }),
     })
     try {
+      await fila.current
       const salvo = await notasApi<Item>(`/itens/${itemId}`, { method: 'PATCH', json: mudanca })
       setDados(d => d && { ...d, itens: d.itens.map(i => i.id === itemId ? salvo : i) })
       if (mudanca.titulo !== undefined) void recarregarArvore()
@@ -102,3 +121,24 @@ export function useBase(id: string) {
   return { dados, erro, carregar, salvarBase, mudarVisao, mudarPropriedade, criarOpcao, novoItem, mudarItem, arquivarItem }
 }
 export type BaseApi = ReturnType<typeof useBase>
+
+/**
+ * Relação nova "nos dois sentidos" (reciproca = "__nova__"): cria antes a propriedade espelho, na outra base ou nesta
+ * (se a relação é com ela mesma), e devolve o esquema com os ids das duas pontas.
+ */
+export async function prepararRelacoes(esquemaNovo: Propriedade[], baseId: string, tituloBase: string, avisar: (t: string) => void) {
+  const esquema: Propriedade[] = []
+  for (const p of esquemaNovo) {
+    if (p.reciproca !== '__nova__' || !p.baseRelacionada) { esquema.push(p); continue }
+    const espelho: Propriedade = { id: novoId(), nome: p.baseRelacionada === baseId ? `${p.nome} (volta)` : tituloBase || 'Itens ligados', tipo: 'relacao', baseRelacionada: baseId, reciproca: p.id }
+    if (p.baseRelacionada === baseId) { esquema.push({ ...p, reciproca: espelho.id }, espelho); continue }
+    try {
+      const outra = await notasApi<BaseCompleta>(`/bases/${p.baseRelacionada}?sem_itens=1`)
+      let nome = espelho.nome
+      while (outra.base.esquema.some(q => q.nome.toLowerCase() === nome.toLowerCase())) nome = `${nome} (2)`
+      await notasApi(`/bases/${p.baseRelacionada}`, { method: 'PATCH', json: { esquema: [...outra.base.esquema, { ...espelho, nome }] } })
+      esquema.push({ ...p, reciproca: espelho.id })
+    } catch (e) { avisar(`A relação foi criada só nesta base: ${(e as Error).message}`); esquema.push({ ...p, reciproca: undefined }) }
+  }
+  return esquema
+}

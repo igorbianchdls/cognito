@@ -5,11 +5,18 @@ import { BlockNoteEditor } from '@blocknote/core'
 import { importarCsv, lerCsv } from '@/products/notas/shared/csv'
 import { notasApi, type Pagina } from './api'
 
-export const TIPOS_IMPORTACAO = '.md,.markdown,.txt,.html,.htm,.csv'
+export const TIPOS_IMPORTACAO = '.md,.markdown,.txt,.html,.htm,.csv,.zip'
 const LIMITE = 5 * 1024 * 1024
 
 /** Importa o arquivo no espaço escolhido; devolve o id da página (ou base) criada. */
-export async function importarArquivo(arquivo: File, espaco: 'equipe' | 'particular'): Promise<string> {
+export async function importarArquivo(arquivo: File, espaco: 'equipe' | 'particular', progresso?: (feitas: number, total: number) => void): Promise<string> {
+  // ZIP = exportação do Notion (Markdown e CSV, com subpáginas e imagens).
+  if (/\.zip$/i.test(arquivo.name)) {
+    const { importarZipNotion } = await import('./importarNotion')
+    const r = await importarZipNotion(arquivo, espaco, progresso ?? (() => undefined))
+    if (!r.primeira) throw new Error('Nada foi importado.')
+    return r.primeira
+  }
   if (arquivo.size > LIMITE) throw new Error('O arquivo pode ter até 5 MB.')
   const nome = arquivo.name.replace(/\.[^.]+$/, '').slice(0, 200) || 'Importado'
   const extensao = arquivo.name.split('.').pop()?.toLowerCase() ?? ''

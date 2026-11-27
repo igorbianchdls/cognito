@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   ArrowUpRight, AtSign, Calendar, CheckSquare, Clock, FileText, Hash, Link2, List, Loader, Maximize2, Phone, Sigma, SquareFunction, Tags, Type, User, UserPlus, X,
   type LucideIcon,
@@ -172,15 +172,19 @@ function EditorPessoas({ valor, pessoas, ancora, onFechar, onMudar }: { valor: u
  * Uma célula editável: texto, número, URL, e-mail e telefone abrem uma caixa por cima (Enter grava, Esc desiste);
  * seleção, data e pessoa abrem um menu; caixa de seleção marca direto. O título também é uma célula.
  */
-export function Celula({ item, prop, pessoas, editavel, className, style, onMudar, onTitulo, criarOpcao, onAbrir, quebrar, vazio, comecarEditando }: {
+export function Celula({ item, prop, pessoas, editavel, className, style, onMudar, onTitulo, criarOpcao, onAbrir, quebrar, vazio, comecarEditando, antes }: {
   item: Item; prop: Propriedade | null; pessoas: Pessoa[]; editavel: boolean; className?: string; style?: React.CSSProperties
   onMudar: (valor: unknown) => void; onTitulo: (titulo: string) => void; criarOpcao: (nome: string) => Promise<string | null>
   onAbrir?: () => void; quebrar?: boolean; vazio?: ReactNode
   /** Item recém-criado: o título já abre para digitar. */
   comecarEditando?: boolean
+  /** Antes do título (recuo e seta dos subitens). */
+  antes?: ReactNode
 }) {
   const { avisar } = useNotas()
   const [editando, setEditando] = useState<HTMLElement | true | null>(comecarEditando ? true : null)
+  // A linha pode aparecer antes de saber que é a recém-criada (subitem): abre o título quando o pedido chega.
+  useEffect(() => { if (comecarEditando) setEditando(true) }, [comecarEditando])
   const tipo = prop?.tipo ?? 'titulo'
   const valor = prop ? valorDe(item, prop.id, [prop]) : item.titulo
   const automatico = prop ? AUTOMATICOS.includes(prop.tipo) : false
@@ -202,7 +206,7 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
   return <div className={className} style={style} onClick={abrir} role="gridcell"
     tabIndex={editavel && !automatico ? 0 : undefined} onKeyDown={e => { if (e.key === 'Enter' && e.target === e.currentTarget) { e.preventDefault(); (e.currentTarget as HTMLElement).click() } }}>
     {prop ? <Valor prop={prop} valor={valor} pessoas={pessoas} quebrar={quebrar} />
-      : <>{item.icone ? <span>{item.icone}</span> : <FileText size={16} style={{ flexShrink: 0, marginTop: 2, opacity: .6 }} />}
+      : <>{antes}{item.icone ? <span>{item.icone}</span> : <FileText size={16} style={{ flexShrink: 0, marginTop: 2, opacity: .6 }} />}
         <span className={quebrar ? x.cellWrap : x.cellText}>{item.titulo || <span className={x.placeholder}>{tituloExibido('')}</span>}</span>
         {onAbrir && <button type="button" className={x.open} onClick={e => { e.stopPropagation(); onAbrir() }}><Maximize2 size={12} />ABRIR</button>}</>}
     {vazio && (valor === null || valor === undefined || valor === '' || (Array.isArray(valor) && !valor.length)) && prop?.tipo !== 'checkbox' && vazio}

@@ -163,7 +163,7 @@ export function validarEsquema(esquema: unknown): Resultado<Propriedade[]> {
     if (tipo === 'relacao') {
       if (typeof bruto.baseRelacionada !== 'string' || !UUID.test(bruto.baseRelacionada)) return erro(`Escolha a base ligada em “${nome}”.`)
       prop.baseRelacionada = bruto.baseRelacionada
-      if (typeof bruto.reciproca === 'string' && /^[\w-]{1,40}$/.test(bruto.reciproca)) prop.reciproca = bruto.reciproca
+      if (typeof bruto.reciproca === 'string' && /^[\w-]{1,40}$/.test(bruto.reciproca) && bruto.reciproca !== '__nova__') prop.reciproca = bruto.reciproca
     }
     if (tipo === 'data' && (bruto.lembrete === 'no_dia' || bruto.lembrete === 'um_dia_antes')) prop.lembrete = bruto.lembrete
     if (tipo === 'formula') {

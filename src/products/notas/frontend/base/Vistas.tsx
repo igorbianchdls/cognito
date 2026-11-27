@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, EyeOff, Maximize2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { hierarquia, periodoDoItem, somarDias } from '@/products/notas/shared/bases'
 import { estiloCapa } from '../catalogo'
 import {
   agrupar, calcular, calculosDe, formatarNumero, NOME_CALCULO, novoId, TITULO, valorDe,
@@ -26,9 +27,12 @@ export type VistaProps = {
 const LARGURA_TITULO = 280, LARGURA = 200
 
 /** Menu de um item (botão direito ou ⋯): abrir e mandar para a lixeira. */
-function MenuItem({ ancora, onFechar, onAbrir, onArquivar, editavel }: { ancora: HTMLElement | { x: number; y: number }; onFechar: () => void; onAbrir: () => void; onArquivar: () => void; editavel: boolean }) {
+function MenuItem({ ancora, onFechar, onAbrir, onArquivar, editavel, onSubitem }: {
+  ancora: HTMLElement | { x: number; y: number }; onFechar: () => void; onAbrir: () => void; onArquivar: () => void; editavel: boolean; onSubitem?: () => void
+}) {
   return <Menu ancora={ancora} onFechar={onFechar}>
     <ItemMenu icone={Maximize2} onClick={() => { onFechar(); onAbrir() }}>Abrir</ItemMenu>
+    {editavel && onSubitem && <ItemMenu icone={Plus} onClick={() => { onFechar(); onSubitem() }}>Novo subitem</ItemMenu>}
     {editavel && <ItemMenu icone={Trash2} perigo onClick={() => { onFechar(); onArquivar() }}>Mover para a lixeira</ItemMenu>}
   </Menu>
 }
@@ -60,6 +64,21 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
   const [menuLinha, setMenuLinha] = useState<{ ancora: { x: number; y: number }; id: string } | null>(null)
   const [arrastandoCol, setArrastandoCol] = useState<{ col: string; x: number; largura: number; atual: number } | null>(null)
   const [editarTitulo, setEditarTitulo] = useState<string | null>(null)
+  const [fechados, setFechados] = useState<Set<string>>(new Set())
+  // Subitens: a ordem vira a da árvore (mãe e depois as filhas), com recuo; filhas de mãe fechada somem.
+  const linhas = (() => {
+    if (!visao.subitens) return itens.map(item => ({ item, nivel: 0, temFilhos: false }))
+    const todas = hierarquia(itens, visao.subitens)
+    const saida: typeof todas = []
+    let escondendo: number | null = null
+    for (const l of todas) {
+      if (escondendo !== null && l.nivel > escondendo) continue
+      escondendo = null
+      saida.push(l)
+      if (l.temFilhos && fechados.has(l.item.id)) escondendo = l.nivel
+    }
+    return saida
+  })()
 
   const colunas = [TITULO, ...visao.visiveis.filter(v => base.esquema.some(p => p.id === v))]
   const largura = (col: string) => arrastandoCol?.col === col ? arrastandoCol.atual : visao.larguras?.[col] ?? (col === TITULO ? LARGURA_TITULO : LARGURA)
@@ -96,10 +115,15 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
         })}
         {editavel && <div className={`${x.th} ${x.thAdd}`} role="columnheader" aria-label="Nova propriedade" title="Nova propriedade" onClick={e => setNovaProp(e.currentTarget)}><Plus size={16} /></div>}
       </div>
-      {itens.map(item => <div key={item.id} className={x.tr} role="row" onContextMenu={e => { e.preventDefault(); setMenuLinha({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
+      {linhas.map(({ item, nivel, temFilhos }) => <div key={item.id} className={x.tr} role="row" onContextMenu={e => { e.preventDefault(); setMenuLinha({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
         {colunas.map(col => {
           const prop = base.esquema.find(p => p.id === col) ?? null
-          return <Celula key={col} item={item} prop={prop} pessoas={pessoas} editavel={editavel}
+          const recuo = !prop && visao.subitens ? <span className={x.subRecuo} style={{ width: nivel * 20 + 20 }}>
+            {temFilhos && <button type="button" className={`${x.subSeta} ${fechados.has(item.id) ? '' : x.subSetaAberta}`}
+              aria-label={fechados.has(item.id) ? 'Mostrar subitens' : 'Esconder subitens'}
+              onClick={e => { e.stopPropagation(); setFechados(f => { const n = new Set(f); if (n.has(item.id)) n.delete(item.id); else n.add(item.id); return n }) }}><ChevronRight size={14} /></button>}
+          </span> : null
+          return <Celula key={col} item={item} prop={prop} pessoas={pessoas} editavel={editavel} antes={recuo}
             className={`${x.td} ${prop ? '' : x.tdTitle}`} style={{ width: largura(col) }}
             comecarEditando={!prop && editarTitulo === item.id}
             onMudar={valor => prop && void api.mudarItem(item.id, { propriedades: { [prop.id]: valor } })}
@@ -132,7 +156,8 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
       {calculosDe(menuCalc.tipo).map(c => <ItemMenu key={c} onClick={() => { api.mudarVisao(visao.id, { calculos: { ...visao.calculos, [menuCalc.col]: c as Calculo } }); setMenuCalc(null) }}
         direita={(visao.calculos?.[menuCalc.col] ?? 'nenhum') === c ? <span style={{ marginLeft: 'auto' }}>✓</span> : undefined}>{NOME_CALCULO[c]}</ItemMenu>)}
     </Menu>}
-    {menuLinha && <MenuItem ancora={menuLinha.ancora} editavel={editavel} onFechar={() => setMenuLinha(null)} onAbrir={() => abrir(menuLinha.id)} onArquivar={() => void api.arquivarItem(menuLinha.id)} />}
+    {menuLinha && <MenuItem ancora={menuLinha.ancora} editavel={editavel} onFechar={() => setMenuLinha(null)} onAbrir={() => abrir(menuLinha.id)} onArquivar={() => void api.arquivarItem(menuLinha.id)}
+      onSubitem={visao.subitens ? () => void api.novoItem({ ...valoresNovos, [visao.subitens!]: [menuLinha.id] }).then(i => i && setEditarTitulo(i.id)) : undefined} />}
   </div>
 }
 
@@ -326,5 +351,98 @@ export function Calendario({ api, base, visao, itens, editavel, abrir, valoresNo
         </div>)}
       </div>}
     </div>
+  </div>
+}
+
+const LARGURA_DIA = { dias: 36, semanas: 14 } as const
+
+/**
+ * Linha do tempo (Gantt): uma barra por item, do início ao fim (as propriedades de data da visão). Arrastar a barra
+ * muda as duas datas; arrastar a ponta direita muda o fim. Itens sem data ficam numa lista embaixo.
+ */
+export function LinhaDoTempo({ api, base, visao, itens, editavel, abrir, valoresNovos }: VistaProps) {
+  const hojeDia = diaLocal(new Date())
+  const [inicio, setInicio] = useState(() => somarDias(diaLocal(new Date()), -7))
+  const [escala, setEscala] = useState<'dias' | 'semanas'>('dias')
+  const [arrasto, setArrasto] = useState<{ id: string; modo: 'mover' | 'fim'; x: number; dias: number } | null>(null)
+  const prop = base.esquema.find(p => p.id === visao.dataPor && p.tipo === 'data')
+  if (!prop) return <div className={x.empty} style={{ padding: '24px 4px', height: 'auto' }}>Para a linha do tempo, crie uma propriedade de data e escolha-a em “Propriedades → Início”.</div>
+  const fimProp = base.esquema.find(p => p.id === visao.dataFim && p.tipo === 'data')
+  const largura = LARGURA_DIA[escala]
+  const totalDias = escala === 'dias' ? 42 : 120
+  const dias = Array.from({ length: totalDias }, (_, i) => somarDias(inicio, i))
+  const indice = (data: string) => Math.round((Date.parse(`${data}T12:00:00Z`) - Date.parse(`${inicio}T12:00:00Z`)) / 864e5)
+  const comData = itens.map(item => ({ item, periodo: periodoDoItem(item, prop.id, fimProp?.id, base.esquema) }))
+  const semData = comData.filter(c => !c.periodo)
+  const soltar = (id: string, delta: number, modo: 'mover' | 'fim') => {
+    const c = comData.find(c => c.item.id === id)
+    if (!c?.periodo || !delta) return
+    const valores: Record<string, unknown> = modo === 'mover' ? { [prop.id]: somarDias(c.periodo.inicio, delta) } : {}
+    if (fimProp) {
+      const novoFim = somarDias(c.periodo.fim, delta)
+      if (modo === 'mover' || novoFim >= c.periodo.inicio) valores[fimProp.id] = novoFim
+    }
+    if (Object.keys(valores).length) void api.mudarItem(id, { propriedades: valores })
+  }
+  const mover = (e: React.MouseEvent) => {
+    if (!arrasto) return
+    const dias = Math.round((e.clientX - arrasto.x) / largura)
+    if (dias !== arrasto.dias) setArrasto({ ...arrasto, dias })
+  }
+  const terminar = () => { if (arrasto) soltar(arrasto.id, arrasto.dias, arrasto.modo); setArrasto(null) }
+  const meses = dias.reduce<{ nome: string; n: number }[]>((lista, d) => {
+    const bruto = new Date(`${d}T12:00:00Z`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+    const nome = bruto.charAt(0).toUpperCase() + bruto.slice(1)
+    if (lista.at(-1)?.nome === nome) lista[lista.length - 1].n++; else lista.push({ nome, n: 1 })
+    return lista
+  }, [])
+
+  return <div className={x.timeline} onMouseMove={mover} onMouseUp={terminar} onMouseLeave={terminar}>
+    <div className={x.calendarHead}>
+      <span className={x.barSpacer} />
+      <select className={x.barBtn} value={escala} aria-label="Escala" onChange={e => setEscala(e.target.value as 'dias' | 'semanas')}>
+        <option value="dias">Dias</option><option value="semanas">Semanas</option>
+      </select>
+      <button type="button" className={x.barBtn} aria-label="Voltar" onClick={() => setInicio(somarDias(inicio, escala === 'dias' ? -14 : -56))}><ChevronLeft size={16} /></button>
+      <button type="button" className={x.barBtn} onClick={() => setInicio(somarDias(hojeDia, -7))}>Hoje</button>
+      <button type="button" className={x.barBtn} aria-label="Avançar" onClick={() => setInicio(somarDias(inicio, escala === 'dias' ? 14 : 56))}><ChevronRight size={16} /></button>
+    </div>
+    <div className={x.timelineGrade}>
+      <div className={x.timelineNomes}>
+        <div className={x.timelineCab} />
+        {comData.filter(c => c.periodo).map(({ item }) => <div key={item.id} className={x.timelineNome} role="button" tabIndex={0} onClick={() => abrir(item.id)}
+          onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}>{item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span></div>)}
+      </div>
+      <div className={x.timelineArea}>
+        <div style={{ width: totalDias * largura, position: 'relative' }}>
+          <div className={x.timelineMeses}>{meses.map((m, i) => <span key={i} style={{ width: m.n * largura }}>{m.nome}</span>)}</div>
+          <div className={x.timelineDias}>{dias.map(d => <span key={d} style={{ width: largura }} className={`${d === hojeDia ? x.timelineHoje : ''} ${[0, 6].includes(new Date(`${d}T12:00:00Z`).getUTCDay()) ? x.timelineFds : ''}`}>
+            {escala === 'dias' || d.endsWith('-01') || new Date(`${d}T12:00:00Z`).getUTCDay() === 1 ? Number(d.slice(8)) : ''}
+          </span>)}</div>
+          {indice(hojeDia) >= 0 && indice(hojeDia) < totalDias && <div className={x.timelineLinhaHoje} style={{ left: indice(hojeDia) * largura + largura / 2 }} />}
+          {comData.filter(c => c.periodo).map(({ item, periodo }) => {
+            const a = arrasto?.id === item.id ? arrasto : null
+            const ini = indice(periodo!.inicio) + (a?.modo === 'mover' ? a.dias : 0)
+            const dur = indice(periodo!.fim) - indice(periodo!.inicio) + 1 + (a?.modo === 'fim' ? a.dias : 0)
+            return <div key={item.id} className={x.timelineLinha}>
+              <div className={x.timelineBarra} role="button" tabIndex={0} title={`${tituloExibido(item.titulo)} — ${periodo!.inicio} a ${periodo!.fim}`}
+                style={{ left: ini * largura + 2, width: Math.max(1, dur) * largura - 4 }}
+                onClick={() => { if (!arrasto) abrir(item.id) }} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}
+                onMouseDown={e => { if (!editavel) return; e.preventDefault(); setArrasto({ id: item.id, modo: 'mover', x: e.clientX, dias: 0 }) }}>
+                <span className={x.cellText}>{tituloExibido(item.titulo)}</span>
+                {editavel && fimProp && <span className={x.timelinePonta} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setArrasto({ id: item.id, modo: 'fim', x: e.clientX, dias: 0 }) }} />}
+              </div>
+            </div>
+          })}
+        </div>
+      </div>
+    </div>
+    {semData.length > 0 && <div className={x.timelineSem}>
+      <div className={x.menuLabel}>Sem data ({semData.length})</div>
+      {semData.map(({ item }) => <div key={item.id} className={x.calendarItem} role="button" tabIndex={0} onClick={() => abrir(item.id)} onKeyDown={e => { if (e.key === 'Enter') abrir(item.id) }}>
+        {item.icone && <span>{item.icone}</span>}<span className={x.cellText}>{tituloExibido(item.titulo)}</span>
+      </div>)}
+    </div>}
+    {editavel && <button type="button" className={x.newRow} onClick={() => void api.novoItem({ ...valoresNovos, [prop.id]: hojeDia }).then(i => i && abrir(i.id))}><Plus size={16} />Novo</button>}
   </div>
 }
