@@ -127,12 +127,20 @@
     flags = f || {}; flagsReady = true
     var list = flagWaiters.splice(0); list.forEach(function (cb) { try { cb(flags) } catch (_e) { /* do site */ } })
   }
+  // The last answer is kept for the session, so the next pages start recording (and know their flags) right away.
+  function cached() { try { return JSON.parse(sessionStorage.getItem('otto_cfg') || 'null') } catch (_e) { return null } }
   function decide() {
+    var c = cached()
+    if (c) { config = c; applyFlags(c.flags); maybeRecord(c.gravacao) }
     var body = JSON.stringify({ k: key, d: visitor(), u: userId || store.get('otto_user') || undefined, url: location.href, lang: n.language })
     fetch(base + '/api/analytics/decidir', { method: 'POST', body: body, headers: { 'content-type': 'text/plain' }, credentials: 'omit' })
       .then(function (r) { return r.ok ? r.json() : null })
-      .then(function (r) { if (!r) { applyFlags({}); return } config = r; applyFlags(r.flags); maybeRecord(r.gravacao) })
-      .catch(function () { applyFlags({}) })
+      .then(function (r) {
+        if (!r) { if (!flagsReady) applyFlags({}); return }
+        try { sessionStorage.setItem('otto_cfg', JSON.stringify(r)) } catch (_e) { /* bloqueado */ }
+        config = r; applyFlags(r.flags); maybeRecord(r.gravacao)
+      })
+      .catch(function () { if (!flagsReady) applyFlags({}) })
   }
 
   // ---------- gravação da sessão (rrweb) ----------

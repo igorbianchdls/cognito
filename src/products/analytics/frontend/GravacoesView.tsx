@@ -84,7 +84,10 @@ function Reprodutor({ site, sessao, voltar }: { site: string; sessao: string; vo
     rep.current = r
     r.on('finish', () => setTocando(false))
     const ajustar = () => { const el = palco.current; const w = el?.querySelector('.replayer-wrapper') as HTMLElement | null; const f = el?.querySelector('iframe'); if (!el || !w || !f) return
-      const s = Math.min(1, el.clientWidth / (f.offsetWidth || 1)); w.style.transform = `scale(${s})`; w.style.transformOrigin = 'top left'; el.style.height = `${(f.offsetHeight || 600) * s}px` }
+      // Cabe na largura e em até 70% da altura da tela, centralizado.
+      const s = Math.min(1, el.clientWidth / (f.offsetWidth || 1), window.innerHeight * 0.7 / (f.offsetHeight || 1))
+      w.style.transform = `scale(${s})`; w.style.transformOrigin = 'top left'; w.style.marginLeft = `${Math.max(0, (el.clientWidth - f.offsetWidth * s) / 2)}px`
+      el.style.height = `${(f.offsetHeight || 600) * s}px` }
     const timer = setInterval(() => { setT(r.getCurrentTime()); ajustar() }, 250)
     r.play(); queueMicrotask(() => setTocando(true))
     return () => { clearInterval(timer); r.pause(); rep.current = null }
