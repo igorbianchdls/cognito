@@ -113,6 +113,8 @@ function Construtor({ site, inicial }: { site: string; inicial?: Insight }) {
   const [visual, setVisual] = useState<Visual>(inicial?.view ?? 'linha')
   const [nome, setNome] = useState(inicial?.name ?? '')
   const [msg, setMsg] = useState<{ t: string; erro?: boolean } | null>(null)
+  // O insight salvo (o aberto ou o recém-criado): salvar de novo altera em vez de criar outro.
+  const [salvo, setSalvo] = useState<Insight | undefined>(inicial)
   const [painel, setPainel] = useState('')
   const paineis = useLista<Painel>('paineis', site)
   const { resultado, erro, carregando } = useConsulta(site, limpar(c))
@@ -122,16 +124,18 @@ function Construtor({ site, inicial }: { site: string; inicial?: Insight }) {
   async function gravar() {
     if (!nome.trim()) { setMsg({ t: 'Dê um nome ao insight.', erro: true }); return null }
     try {
-      const r = await salvar<Insight>('insights', { ...(inicial ? {} : { property_id: site }), name: nome.trim(), query: limpar(c), view: visual }, inicial?.id)
+      const r = await salvar<Insight>('insights', { ...(salvo ? {} : { property_id: site }), name: nome.trim(), query: limpar(c), view: visual }, salvo?.id)
       setMsg({ t: 'Insight salvo.' })
-      if (!inicial) router.replace(`/analytics/insights/${r.id}`)
+      // Só o endereço muda (sem remontar a tela), para o link e o recarregar abrirem este insight.
+      if (!salvo) try { window.history.replaceState(null, '', `/analytics/insights/${r.id}`) } catch { /* ok */ }
+      setSalvo(r)
       return r
     } catch (e) { setMsg({ t: (e as Error).message, erro: true }); return null }
   }
   async function porNoPainel() {
     const p = paineis.itens?.find(x => x.id === painel)
     if (!p) return
-    const i = inicial ?? await gravar()
+    const i = salvo ?? await gravar()
     if (!i) return
     if (p.items.some(x => x.insight_id === i.id)) { setMsg({ t: `Já está em "${p.name}".` }); return }
     try { await salvar('paineis', { items: [...p.items, { insight_id: i.id, largura: 1 }] }, p.id); await paineis.recarregar(); setMsg({ t: `Adicionado ao painel "${p.name}".` }) } catch (e) { setMsg({ t: (e as Error).message, erro: true }) }
@@ -144,7 +148,7 @@ function Construtor({ site, inicial }: { site: string; inicial?: Insight }) {
       {paineis.itens?.length ? <span className="flex gap-1">
         <select aria-label="Painel" value={painel} onChange={e => setPainel(e.target.value)} className={campoCls}><option value="">Pôr num painel…</option>{paineis.itens.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select>
         <button type="button" disabled={!painel} onClick={() => void porNoPainel()} className={secundario}>Adicionar</button></span> : null}
-      {inicial ? <button type="button" onClick={async () => { if (!confirm(`Apagar "${inicial.name}"?`)) return; try { await apagar('insights', inicial.id); router.push('/analytics/insights') } catch (e) { setMsg({ t: (e as Error).message, erro: true }) } }} className={perigo}>Apagar</button> : null}
+      {salvo ? <button type="button" onClick={async () => { if (!confirm(`Apagar "${salvo.name}"?`)) return; try { await apagar('insights', salvo.id); router.push('/analytics/insights') } catch (e) { setMsg({ t: (e as Error).message, erro: true }) } }} className={perigo}>Apagar</button> : null}
     </div>
     {msg ? <p role={msg.erro ? 'alert' : 'status'} className={`text-[13px] ${msg.erro ? 'text-[#a33]' : 'text-[#2f7a3a]'}`}>{msg.t}</p> : null}
     <div role="tablist" aria-label="Tipo de insight" className="flex w-fit flex-wrap rounded-xl border border-[#e2e2e2] bg-white p-1">
