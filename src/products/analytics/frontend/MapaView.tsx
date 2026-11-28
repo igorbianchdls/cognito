@@ -96,7 +96,7 @@ function Desenho({ mapa, url, aparelho }: { mapa: Mapa; url?: string; aparelho: 
   const base = mapa.rolagem[0]?.pessoas || 1
   return <div ref={caixa} className="max-h-[78vh] overflow-auto rounded-xl bg-[#f6f7f9]" data-mapa>
     <div className="relative mx-auto" style={{ width: vw * escala, height: alturaPagina * escala }}>
-      {url ? <iframe title="Página" src={url} sandbox="allow-same-origin" tabIndex={-1} aria-hidden className="pointer-events-none absolute left-0 top-0 origin-top-left border-0 bg-white" style={{ width: vw, height: alturaPagina, transform: `scale(${escala})` }} /> : null}
+      {url ? <iframe title="Prévia do site" src={url} sandbox="allow-same-origin" tabIndex={-1} aria-hidden className="pointer-events-none absolute left-0 top-0 origin-top-left border-0 bg-white" style={{ width: vw, height: alturaPagina, transform: `scale(${escala})` }} /> : null}
       <canvas ref={tela} className="pointer-events-none absolute left-0 top-0" aria-label={`Mapa de calor com ${mapa.pontos.length} pontos`} role="img" />
       {linhas.map(f => <div key={f.faixa} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-[#e8590c]/70" style={{ top: alturaPagina * escala * f.faixa / 100 }}>
         <span className="absolute right-1 top-0.5 rounded bg-[#e8590c] px-1.5 py-0.5 text-[10.5px] font-medium text-white">{Math.round(f.pessoas / base * 100)}% chegam aqui</span></div>)}

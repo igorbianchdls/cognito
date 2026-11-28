@@ -59,7 +59,8 @@
       url: at || location.href, title: at ? undefined : d.title, ref: d.referrer || undefined, sw: w.screen ? screen.width : undefined, lang: n.language,
       p: props && typeof props === 'object' ? props : undefined
     })
-    if (queue.length >= 10) flush(false)
+    // Page views and clicks go out at once (a click may be about to leave the page); the rest in small batches.
+    if (queue.length >= 10 || event === '$pageview' || event === '$autocapture' || event === '$rageclick') { clearTimeout(timer); flush(event !== '$pageview') }
     else { clearTimeout(timer); timer = setTimeout(function () { flush(false) }, 2000) }
   }
 
@@ -67,7 +68,7 @@
   function pageview() {
     if (location.href === lastPath) return
     pageleave()
-    maxScroll = 0
+    maxScroll = 0; left = false
     lastPath = location.href
     track('$pageview')
   }
@@ -89,7 +90,12 @@
     return h ? Math.min(100, Math.round(seen / h * 100)) : 100
   }
   w.addEventListener('scroll', function () { var p = scrollPct(); if (p > maxScroll) maxScroll = p }, { passive: true })
-  function pageleave() { if (lastPath && config && config.autocaptura) track('$pageleave', { rolagem: lastPath === location.href ? Math.max(maxScroll, scrollPct()) : maxScroll }, lastPath) }
+  var left = false
+  function pageleave() {
+    if (left || !lastPath || !config || !config.autocaptura) return
+    left = true
+    track('$pageleave', { rolagem: lastPath === location.href ? Math.max(maxScroll, scrollPct()) : maxScroll }, lastPath)
+  }
   function selector(el) {
     var parts = []
     for (var i = 0; el && el.nodeType === 1 && i < 4; i++, el = el.parentElement) {

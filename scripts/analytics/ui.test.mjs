@@ -61,7 +61,9 @@ describe('Analytics na tela', () => {
       if (i) for (let k = 0; k < 3; k++) await p.click('button.duvida', { delay: 10 })
       await p.evaluate(() => window.otto.identify('cliente-' + (navigator.userAgent.includes('iPhone') ? 'cel' : 'pc'), { plano: 'pro' }))
       await p.mouse.wheel(0, 1500); await p.waitForTimeout(6500) // a gravação manda a cada 5 s
-      await p.goto('about:blank'); await p.waitForTimeout(800)
+      // O Chromium sem janela descarta os envios feitos no fechamento da página; aqui o "sair" é disparado antes.
+      await p.evaluate(() => window.dispatchEvent(new Event('pagehide'))); await p.waitForTimeout(800)
+      await p.goto('about:blank')
       await ctx.close()
     }
     let inst
