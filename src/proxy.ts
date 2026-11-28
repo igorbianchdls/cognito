@@ -62,9 +62,9 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
   if (request.nextUrl.pathname.startsWith('/api/public/nfse/') || request.nextUrl.pathname.startsWith('/api/public/documentos-comerciais/')) return NextResponse.next()
-  // Testes de tela das Notas (npm run notas:ui): só fora de produção e com NOTAS_TESTE_USUARIO definido.
+  // Testes de tela (npm run notas:ui, editor:ui): só fora de produção e com NOTAS_TESTE_USUARIO definido.
   if (process.env.NODE_ENV !== 'production' && process.env.NOTAS_TESTE_USUARIO
-    && (request.nextUrl.pathname.startsWith('/api/notas/') || /^\/(notas|artefatos)(\/|$)/.test(request.nextUrl.pathname))) return NextResponse.next()
+    && (request.nextUrl.pathname.startsWith('/api/notas/') || /^\/(notas|artefatos|editor|drive)(\/|$)/.test(request.nextUrl.pathname))) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }
