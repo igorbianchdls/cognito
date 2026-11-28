@@ -313,7 +313,17 @@
 /* tabela */
 .table { position: relative; overflow-x: auto; padding-bottom: 8px; }
 .tableInner { display: inline-block; min-width: 100%; }
-.tr { display: flex; border-bottom: 1px solid var(--n-line); min-height: 34px; }
+.tr { position: relative; display: flex; border-bottom: 1px solid var(--n-line); min-height: 34px; }
+/* Alça para arrastar a linha, à esquerda do nome (aparece ao passar o mouse). */
+.tableReordena .tdTitle { padding-left: 28px; }
+.alcaLinha { position: absolute; z-index: 2; left: 4px; top: 7px; width: 20px; height: 20px; display: grid; place-items: center; border-radius: 4px; color: var(--n-faint); opacity: 0; cursor: grab; transition: opacity .12s, background-color .1s; }
+.tr:hover .alcaLinha { opacity: 1; }
+.alcaLinha:hover { background: var(--n-hover); color: var(--n-muted); }
+.alcaLinha:active { cursor: grabbing; }
+.trArrastando { opacity: .4; }
+.trAlvo { box-shadow: inset 0 3px 0 -1px rgba(35, 131, 226, .8); }
+.trAlvoFim { box-shadow: inset 0 -3px 0 -1px rgba(35, 131, 226, .8); }
+@media (hover: none) { .alcaLinha { display: none; } .tableReordena .tdTitle { padding-left: 8px; } }
 .th { position: relative; display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 8px; flex-shrink: 0; color: var(--n-muted); border-right: 1px solid var(--n-line); white-space: nowrap; overflow: hidden; }
 .th:hover { background: var(--n-hover); }
 .th svg { flex-shrink: 0; opacity: .8; }
@@ -787,3 +797,21 @@
 .app :global(.bn-block-content[data-content-type=table] .tableWrapper) { padding-left: 0 !important; }
 /* Soltar na lateral de um bloco: barra azul vertical onde a coluna nova vai entrar. */
 .soltarLateral { position: fixed; z-index: 60; width: 3px; border-radius: 2px; background: rgba(35, 131, 226, .8); pointer-events: none; }
+
+/* Sensação: menus, janelas e painéis entram com um movimento curto (como no Notion); botões mudam de cor suavemente. */
+@keyframes nEntra { from { opacity: 0; transform: translateY(-4px) scale(.98); } }
+@keyframes nFade { from { opacity: 0; } }
+@keyframes nDaDireita { from { opacity: .6; transform: translateX(28px); } }
+@keyframes nSobe { from { opacity: 0; transform: translate(-50%, 10px); } }
+.menu { animation: nEntra .14s cubic-bezier(.2, .8, .2, 1); transform-origin: top left; }
+.overlay { animation: nFade .14s ease-out; }
+.search { animation: nEntra .18s cubic-bezier(.2, .8, .2, 1); }
+.peek, .comments { animation: nDaDireita .22s cubic-bezier(.2, .8, .2, 1); }
+.toast { animation: nSobe .2s cubic-bezier(.2, .8, .2, 1); }
+.app :global(.bn-formatting-toolbar), .app :global(.bn-suggestion-menu), .app :global(.bn-link-toolbar) { animation: nEntra .12s cubic-bezier(.2, .8, .2, 1); }
+.navItem, .menuItem, .rowBtn, .viewTab, .barBtn, .addBtn, .topBtn, .searchItem, .card { transition: background-color .1s ease, color .1s ease, box-shadow .15s ease, opacity .15s ease; }
+.card:hover { box-shadow: rgba(15, 15, 15, .1) 0 0 0 1px, rgba(15, 15, 15, .08) 0 4px 12px; }
+@media (prefers-reduced-motion: reduce) {
+  .menu, .overlay, .search, .peek, .comments, .toast, .app :global(.bn-formatting-toolbar), .app :global(.bn-suggestion-menu) { animation: none; }
+}
+.trArrastando .open { display: none !important; }

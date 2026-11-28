@@ -573,6 +573,33 @@ describe('Notas — telas de ponta a ponta', () => {
     assert.equal(resposta.status(), 200, 'a página pública abre sem erro no servidor')
   })
 
+  test('arrastar uma linha da tabela pela alça muda a ordem e fica guardado; menus entram com animação', async () => {
+    const id = await page.evaluate(async () => (await (await fetch('/api/notas/arvore')).json()).paginas.find(p => p.titulo === 'Tarefas' && p.tipo === 'base')?.id)
+    assert.ok(id, 'base de tarefas')
+    await page.goto(`${BASE}/notas/${id}`, { waitUntil: 'domcontentloaded' })
+    await page.getByRole('tab', { name: 'Tabela' }).first().click()
+    const base = page.locator('[role=grid]').first()
+    await base.locator('[role=row] [class*=tdTitle]').first().waitFor()
+    const nomes = async () => (await base.locator('[role=row] [class*=tdTitle]').allInnerTexts()).map(t => t.split('\n')[0].trim())
+    const antes = await nomes()
+    const ultimo = antes.at(-1)
+    const linha = base.locator('[role=row]').filter({ hasText: ultimo }).last()
+    await linha.hover()
+    const h = await linha.locator('[class*=alcaLinha]').boundingBox()
+    const alvo = await base.locator('[role=row]').nth(1).boundingBox()
+    await page.mouse.move(h.x + 10, h.y + 10); await page.mouse.down()
+    await page.mouse.move(alvo.x + 200, alvo.y + 6, { steps: 12 })
+    await base.locator('[class*=trAlvo]').waitFor()
+    await page.mouse.up()
+    await page.waitForFunction(u => document.querySelector('[role=grid] [role=row] [class*=tdTitle]')?.textContent.includes(u), ultimo)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.getByRole('tab', { name: 'Tabela' }).first().click()
+    await page.waitForFunction(u => document.querySelector('[role=grid] [role=row] [class*=tdTitle]')?.textContent.includes(u), ultimo)
+    await page.getByRole('button', { name: 'Filtrar' }).first().click()
+    assert.match(await page.locator('[role=menu]').first().evaluate(e => getComputedStyle(e).animationName), /nEntra/)
+    await page.keyboard.press('Escape')
+  })
+
   test('sem erros de servidor nem de página', () => {
     // O armazenamento de arquivos (Supabase Storage) não existe no banco local: o envio da imagem do ZIP falha aqui
     // e a importação segue sem ela (é o comportamento esperado). Em produção o bucket "notas" existe.

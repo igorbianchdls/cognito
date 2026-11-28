@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { ChevronLeft, ChevronRight, EyeOff, Maximize2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, EyeOff, GripVertical, Maximize2, MoreHorizontal, Plus, Trash2 } from 'lucide-react'
 import { hierarquia, periodoDoItem, somarDias } from '@/products/notas/shared/bases'
 import { estiloCapa } from '../catalogo'
 import {
@@ -95,6 +95,20 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
   const [novaProp, setNovaProp] = useState<HTMLElement | null>(null)
   const [menuCalc, setMenuCalc] = useState<{ ancora: HTMLElement; col: string; tipo: TipoPropriedade | 'titulo' } | null>(null)
   const [menuLinha, setMenuLinha] = useState<{ ancora: { x: number; y: number }; id: string } | null>(null)
+  // Arrastar linhas pela alça (⋮⋮) muda a ordem, como no Notion. Só sem ordenação e sem subitens (aí a ordem é outra).
+  const reordena = editavel && !visao.ordenacao.length && !visao.subitens
+  const [linhaArrastada, setLinhaArrastada] = useState<string | null>(null)
+  /** Antes de qual linha a arrastada vai entrar (null = no fim; undefined = em lugar nenhum). */
+  const [antesDaLinha, setAntesDaLinha] = useState<string | null | undefined>(undefined)
+  const soltarLinha = () => {
+    const id = linhaArrastada, alvo = antesDaLinha
+    setLinhaArrastada(null); setAntesDaLinha(undefined)
+    if (!id || alvo === undefined || alvo === id) return
+    const lista = itens.filter(i => i.id !== id)
+    const k = alvo ? lista.findIndex(i => i.id === alvo) : lista.length
+    if (k < 0) return
+    void api.mudarItem(id, { posicao: posicaoEntre(lista[k - 1]?.posicao ?? null, lista[k]?.posicao ?? null) })
+  }
   const [arrastandoCol, setArrastandoCol] = useState<{ col: string; x: number; largura: number; atual: number } | null>(null)
   const [editarTitulo, setEditarTitulo] = useState<string | null>(null)
   const [fechados, setFechados] = useState<Set<string>>(new Set())
@@ -134,7 +148,7 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
 
   const novo = async () => { const item = await api.novoItem(valoresNovos); if (item) setEditarTitulo(item.id) }
 
-  return <div className={x.table} role="grid" aria-label={visao.nome} onKeyDown={andarComSetas}>
+  return <div className={`${x.table} ${reordena ? x.tableReordena : ''}`} role="grid" aria-label={visao.nome} onKeyDown={andarComSetas}>
     <div className={x.tableInner}>
       <div className={`${x.tr} ${x.headRow}`} role="row">
         {colunas.map(col => {
@@ -148,7 +162,26 @@ export function Tabela({ api, base, visao, itens, pessoas, editavel, abrir, valo
         })}
         {editavel && <div className={`${x.th} ${x.thAdd}`} role="columnheader" aria-label="Nova propriedade" title="Nova propriedade" onClick={e => setNovaProp(e.currentTarget)}><Plus size={16} /></div>}
       </div>
-      {linhas.map(({ item, nivel, temFilhos }) => <div key={item.id} className={x.tr} role="row" onContextMenu={e => { e.preventDefault(); setMenuLinha({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}>
+      {linhas.map(({ item, nivel, temFilhos }, n) => <div key={item.id} role="row"
+        className={[x.tr, linhaArrastada === item.id ? x.trArrastando : '', linhaArrastada && antesDaLinha === item.id ? x.trAlvo : '',
+          linhaArrastada && antesDaLinha === null && n === linhas.length - 1 ? x.trAlvoFim : ''].join(' ')}
+        onContextMenu={e => { e.preventDefault(); setMenuLinha({ ancora: { x: e.clientX, y: e.clientY }, id: item.id }) }}
+        onDragOver={e => {
+          if (!linhaArrastada) return
+          e.preventDefault(); e.dataTransfer.dropEffect = 'move'
+          const r = e.currentTarget.getBoundingClientRect()
+          const alvo = e.clientY < r.top + r.height / 2 ? item.id : linhas[n + 1]?.item.id ?? null
+          if (alvo !== antesDaLinha) setAntesDaLinha(alvo)
+        }}
+        onDrop={e => { if (linhaArrastada) { e.preventDefault(); soltarLinha() } }}>
+        {reordena && <span className={x.alcaLinha} draggable title="Arraste para mover" aria-hidden
+          onDragStart={e => {
+            const linha = e.currentTarget.parentElement
+            if (linha) e.dataTransfer.setDragImage(linha, 30, 17)
+            e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', item.titulo)
+            setLinhaArrastada(item.id)
+          }}
+          onDragEnd={() => { setLinhaArrastada(null); setAntesDaLinha(undefined) }}><GripVertical size={14} /></span>}
         {colunas.map(col => {
           const prop = base.esquema.find(p => p.id === col) ?? null
           const recuo = !prop && visao.subitens ? <span className={x.subRecuo} style={{ width: nivel * 20 + 20 }}>
