@@ -30,6 +30,7 @@ import { enviarArquivoNotas, notasApi, type Pagina } from './api'
 import { abrirCanal } from './tempoReal'
 import { deBase64, paraBase64 } from '@/products/notas/shared/colaboracao'
 import { useNotas } from './NotasProvider'
+import { observarMenusDoEditor } from './saida'
 import x from './notas.module.css'
 
 /**
@@ -283,6 +284,8 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
     return () => { clearTimeout(t); raiz?.removeEventListener('focusin', religar) }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o editor muda
   }, [editor])
+  // Menus do editor (formatação, "/", ⋮⋮) também animam ao fechar.
+  useEffect(() => { const raiz = caixa.current; return raiz ? observarMenusDoEditor(raiz) : undefined }, [editor])
   // Testes de tela (só em desenvolvimento): o documento do editor fica acessível para conferir a estrutura.
   useEffect(() => {
     if (process.env.NODE_ENV === 'production') return

@@ -825,3 +825,8 @@
 .janelaSaindo { animation: nSaiFade .12s ease-in forwards !important; }
 .janelaSaindo > * { animation: nSaiMenu .12s ease-in forwards !important; }
 .avisoSaindo { animation: nSaiAviso .15s ease-in forwards !important; }
+/* Menus do editor: o ⋮⋮ (Mantine) só esmaece ao entrar, sem mexer no tamanho (o submenu precisa ficar parado). */
+.app :global(.mantine-Menu-dropdown) { animation: nFade .12s ease-out; }
+.menuEditorSaindo { animation: nSaiFade .12s ease-in forwards !important; }
+.menuEditorSaindo:is(:global(.bn-formatting-toolbar), :global(.bn-suggestion-menu)) { animation: nSaiMenu .11s ease-in forwards !important; }
+@media (prefers-reduced-motion: reduce) { .app :global(.mantine-Menu-dropdown) { animation: none; } }
