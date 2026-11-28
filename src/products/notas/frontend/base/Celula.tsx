@@ -196,6 +196,8 @@ export function Celula({ item, prop, pessoas, editavel, className, style, onMuda
     if (r.valor !== valor) onMudar(r.valor)
   }
   const abrir = (e: React.MouseEvent<HTMLElement>) => {
+    // No celular (sem mouse) ou sem poder editar, tocar no nome abre o item; renomear fica dentro dele.
+    if (!prop && onAbrir && (!editavel || window.matchMedia('(hover: none)').matches)) { onAbrir(); return }
     if (!editavel || automatico) return
     if (tipo === 'checkbox') { onMudar(!valor); return }
     setEditando(e.currentTarget)

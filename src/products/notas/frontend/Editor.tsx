@@ -16,11 +16,11 @@ import { BotoesDoCodigo } from './BotoesDoCodigo'
 import { ArrasteLateral } from './ArrasteLateral'
 import { AcoesDoBlocoContexto, MenuDoBloco, semIds } from './MenuDoBloco'
 import { Menu } from './Menu'
-import { createReactBlockSpec, createReactInlineContentSpec, getDefaultReactSlashMenuItems, SideMenu, SideMenuController, SuggestionMenuController, useCreateBlockNote } from '@blocknote/react'
+import { BasicTextStyleButton, createReactBlockSpec, createReactInlineContentSpec, FormattingToolbar, FormattingToolbarController, getDefaultReactSlashMenuItems, getFormattingToolbarItems, SideMenu, SideMenuController, SuggestionMenuController, useBlockNoteEditor, useComponentsContext, useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Columns2, Columns3, FileText, Globe, ListChecks, MessageSquareWarning, MousePointerClick, Plus, Table2 } from 'lucide-react'
+import { Columns2, Columns3, FileText, Globe, ListChecks, MessageSquare, MessageSquareWarning, MousePointerClick, Plus, Table2 } from 'lucide-react'
 import type { TipoVisao } from '@/products/notas/shared/bases'
 import { BaseView } from './base/BaseView'
 import { Botao, Coluna, Colunas, Destaque, Incorporar, MencaoPessoa } from './blocos'
@@ -123,6 +123,27 @@ export type ControleEditor = {
 }
 
 /** Texto puro de um bloco (para citar no comentário). */
+// Barra que aparece ao selecionar texto, na ordem do Notion: transformar em, estilos (com código), link, cor e
+// comentar. Alinhamento e recuo ficam no menu do bloco (⋮⋮), como lá.
+const FORA_DA_BARRA = ['textAlignLeftButton', 'textAlignCenterButton', 'textAlignRightButton', 'nestBlockButton', 'unnestBlockButton', 'addCommentButton', 'addTiptapCommentButton', 'colorStyleButton', 'createLinkButton']
+function BarraDeFormatacao({ onComentar }: { onComentar?: (blocoId: string, trecho: string) => void }) {
+  const editor = useBlockNoteEditor()
+  const Componentes = useComponentsContext()!
+  const itens = getFormattingToolbarItems().filter(i => !FORA_DA_BARRA.includes(String(i.key)))
+  const depoisDoTachado = itens.findIndex(i => i.key === 'strikeStyleButton') + 1
+  const padrao = getFormattingToolbarItems()
+  const pegar = (k: string) => padrao.find(i => i.key === k)
+  return <FormattingToolbar>
+    {itens.slice(0, depoisDoTachado)}
+    <BasicTextStyleButton basicTextStyle="code" key="codeStyleButton" />
+    {pegar('createLinkButton')}
+    {pegar('colorStyleButton')}
+    {itens.slice(depoisDoTachado)}
+    {onComentar && <Componentes.FormattingToolbar.Button key="comentar" className="bn-button" label="Comentar" mainTooltip="Comentar (Ctrl+Alt+M)" icon={<MessageSquare size={16} />}
+      onClick={() => { try { const b = editor.getTextCursorPosition().block; onComentar(b.id, editor.getSelectedText().trim() || textoDoBloco(b)) } catch { /* sem seleção */ } }}>Comentar</Componentes.FormattingToolbar.Button>}
+  </FormattingToolbar>
+}
+
 function textoDoBloco(bloco: { content?: unknown }) {
   return Array.isArray(bloco.content) ? bloco.content.map(c => (c as { text?: string }).text ?? '').join('').slice(0, 300) : ''
 }
@@ -278,7 +299,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
   }}>
   {destaques && destaques.length > 0 && <style>{destaques.map(id => `.bn-block[data-id="${CSS.escape(id)}"] > .bn-block-content`).join(',') + '{background:rgba(255,212,0,.16);border-bottom:2px solid rgba(255,212,0,.6)}'}</style>}
   <AcoesDoBlocoContexto.Provider value={acoesDoBloco}>
-  <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false} sideMenu={false}
+  <BlockNoteView editor={editor} editable={editavel} theme={escuro ? 'dark' : 'light'} slashMenu={false} sideMenu={false} formattingToolbar={false}
     onChange={() => onMudar(editor.document)}>
     <SuggestionMenuController triggerCharacter="/" getItems={async query => arrumarMenu(filterSuggestionItems([
       ...getDefaultReactSlashMenuItems(editor),
@@ -356,6 +377,7 @@ export default function Editor({ chave, conteudo, editavel, onMudar, criarSubpag
         }] : []),
       ])
     }} />
+    <FormattingToolbarController formattingToolbar={() => <BarraDeFormatacao onComentar={onComentar} />} />
     <SideMenuController sideMenu={props => <SideMenu {...props} dragHandleMenu={MenuDoBloco} />} />
     <ArrasteLateral caixa={caixa} editavel={editavel} />
   </BlockNoteView>

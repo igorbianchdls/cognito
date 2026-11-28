@@ -118,7 +118,7 @@ export const sections: Section[] = [
       { title: "Início", url: "/drive", icon: IconFolderFilled, excludePaths: ["/drive/recentes", "/drive/favoritos", "/drive/lixeira"] },
       { title: "Recentes", url: "/drive/recentes", icon: IconClockFilled },
       { title: "Favoritos", url: "/drive/favoritos", icon: IconStarFilled },
-      { title: "Lixeira", url: "/drive/lixeira", icon: IconTrashFilled },
+      { title: "Lixeira do Drive", url: "/drive/lixeira", icon: IconTrashFilled },
     ],
   },
   {

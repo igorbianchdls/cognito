@@ -19,6 +19,15 @@ export function Busca() {
 const destacar = (trecho: string) => trecho.split(/(«[^»]*»)/g).map((parte, i) =>
   parte.startsWith('«') ? <mark key={i}>{parte.slice(1, -1)}</mark> : parte)
 
+/** Sublinha o termo buscado no título (sem diferença de maiúsculas nem acentos). */
+function marcarTitulo(titulo: string, termo: string) {
+  const simples = (s: string) => [...s].map(c => c.normalize('NFD')[0].toLowerCase()).join('')
+  const t = simples(termo.trim())
+  const i = t ? simples(titulo).indexOf(t) : -1
+  if (i < 0) return titulo
+  return <>{titulo.slice(0, i)}<mark>{titulo.slice(i, i + t.length)}</mark>{titulo.slice(i + t.length)}</>
+}
+
 function JanelaBusca() {
   const { setBuscaAberta, arvore } = useNotas()
   const router = useRouter()
@@ -66,11 +75,12 @@ function JanelaBusca() {
           className={x.searchItem} onMouseEnter={() => setIndice(i)} onClick={() => abrir(item.id)}>
           <span><IconePagina icone={item.icone} tipo={arvore?.paginas.find(p => p.id === item.id)?.tipo} tamanho={18} /></span>
           <div>
-            <b>{tituloExibido(item.titulo)}</b>
+            <b>{buscando ? marcarTitulo(tituloExibido(item.titulo), texto) : tituloExibido(item.titulo)}</b>
             {item.trecho ? <small>{destacar(item.trecho)}</small> : local(item.id) && <small>{local(item.id)}</small>}
           </div>
         </button>)}
       </div>
+      <div className={x.searchRodape} aria-hidden><span><kbd>↑↓</kbd>navegar</span><span><kbd>↵</kbd>abrir</span><span><kbd>Esc</kbd>fechar</span></div>
     </div>
   </div>
 }

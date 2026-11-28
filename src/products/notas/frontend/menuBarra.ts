@@ -38,6 +38,10 @@ export const DICIONARIO = {
     ...item('page_break', 'Quebra de página', 'Começa uma nova folha ao imprimir', 'Avançados'),
     ...item('emoji', 'Emoji', 'Procure e insira um emoji', 'Avançados'),
   },
+  formatting_toolbar: {
+    ...pt.formatting_toolbar,
+    code: { ...(pt.formatting_toolbar as unknown as Record<string, object>).code, tooltip: 'Código' },
+  },
 } as unknown as typeof pt
 
 /** Ordem dos itens (pela chave do BlockNote ou pelo título dos nossos); o que não está aqui vai para o fim do grupo. */
