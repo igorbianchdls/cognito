@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { saidaMenu } from './saida'
 import x from './notas.module.css'
 
 /** Menu flutuante ancorado num elemento (ou num ponto); fecha ao clicar fora ou com Esc. */
@@ -10,6 +11,13 @@ export function Menu({ ancora, onFechar, children, alinhar = 'inicio', className
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  // Guarda o elemento para posicionar e anima a saída quando o menu fecha.
+  const prender = useCallback((el: HTMLDivElement | null) => {
+    ref.current = el
+    if (!el) return
+    const animar = saidaMenu(el)
+    return () => { ref.current = null; animar() }
+  }, [])
   useLayoutEffect(() => {
     if (!ancora || !ref.current) return
     const r = 'getBoundingClientRect' in ancora ? ancora.getBoundingClientRect() : { left: ancora.x, right: ancora.x, bottom: ancora.y, top: ancora.y }
@@ -28,7 +36,7 @@ export function Menu({ ancora, onFechar, children, alinhar = 'inicio', className
     return () => { clearTimeout(t); window.removeEventListener('mousedown', fora); window.removeEventListener('keydown', esc) }
   }, [onFechar])
   if (!ancora) return null
-  return createPortal(<div ref={ref} role="menu" className={`${x.menu} ${className ?? ''}`} style={pos ?? { visibility: 'hidden', top: 0, left: 0 }}
+  return createPortal(<div ref={prender} role="menu" className={`${x.menu} ${className ?? ''}`} style={pos ?? { visibility: 'hidden', top: 0, left: 0 }}
     onMouseDown={e => e.stopPropagation()}>{children}</div>, document.body)
 }
 

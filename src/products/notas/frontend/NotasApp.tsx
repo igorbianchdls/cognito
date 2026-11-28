@@ -4,12 +4,13 @@ import type { ReactNode } from 'react'
 import { Busca } from './Busca'
 import { NotasProvider, useNotas } from './NotasProvider'
 import { Sidebar } from './Sidebar'
+import { saidaAviso } from './saida'
 import x from './notas.module.css'
 
 function Aviso() {
   const { aviso, avisar } = useNotas()
   if (!aviso) return null
-  return <div key={aviso.n} className={x.toast} role="status">
+  return <div key={aviso.n} ref={saidaAviso} className={x.toast} role="status">
     {aviso.texto}
     {aviso.acao && <button type="button" className={x.toastAcao} onClick={() => { const fazer = aviso.acao!.fazer; avisar(''); fazer() }}>{aviso.acao.rotulo}</button>}
   </div>

@@ -6,6 +6,7 @@ import { History, Loader2, X } from 'lucide-react'
 import { tituloExibido } from '@/products/notas/shared/arvore'
 import { notasApi, type Pagina } from './api'
 import { usePessoas } from './base/pessoas'
+import { saidaJanela } from './saida'
 import x from './notas.module.css'
 
 const Editor = dynamic(() => import('./Editor'), { ssr: false })
@@ -52,7 +53,7 @@ export function Historico({ pagina, podeRestaurar, onFechar, onRestaurada }: {
   const nome = (id: string | null) => pessoas.find(p => p.id === id)?.nome ?? 'Alguém'
   const mostrada = aberta?.id === escolhida ? aberta : null
 
-  return <div className={x.overlay} onMouseDown={e => { if (e.target === e.currentTarget) onFechar() }}>
+  return <div ref={saidaJanela} className={x.overlay} onMouseDown={e => { if (e.target === e.currentTarget) onFechar() }}>
     <div className={x.historyDialog} role="dialog" aria-label="Histórico de versões">
       <div className={x.historyPreview}>
         {!versoes ? <Loader2 size={18} className={x.spin} />

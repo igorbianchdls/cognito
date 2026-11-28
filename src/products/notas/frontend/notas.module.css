@@ -815,3 +815,13 @@
   .menu, .overlay, .search, .peek, .comments, .toast, .app :global(.bn-formatting-toolbar), .app :global(.bn-suggestion-menu) { animation: none; }
 }
 .trArrastando .open { display: none !important; }
+/* Saída (cópia visual que some depois que o menu/painel fechou). */
+@keyframes nSaiMenu { to { opacity: 0; transform: translateY(-3px) scale(.98); } }
+@keyframes nSaiPainel { to { opacity: 0; transform: translateX(28px); } }
+@keyframes nSaiFade { to { opacity: 0; } }
+@keyframes nSaiAviso { to { opacity: 0; transform: translate(-50%, 8px); } }
+.menuSaindo { animation: nSaiMenu .11s ease-in forwards !important; }
+.painelSaindo { animation: nSaiPainel .16s ease-in forwards !important; }
+.janelaSaindo { animation: nSaiFade .12s ease-in forwards !important; }
+.janelaSaindo > * { animation: nSaiMenu .12s ease-in forwards !important; }
+.avisoSaindo { animation: nSaiAviso .15s ease-in forwards !important; }

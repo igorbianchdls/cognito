@@ -13,6 +13,7 @@ import { usePessoas } from './pessoas'
 import { useBase } from './useBase'
 import { Calendario, Galeria, LinhaDoTempo, Lista, Quadro, Tabela, type VistaProps } from './Vistas'
 import { LigadasContexto } from './ligadas'
+import { saidaPainel } from '../saida'
 import x from '../notas.module.css'
 
 export const ICONE_VISAO: Record<TipoVisao, LucideIcon> = { tabela: Table2, quadro: Columns3, lista: List, galeria: LayoutGrid, calendario: CalendarDays, linha_tempo: GanttChart }
@@ -207,7 +208,7 @@ export function BaseView({ id, embutida }: { id: string; embutida?: boolean }) {
       <ItemMenu icone={Plus} onClick={novoModelo}>Novo modelo</ItemMenu>
     </Menu>}
 
-    {aberto && <div className={x.peek} role="dialog" aria-label="Item da base">
+    {aberto && <div ref={saidaPainel} className={x.peek} role="dialog" aria-label="Item da base">
       <PaginaView key={aberto} id={aberto} lateral onFechar={() => { setAberto(null); void api.carregar() }} />
     </div>}
   </div></LigadasContexto.Provider>

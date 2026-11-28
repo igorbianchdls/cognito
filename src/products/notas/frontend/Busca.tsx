@@ -7,6 +7,7 @@ import { IconePagina } from './IconePagina'
 import { caminho, tituloExibido } from '@/products/notas/shared/arvore'
 import { notasApi, type ResultadoBusca } from './api'
 import { useNotas } from './NotasProvider'
+import { saidaJanela } from './saida'
 import x from './notas.module.css'
 
 /** Busca (Ctrl+K): sem texto mostra as recentes; com texto busca no título e no conteúdo. Setas e Enter navegam. */
@@ -55,7 +56,7 @@ function JanelaBusca() {
   }
   const abrir = (id: string) => { setBuscaAberta(false); router.push(`/notas/${id}`) }
 
-  return <div className={x.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setBuscaAberta(false) }}>
+  return <div ref={saidaJanela} className={x.overlay} onMouseDown={e => { if (e.target === e.currentTarget) setBuscaAberta(false) }}>
     <div className={x.search} role="dialog" aria-modal="true" aria-label="Buscar nas notas">
       <label className={x.searchInput}>
         <Search size={18} />

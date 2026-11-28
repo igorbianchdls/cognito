@@ -6,6 +6,7 @@ import { notasApi } from './api'
 import { ItemMenu, Menu } from './Menu'
 import { useNotas } from './NotasProvider'
 import { usePessoas, type Pessoa } from './base/pessoas'
+import { saidaPainel } from './saida'
 import x from './notas.module.css'
 
 export type Comentario = {
@@ -77,7 +78,7 @@ export function Comentarios({ paginaId, euId, rascunho, onFechar, onIrPara, onMu
 
   const resolvidas = (lista ?? []).filter(c => !c.discussao_id && c.resolvido).length
   const Moldura = embutido ? 'section' : 'aside'
-  return <Moldura className={embutido ? x.comentariosItem : x.comments} aria-label="Comentários">
+  return <Moldura ref={embutido ? undefined : saidaPainel} className={embutido ? x.comentariosItem : x.comments} aria-label="Comentários">
     {embutido
       ? <div className={x.comentariosItemTopo}>
         <b>Comentários</b>
