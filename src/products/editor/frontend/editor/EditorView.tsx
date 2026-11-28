@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Check, CloudCheck, Download, History, Plus, RectangleVertical } from 'lucide-react'
 import type { PlayerRef } from '@remotion/player'
-import { formatDateTime } from '@/products/editor/frontend/lib/format'
 import { Preview } from './preview/Preview'
 import { Timeline } from './timeline/Timeline'
 import { LeftPanel, uploadToEditor, type ChatMessage } from './panels/LeftPanel'
@@ -14,15 +13,18 @@ import { clipesComFala, comLegendas, gerarLegendas } from './project/legendasAut
 import { blankProject, defaultBox, fullBox, media, type MediaItem } from './project/data'
 import { fromTemplate } from './project/templates'
 import { addClip, clipEnd, duplicateClip, groupClips, insertClip, isLocked, projectDuration, removeClips, rippleDelete, splitAt, toggleMarker, ungroupClips, withGroup } from './project/ops'
-import { listVersions, saveVersion, type Version } from './project/store'
+import { linkExport, newProjectId, storeProjectNow, type Version } from './project/store'
+import { useVersoes } from './versions/useVersoes'
+import { Historico } from './versions/Historico'
+import { useRouter } from 'next/navigation'
 import { copyClips, pasteClips, type ClipboardItem } from './project/clipboard'
 import { createFrameStore, useEditor } from './project/useEditor'
-import { FPS, type ClipProps, type Project, type TrackKind } from './project/types'
+import { FPS, localStamp, type ClipProps, type Project, type TrackKind } from './project/types'
 import e from './editor.module.css'
 import { ExportDialog } from './export/ExportDialog'
 
 export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: string[] }) {
-  const { project, apply, transient, commit, undo, redo, canUndo, canRedo, externalChanges } = useEditor(initial, fileIds?.length ? () => blankProject(initial.id, fileIds) : undefined)
+  const { project, apply, transient, commit, undo, redo, canUndo, canRedo, externalChanges, carregado } = useEditor(initial, fileIds?.length ? () => blankProject(initial.id, fileIds) : undefined)
   const [selection, setSelection] = useState<string[]>([])
   const [insertMode, setInsertMode] = useState(false)
   const [loop, setLoop] = useState<{ start: number; end: number } | null>(null)
@@ -30,13 +32,30 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   const [pane, setPane] = useState<'ferramentas' | 'propriedades'>('ferramentas')
   /** The project's settings (format, background) open on the right when nothing is selected. */
   const [projectOpen, setProjectOpen] = useState(false)
-  const [versions, setVersions] = useState<Version[] | null>(null)
   const clipboard = useRef<ClipboardItem[]>([])
   const [playing, setPlaying] = useState(false)
   const [chat, setChat] = useState<ChatMessage[]>([])
   const [toast, setToast] = useState('')
   const [exporting, setExporting] = useState(false)
   const playerRef = useRef<PlayerRef>(null)
+  const versoes = useVersoes(project, carregado)
+  const router = useRouter()
+  const restaurar = (v: Version, p: Project) => {
+    void (async () => {
+      await versoes.antes('Antes de restaurar')
+      const novo = { ...p, id: project.id }
+      apply(() => novo)
+      await versoes.versionar('restauracao', `Restaurada: ${v.label}`, { projeto: novo })
+      setToast(`“${v.label}” restaurada. O que havia antes ficou guardado no histórico.`)
+    })()
+  }
+  const duplicarVersao = (v: Version, p: Project) => {
+    void (async () => {
+      const novo: Project = { ...p, id: newProjectId(), name: `${p.name} (${v.at.slice(8, 10)}/${v.at.slice(5, 7)} ${v.at.slice(11, 16)})`, updatedAt: localStamp() }
+      await storeProjectNow(novo)
+      router.push(`/editor/${novo.id}`)
+    })()
+  }
   const frames = useMemo(() => createFrameStore(), [])
   const duration = projectDuration(project)
 
@@ -96,10 +115,12 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   }, [apply, frames])
 
   /** Swaps the project for a template (same id and name); Ctrl+Z brings the old one back. */
-  const applyTemplate = useCallback((templateId: string) => {
+  const applyTemplate = useCallback(async (templateId: string) => {
+    await versoes.antes('Antes de aplicar um modelo')
     apply(p => { const t = fromTemplate(p.id, templateId); return t ? { ...t, name: p.name } : p })
     setSelection([])
     setToast('Modelo aplicado. Ctrl+Z desfaz.')
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- versoes.antes é estável o bastante (muda só com o autor)
   }, [apply])
 
   const uploadInput = useRef<HTMLInputElement>(null)
@@ -177,6 +198,7 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       const corpo = await resposta.json().catch(() => ({})) as { resposta?: string; acoes?: Acao[]; erro?: string }
       if (!resposta.ok) throw new Error(corpo.erro ?? 'ia')
       let pediuLegendas = false
+      if (corpo.acoes?.length) await versoes.antes('Antes da edição da IA')
       if (corpo.acoes?.length) apply(p => { const r = aplicarAcoes(p, corpo.acoes!, frame, selected); pediuLegendas = r.legendas; return r.project }, `ia:${Date.now()}`)
       setChat(c => [...c, { from: 'ia', text: corpo.resposta ?? 'Pronto.' }])
       if (pediuLegendas || corpo.acoes?.some(a => a.tipo === 'gerar_legendas')) {
@@ -241,19 +263,11 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       <span className={e.grow} />
       <span className={e.format}>{project.format}</span>
       <div className={e.versionsWrap}>
-        <button className={e.versionsBtn} onClick={() => { if (versions) setVersions(null); else void listVersions(project.id).then(setVersions) }} aria-expanded={!!versions}><History size={16} />Versões</button>
-        {versions && <div className={e.versions}>
-          <button className={e.saveVersion} onClick={() => { void saveVersion(project, `Versão ${versions.length + 1}`).then(list => { setVersions(list); setToast('Versão salva.') }).catch(() => setToast('Não foi possível salvar a versão.')) }}>Salvar versão agora</button>
-          {versions.length === 0 && <p className={e.hint}>Nenhuma versão salva ainda.</p>}
-          {versions.map(v => <div key={v.at + v.label} className={e.versionRow}>
-            <span><b>{v.label}</b><small>{formatDateTime(v.at)}</small></span>
-            <button onClick={() => { void saveVersion(project, 'Antes de restaurar'); apply(() => ({ ...v.project, id: project.id })); setVersions(null); setToast(`${v.label} restaurada. A versão anterior foi guardada.`) }}>Restaurar</button>
-          </div>)}
-        </div>}
+        <button className={e.versionsBtn} onClick={() => versoes.aberto ? versoes.fechar() : versoes.abrir()} aria-expanded={versoes.aberto}><History size={16} />Versões</button>
       </div>
       <button className={e.export} onClick={() => { playerRef.current?.pause(); setExporting(true) }}><Download size={16} />Exportar</button>
     </header>
-    <LeftPanel project={project} selectedIds={selected} apply={apply} onApplyTemplate={applyTemplate} onAddMedia={m => addMedia(m)} onAddMediaMany={addMediaMany} onAddPreset={addPreset} onToast={setToast} chat={chat} onAsk={t => void ask(t)} pensando={pensando} />
+    <LeftPanel project={project} selectedIds={selected} apply={apply} onApplyTemplate={t => void applyTemplate(t)} antes={versoes.antes} onAddMedia={m => addMedia(m)} onAddMediaMany={addMediaMany} onAddPreset={addPreset} onToast={setToast} chat={chat} onAsk={t => void ask(t)} pensando={pensando} />
     <div className={`${e.body} ${showProps ? e.withProps : ''} ${pane === 'propriedades' ? e.showProps : e.showTools}`}>
       <div className={e.paneSwitch}><button className={pane === 'ferramentas' ? e.segOn : ''} onClick={() => setPane('ferramentas')}>Ferramentas</button><button className={pane === 'propriedades' ? e.segOn : ''} onClick={() => setPane('propriedades')}>Propriedades</button></div>
       <div className={e.stage}>
@@ -271,6 +285,14 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       apply={apply} transient={transient} commit={commit} onSplit={split} onDelete={remove} onRipple={ripple} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo}
       onDropMedia={(id, frame, trackId) => { const m = media(id); if (m) addMedia(m, frame, trackId) }} />
     {toast && <div className={e.toast} role="status"><Check size={15} />{toast}</div>}
-    {exporting && <ExportDialog project={project} onClose={() => setExporting(false)} />}
+    {exporting && <ExportDialog project={project} onClose={() => setExporting(false)} onExported={fileId => {
+      // Cada exportação vira uma versão (para sempre), ligada ao arquivo de vídeo gerado.
+      const agora = new Date()
+      const quando = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')} às ${agora.toTimeString().slice(0, 5)}`
+      void versoes.versionar('exportacao', `Exportado em ${quando}`).then(v => { if (fileId) void linkExport(project.id, v.id, fileId) }).catch(() => undefined)
+    }} />}
+    {versoes.aberto && <Historico projectId={project.id} versoes={versoes.lista} onFechar={versoes.fechar} onRenomear={versoes.renomear}
+      onSalvar={async nome => { await versoes.versionar('manual', nome, { nomeada: true }); setToast('Versão salva.') }}
+      onRestaurar={restaurar} onDuplicar={duplicarVersao} />}
   </div>
 }

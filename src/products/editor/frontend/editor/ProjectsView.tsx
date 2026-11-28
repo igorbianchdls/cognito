@@ -13,7 +13,7 @@ import { Thumb } from '@/products/drive/frontend/Thumb'
 import { useDriveActions } from '@/products/drive/frontend/views/actions'
 import { EditorComposition } from './remotion/Composition'
 import { projectDuration } from './project/ops'
-import { newProjectId, useProjects } from './project/store'
+import { exportOrigins, newProjectId, useProjects } from './project/store'
 import { templates } from './project/templates'
 import { FPS, canvasSize, type Project } from './project/types'
 import { timecode } from './timeline/Timeline'
@@ -63,13 +63,14 @@ function ProjectCard({ p, list }: { p: Project; list: boolean }) {
   </Link>
 }
 
-function ExportCard({ f, list, onOpen }: { f: DFile; list: boolean; onOpen: () => void }) {
+function ExportCard({ f, list, onOpen, origem }: { f: DFile; list: boolean; onOpen: () => void; origem?: { projeto: string; label: string } }) {
   return <button type="button" className={list ? h.row : h.card} onClick={onOpen}>
     <span className={h.thumb}>
       <span className={h.frame} style={{ aspectRatio: f.width && f.height ? `${f.width} / ${f.height}` : '9 / 16' }}><Thumb file={f} className={h.fileThumb} showKind={false} /></span>
       {f.duration != null && <i className={h.badge}>{clock(f.duration)}</i>}
     </span>
-    <span className={h.meta}><b>{f.name}</b><small>Exportado em {shortDate(f.createdAt)}</small></span>
+    <span className={h.meta}><b>{f.name}</b><small>Exportado em {shortDate(f.createdAt)}</small>
+      {origem && <small className={h.origem} title={`Projeto “${origem.projeto}” · ${origem.label}`}>De “{origem.projeto}” · {origem.label}</small>}</span>
   </button>
 }
 
@@ -96,6 +97,14 @@ export function ProjectsView() {
   const folders = useMemo(() => drive ? liveFolders(driveState).filter(f => f.driveId === drive.id && f.parentId === null && f.name !== EXPORT_FOLDER) : [], [driveState, drive])
   const byName = (a: string, b: string) => a.localeCompare(b, 'pt-BR', { numeric: true })
   const shownProjects = useMemo(() => [...projects].sort((a, b) => sort === 'nome' ? byName(a.name, b.name) : b.updatedAt.localeCompare(a.updatedAt)), [projects, sort])
+  // De qual projeto e versão veio cada vídeo exportado (a versão de exportação guarda o arquivo gerado).
+  const [origens, setOrigens] = useState<Awaited<ReturnType<typeof exportOrigins>>>({})
+  const exportedIds = liveFiles(driveState).filter(f => f.kind === 'video').map(f => f.id).join(',')
+  useEffect(() => {
+    let vivo = true
+    void exportOrigins(exportedIds ? exportedIds.split(',') : []).then(o => { if (vivo) setOrigens(o) })
+    return () => { vivo = false }
+  }, [exportedIds])
   const exported = useMemo(() => liveFiles(driveState).filter(f => f.kind === 'video' && f.folderId && exportFolders.has(f.folderId))
     .sort((a, b) => sort === 'nome' ? byName(a.name, b.name) : (b.updatedAt ?? b.createdAt).localeCompare(a.updatedAt ?? a.createdAt)), [driveState, exportFolders, sort])
 
@@ -142,7 +151,8 @@ export function ProjectsView() {
 
     {show !== 'projetos' && <>
       <h2 className={h.section}>Vídeos exportados</h2>
-      {exported.length ? <div className={grid}>{exported.map(f => <ExportCard key={f.id} f={f} list={list} onOpen={() => actions.open({ type: 'file', file: f }, exported)} />)}</div>
+      {exported.length ? <div className={grid}>{exported.map(f => <ExportCard key={f.id} f={f} list={list} onOpen={() => actions.open({ type: 'file', file: f }, exported)}
+        origem={origens[f.id] ? { projeto: projects.find(p => p.id === origens[f.id].projectId)?.name ?? 'Projeto apagado', label: origens[f.id].label } : undefined} />)}</div>
         : <p className={h.emptyText}><Film size={16} />Os vídeos que você exportar aparecem aqui.</p>}
     </>}
 

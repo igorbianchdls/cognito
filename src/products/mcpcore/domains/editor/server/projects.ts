@@ -8,7 +8,6 @@ import { fileIds, type FileInfo } from './convert'
 import type { Member } from './database'
 
 /** Versions kept per project; the oldest ones go first. */
-const VERSION_LIMIT = 60
 type Row = { id: string; name: string; data: Project; updated_at: string }
 
 export const toProject = (r: Row): Project => ({ ...r.data, id: r.id, name: r.name, tracks: r.data.tracks ?? [], format: r.data.format ?? '9:16', background: r.data.background ?? '#0b0d12' })
@@ -35,11 +34,11 @@ export async function insertProject(m: Member, p: Project) {
 
 /** Saves `next` over the project, keeping `before` as a version labelled with what is about to change. */
 export async function saveProject(m: Member, before: Project, next: Project, label: string) {
-  await m.db.query('INSERT INTO editor.project_versions (project_id, workspace_id, label, data) VALUES ($1, $2, $3, $4)', [before.id, m.ws, label.slice(0, 120), before])
+  // Versão automática "antes da mudança" do assistente: entra na mesma poda das automáticas do editor.
+  await m.db.query(`INSERT INTO editor.project_versions (project_id, workspace_id, label, data, tipo, nomeada, autor) VALUES ($1, $2, $3, $4, 'antes', false, 'Assistente')`, [before.id, m.ws, label.slice(0, 120), before])
   const data = { ...next, rev: randomUUID(), updatedAt: new Date().toISOString().slice(0, 16) }
   await m.db.query('UPDATE editor.projects SET name = $2, format = $3, data = $4, updated_at = now() WHERE id = $1', [next.id, next.name, next.format, data])
-  await m.db.query(`DELETE FROM editor.project_versions WHERE project_id = $1 AND id NOT IN (
-    SELECT id FROM editor.project_versions WHERE project_id = $1 ORDER BY created_at DESC LIMIT ${VERSION_LIMIT})`, [before.id])
+  await m.db.query('SELECT editor.podar_versoes($1)', [before.id])
 }
 
 export type EditContext = { files: Map<string, FileInfo>; durationOf: DurationOf }

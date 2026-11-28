@@ -40,6 +40,8 @@ export function useEditor(initial: Project, rebuild?: () => Project) {
   // itself is not saved back, so it can't overwrite that copy.
   const ready = useRef(false)
   const skipSave = useRef(true)
+  /** O projeto salvo já foi lido (as versões automáticas só contam mudanças depois disso). */
+  const [carregado, setCarregado] = useState(false)
   useEffect(() => {
     let live = true
     ready.current = false
@@ -50,6 +52,7 @@ export function useEditor(initial: Project, rebuild?: () => Project) {
       else if (rebuild) dispatch({ type: 'load', project: rebuild() })
       else skipSave.current = false
       ready.current = true
+      setCarregado(true)
     })
     return () => { live = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,6 +75,7 @@ export function useEditor(initial: Project, rebuild?: () => Project) {
     return () => { off(); clearInterval(timer) }
   }, [initial.id])
   return {
+    carregado,
     externalChanges,
     project: state.present,
     canUndo: state.past.length > 0,

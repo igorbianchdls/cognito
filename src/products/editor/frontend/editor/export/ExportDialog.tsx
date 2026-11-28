@@ -29,7 +29,7 @@ type Stage =
  * Export, CapCut style: settings, then a 0–100% count while the video is made in this browser, then the
  * download starts by itself (and the file is saved to the Drive when asked).
  */
-export function ExportDialog({ project, onClose }: { project: Project; onClose: () => void }) {
+export function ExportDialog({ project, onClose, onExported }: { project: Project; onClose: () => void; onExported?: (fileId?: string) => void }) {
   const driveState = useDriveState()
   const [prefs, setPrefs] = useState<Prefs>(readPrefs)
   const [name, setName] = useState(project.name || 'Vídeo')
@@ -94,14 +94,16 @@ export function ExportDialog({ project, onClose }: { project: Project; onClose: 
     }
     const file = fileName(name)
     downloadBlob(blob, file)
-    if (!prefs.saveToDrive || !driveId) { setStage({ kind: 'done', name: file, size: blob.size }); return }
+    if (!prefs.saveToDrive || !driveId) { onExported?.(); setStage({ kind: 'done', name: file, size: blob.size }); return }
     setStage(s => s.kind === 'running' ? { ...s, step: 'salvando', progress: 1, secondsLeft: null } : s)
     try {
       const folderId = childFolders(getDriveState(), driveId, null).find(f => f.name === FOLDER && !f.trashedAt)?.id ?? createFolder(driveId, null, FOLDER)
       const [fileId] = await uploadFiles([new File([blob], file, { type: 'video/mp4' })], driveId, folderId)
+      onExported?.(fileId)
       setStage({ kind: 'done', name: file, size: blob.size, fileId, folderId, driveName: driveState.drives.find(s => s.id === driveId)?.name })
     } catch (e) {
       console.error('exportar: não salvou no Drive', e)
+      onExported?.()
       setStage({ kind: 'done', name: file, size: blob.size, saveError: true })
     }
   }

@@ -29,6 +29,8 @@ type Props = {
   onAddPreset: (kind: TrackKind, props: ClipProps, seconds: number) => void
   onToast: (text: string) => void
   chat: ChatMessage[]; onAsk: (text: string) => void; pensando?: boolean
+  /** Guarda uma versão antes de uma mudança grande (legendas automáticas). */
+  antes?: (label: string) => Promise<void>
 }
 
 const tabs: { id: Tab; label: string; Icon: typeof Film }[] = [
@@ -73,7 +75,7 @@ export function LeftPanel(props: Props) {
   </>
 }
 
-function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia, onAddMediaMany, onAddPreset, onToast, chat, onAsk, pensando }: Props & { tab: Tab }) {
+function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia, onAddMediaMany, onAddPreset, onToast, chat, onAsk, pensando, antes }: Props & { tab: Tab }) {
   switch (tab) {
     case 'midia': return <MediaTab onAddMedia={onAddMedia} onAddMediaMany={onAddMediaMany} onToast={onToast} />
     case 'modelos': return <div className={e.list}>
@@ -93,7 +95,7 @@ function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia
     </>
     case 'audio': return <AudioTab onAddMedia={onAddMedia} onToast={onToast} />
     case 'texto': return <TextPresets kinds="texto" onAddPreset={onAddPreset} />
-    case 'legendas': return <><AutoLegendas project={project} selectedIds={selectedIds} apply={apply} onToast={onToast} /><h4 className={e.groupTitle}>Ou escreva à mão</h4><TextPresets kinds="legenda" onAddPreset={onAddPreset} /></>
+    case 'legendas': return <><AutoLegendas project={project} selectedIds={selectedIds} apply={apply} onToast={onToast} antes={antes} /><h4 className={e.groupTitle}>Ou escreva à mão</h4><TextPresets kinds="legenda" onAddPreset={onAddPreset} /></>
     case 'efeitos': return <ClipTab project={project} selectedIds={selectedIds} need="texto" empty="Selecione um texto ou legenda na linha do tempo para aplicar um efeito.">
       {ids => <div className={e.presets}>{anims.map(a => <button key={a.id} type="button" className={e.preset} onClick={() => applyAll(apply, ids, { anim: a.id }, 'anim')}>
         <span className={e.presetSample} style={{ background: '#1f2937' }}><span className={`${e.fxDemo} ${e[`fx_${a.id}`] ?? ''}`}>{a.label}</span></span><small>{a.hint}</small>
@@ -143,7 +145,7 @@ function ClipTab({ project, selectedIds, need, empty, children }: { project: Pro
 }
 
 /** Gera as legendas a partir da fala dos clipes (o selecionado, ou todos os que têm som). */
-function AutoLegendas({ project, selectedIds, apply, onToast }: Pick<Props, 'project' | 'selectedIds' | 'apply' | 'onToast'>) {
+function AutoLegendas({ project, selectedIds, apply, onToast, antes }: Pick<Props, 'project' | 'selectedIds' | 'apply' | 'onToast' | 'antes'>) {
   const [ouvindo, setOuvindo] = useState<string | null>(null)
   const clipes = clipesComFala(project, selectedIds)
   const gerar = async () => {
@@ -152,6 +154,7 @@ function AutoLegendas({ project, selectedIds, apply, onToast }: Pick<Props, 'pro
     try {
       const legendas = await gerarLegendas(clipes, setOuvindo)
       if (!legendas.length) { onToast('Não encontrei fala nesse áudio.'); return }
+      await antes?.('Antes das legendas automáticas')
       apply(p => comLegendas(p, legendas), `legendas:${Date.now()}`)
       onToast(`${legendas.length} legenda${legendas.length > 1 ? 's' : ''} criada${legendas.length > 1 ? 's' : ''}. Ctrl+Z desfaz.`)
     } catch (erro) { onToast((erro as Error).message || 'Não foi possível gerar as legendas.') } finally { setOuvindo(null) }

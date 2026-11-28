@@ -90,6 +90,7 @@
     "produtos:integracao": "bash -c 'NOTAS_TEST_DB_URL=$(scripts/notas/banco-local.sh) tsx --test src/products/notas/server/*.test.ts src/products/marketing/server/*.integracao.test.ts'",
     "notas:ui": "scripts/notas/ui.sh",
     "editor:ui": "scripts/editor/ui.sh",
+    "editor:regras": "tsx --test scripts/editor/regras.test.ts",
     "notas:regras": "tsx --test src/products/notas/shared/*.test.ts",
     "analytics:smoke": "tsx scripts/analytics-smoke.ts",
     "workspace:db-smoke": "tsx scripts/workspace-db-smoke.ts",

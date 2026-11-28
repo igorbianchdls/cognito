@@ -10,8 +10,6 @@ import { localStamp, type Project } from './types'
 
 export const STORAGE_KEY = 'otto-editor-editor-v1'
 const VERSIONS_KEY = 'otto-editor-editor-versions-v1'
-const VERSION_LIMIT = 20
-export type Version = { at: string; label: string; project: Project }
 
 /** New project ids: rows in the workspace need a uuid. */
 export const newProjectId = () => remoteMode ? crypto.randomUUID() : `p-${Date.now().toString(36)}`
@@ -21,7 +19,7 @@ export const newProjectId = () => remoteMode ? crypto.randomUUID() : `p-${Date.n
 export function readSaved(): Record<string, Project> {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') } catch { return {} }
 }
-const readVersions = (): Record<string, Version[]> => { try { return JSON.parse(localStorage.getItem(VERSIONS_KEY) ?? '{}') } catch { return {} } }
+const readVersions = (): Record<string, (Version & { id?: string; tipo?: TipoVersao; nomeada?: boolean })[]> => { try { return JSON.parse(localStorage.getItem(VERSIONS_KEY) ?? '{}') } catch { return {} } }
 const localList = () => {
   const saved = readSaved()
   return [...Object.values(saved).filter(p => !sampleProjects.some(x => x.id === p.id)), ...sampleProjects.map(p => saved[p.id] ?? p)]
@@ -144,28 +142,120 @@ export function deleteProject(id: string) {
 }
 
 // ---------- versions ----------
+// Versões do projeto: as salvas à mão (com nome) e as automáticas (a cada 10 min de edição, antes de grandes mudanças,
+// ao exportar e ao sair). As automáticas sem nome são podadas: todas das últimas 24 h, uma por hora até 7 dias, uma por
+// dia até 90 dias (no banco, editor.podar_versoes; neste navegador, podar() abaixo, com as mesmas regras).
 
-export async function listVersions(id: string): Promise<Version[]> {
-  if (!remoteMode) return readVersions()[id] ?? []
-  if (!uuidish(id)) return []
-  const { data } = await db().from('project_versions').select('label, data, created_at').eq('project_id', id).order('created_at', { ascending: false }).limit(VERSION_LIMIT)
-  return (data ?? []).map(v => ({ at: fromIso(v.created_at), label: v.label, project: v.data as Project }))
+export type TipoVersao = 'manual' | 'auto' | 'antes' | 'exportacao' | 'restauracao'
+export type Version = {
+  id: string; at: string; label: string; tipo: TipoVersao; nomeada: boolean
+  resumo?: string; duracao?: number; capa?: string; autor?: string; arquivoId?: string
+  /** O projeto daquela versão (no banco vem só quando pedido: versionProject). */
+  project?: Project
+}
+export type NovaVersao = Pick<Version, 'label' | 'tipo' | 'resumo' | 'duracao' | 'capa' | 'autor'> & { nomeada?: boolean }
+const LIMITE_LOCAL = 120
+const podavel = (v: Version) => (v.tipo === 'auto' || v.tipo === 'antes') && !v.nomeada
+
+/** As regras de poda (as mesmas do banco), sobre a lista do mais novo para o mais antigo. */
+export function podar(lista: Version[], agora = new Date()): Version[] {
+  const horas = (v: Version) => (agora.getTime() - new Date(v.at).getTime()) / 3600000
+  const vistos = { hora: new Set<string>(), dia: new Set<string>() }
+  return lista.filter(v => {
+    if (!podavel(v)) return true
+    const h = horas(v), hora = v.at.slice(0, 13), dia = v.at.slice(0, 10)
+    const primeiraDaHora = !vistos.hora.has(hora), primeiraDoDia = !vistos.dia.has(dia)
+    vistos.hora.add(hora); vistos.dia.add(dia)
+    if (h >= 90 * 24) return false
+    if (h >= 7 * 24) return primeiraDoDia
+    if (h >= 24) return primeiraDaHora
+    return true
+  })
 }
 
-export async function saveVersion(p: Project, label: string): Promise<Version[]> {
-  const v: Version = { at: localStamp(), label, project: p }
+const guardarLocal = (id: string, lista: Version[]) => {
+  const all = readVersions()
+  try { localStorage.setItem(VERSIONS_KEY, JSON.stringify({ ...all, [id]: lista })) } catch { /* cheio ou bloqueado */ }
+}
+// Versões antigas (antes de haver tipo) contam como salvas à mão.
+const local = (id: string): Version[] => (readVersions()[id] ?? []).map((v, i) => ({ ...v, id: v.id ?? `v${i}-${v.at}`, tipo: v.tipo ?? 'manual', nomeada: v.nomeada ?? true }))
+
+type Linha = { id: string; label: string; tipo: TipoVersao; nomeada: boolean; resumo: string | null; duracao: number | null; capa: string | null; autor: string | null; arquivo_id: string | null; created_at: string }
+const COLUNAS = 'id, label, tipo, nomeada, resumo, duracao, capa, autor, arquivo_id, created_at'
+const daLinha = (v: Linha): Version => ({ id: v.id, at: fromIso(v.created_at), label: v.label, tipo: v.tipo, nomeada: v.nomeada, resumo: v.resumo ?? undefined,
+  duracao: v.duracao ?? undefined, capa: v.capa ?? undefined, autor: v.autor ?? undefined, arquivoId: v.arquivo_id ?? undefined })
+
+/** As versões do projeto, da mais nova para a mais antiga. */
+export async function listVersions(id: string): Promise<Version[]> {
+  if (!remoteMode) return local(id)
+  if (!uuidish(id)) return []
+  await connected
+  const { data } = await db().from('project_versions').select(COLUNAS).eq('project_id', id).order('created_at', { ascending: false }).limit(300)
+  return ((data ?? []) as Linha[]).map(daLinha)
+}
+
+/** O projeto guardado numa versão (para a prévia, restaurar ou duplicar). */
+export async function versionProject(projectId: string, v: Version): Promise<Project | undefined> {
+  if (v.project) return v.project
+  if (!remoteMode) return local(projectId).find(x => x.id === v.id)?.project
+  const { data } = await db().from('project_versions').select('data').eq('id', v.id).maybeSingle()
+  return (data?.data as Project | undefined) ?? undefined
+}
+
+/** Guarda uma versão do projeto como está agora e poda as automáticas antigas. */
+export async function saveVersion(p: Project, nova: NovaVersao): Promise<Version> {
+  const v: Version = { id: remoteMode ? crypto.randomUUID() : `v${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, at: localStamp(), project: p,
+    ...nova, label: nova.label.slice(0, 120), nomeada: nova.nomeada ?? (nova.tipo !== 'auto' && nova.tipo !== 'antes') }
   if (!remoteMode) {
-    const all = readVersions()
-    const list = [v, ...(all[p.id] ?? [])].slice(0, VERSION_LIMIT)
-    try { localStorage.setItem(VERSIONS_KEY, JSON.stringify({ ...all, [p.id]: list })) } catch { /* storage full or blocked */ }
-    return list
+    guardarLocal(p.id, podar([v, ...local(p.id)]).slice(0, LIMITE_LOCAL))
+    return v
   }
-  if (!ctx || !uuidish(p.id)) return [v]
+  if (!ctx || !uuidish(p.id)) return v
   const c = ctx
   // The project row must exist before its version (a new project may still be waiting for its first save).
   clearTimeout(timers.get(p.id)); timers.delete(p.id)
   await persist(async () => {
-    if (await writeProject(c, p)) await must(db().from('project_versions').insert({ project_id: p.id, workspace_id: c.ws, label, data: p }))
+    if (!(await writeProject(c, p))) return
+    await must(db().from('project_versions').insert({ id: v.id, project_id: p.id, workspace_id: c.ws, label: v.label, data: p, tipo: v.tipo, nomeada: v.nomeada,
+      resumo: v.resumo?.slice(0, 300) ?? null, duracao: v.duracao ?? null, capa: v.capa ?? null, autor: v.autor?.slice(0, 120) ?? null }))
+    await must(db().rpc('podar_versoes', { p_projeto: p.id }))
   })
-  return listVersions(p.id)
+  return v
+}
+
+/** Dá nome a uma versão: com nome, ela não é mais podada. */
+export async function renameVersion(projectId: string, versionId: string, label: string) {
+  const nome = label.trim().slice(0, 120)
+  if (!nome) return
+  if (!remoteMode) { guardarLocal(projectId, local(projectId).map(v => v.id === versionId ? { ...v, label: nome, nomeada: true } : v)); return }
+  await persist(() => must(db().from('project_versions').update({ label: nome, nomeada: true }).eq('id', versionId)))
+}
+
+/** Liga a versão de uma exportação ao arquivo de vídeo gerado. */
+export async function linkExport(projectId: string, versionId: string, arquivoId: string) {
+  if (!remoteMode) { guardarLocal(projectId, local(projectId).map(v => v.id === versionId ? { ...v, arquivoId } : v)); return }
+  await persist(() => must(db().from('project_versions').update({ arquivo_id: arquivoId }).eq('id', versionId)))
+}
+
+/** De qual projeto e versão veio cada vídeo exportado (pelo id do arquivo no Drive). */
+export async function exportOrigins(fileIds: string[]): Promise<Record<string, { projectId: string; label: string; at: string }>> {
+  const saida: Record<string, { projectId: string; label: string; at: string }> = {}
+  if (!fileIds.length) return saida
+  if (!remoteMode) {
+    for (const [projectId, lista] of Object.entries(readVersions())) for (const v of lista) if (v.arquivoId && fileIds.includes(v.arquivoId)) saida[v.arquivoId] = { projectId, label: v.label, at: v.at }
+    return saida
+  }
+  await connected
+  const { data } = await db().from('project_versions').select('project_id, label, created_at, arquivo_id').in('arquivo_id', fileIds)
+  for (const v of (data ?? []) as { project_id: string; label: string; created_at: string; arquivo_id: string }[]) saida[v.arquivo_id] = { projectId: v.project_id, label: v.label, at: fromIso(v.created_at) }
+  return saida
+}
+
+/** Guarda um projeto novo já (sem esperar), para abrir em seguida (duplicar uma versão como projeto). */
+export async function storeProjectNow(p: Project) {
+  if (!remoteMode) { storeProject(p); return }
+  if (!ctx || !uuidish(p.id)) return
+  setList([...projects.filter(x => x.id !== p.id), p])
+  const c = ctx
+  await persist(async () => { await writeProject(c, p) })
 }

@@ -63,3 +63,5 @@
   .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .toolsRight .tool span { display: none; }
 }
+
+.origem { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-size: 11.5px; }

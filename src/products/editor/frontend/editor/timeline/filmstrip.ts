@@ -80,3 +80,16 @@ export function useFilmstrip(fileId: string | undefined, url: string | null, seg
   }, [fileId, url, chave])
   return segundos.map(s => (fileId ? frames.get(`${fileId}:${s}`) ?? null : null))
 }
+
+/** Um quadro do vídeo (para a capa de uma versão): espera até 5 s; null se não der. */
+export function quadroUnico(fileId: string, url: string, segundo: number): Promise<string | null> {
+  const s = Math.max(0, Math.floor(segundo))
+  const chave = `${fileId}:${s}`
+  if (frames.has(chave)) return Promise.resolve(frames.get(chave)!)
+  return new Promise(resolve => {
+    const fim = setTimeout(() => { listeners.delete(ver); resolve(frames.get(chave) ?? null) }, 5000)
+    const ver = () => { if (frames.has(chave) || filas.get(fileId)?.falhou) { clearTimeout(fim); listeners.delete(ver); resolve(frames.get(chave) ?? null) } }
+    listeners.add(ver)
+    pedir(fileId, url, [s])
+  })
+}
