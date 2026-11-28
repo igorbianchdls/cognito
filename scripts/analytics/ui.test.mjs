@@ -151,7 +151,7 @@ describe('Analytics na tela', () => {
     const { p, ctx, erros, foto } = await tela('/analytics/mapa')
     await p.getByLabel('Página', { exact: true }).selectOption('/precos')
     await p.locator('[data-mapa] canvas').waitFor()
-    await p.locator('[data-elementos]').getByText('Assinar').waitFor()
+    await p.locator('[data-elementos]').getByText('Assinar', { exact: true }).waitFor()
     await p.getByRole('button', { name: 'Celular' }).click()
     await p.locator('[data-elementos]').getByText(/raiva/).waitFor()
     await p.locator('[data-rolagem]').waitFor()

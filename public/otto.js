@@ -149,10 +149,16 @@
   function startRecording(g) {
     var rr = w.rrwebRecord && (w.rrwebRecord.record || w.rrwebRecord)
     if (typeof rr !== 'function') return
-    var buffer = [], seq = 0, sid = session(), size = 0
+    var buffer = [], sid = session(), size = 0
+    // The chunk number continues across the pages of the same session (each page load records its own snapshot).
+    var nextSeq = function () {
+      var n = 0
+      try { var raw = (sessionStorage.getItem('otto_rec') || '').split(':'); if (raw[0] === sid) n = Number(raw[1]) || 0; sessionStorage.setItem('otto_rec', sid + ':' + (n + 1)) } catch (_e) { n = Date.now() % 5000 }
+      return n
+    }
     var send = function (beacon) {
       if (!buffer.length) return
-      var body = JSON.stringify({ k: key, d: visitor(), s: sid, seq: seq++, url: location.href, eventos: buffer.splice(0) })
+      var body = JSON.stringify({ k: key, d: visitor(), s: sid, seq: nextSeq(), url: location.href, eventos: buffer.splice(0) })
       size = 0
       if (body.length > 1000000) return
       if (beacon && n.sendBeacon && body.length < 60000 && n.sendBeacon(base + '/api/analytics/gravacoes', new Blob([body], { type: 'text/plain' }))) return

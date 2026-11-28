@@ -8,7 +8,7 @@ import { AnalyticsError, type Db } from './pg'
 const TZ = 'America/Sao_Paulo'
 const COLUNAS: Record<keyof typeof CAMPOS, string> = {
   evento: 'e.event', pagina: 'e.path', titulo: 'e.title', host: 'e.host', url: 'e.url',
-  origem: "COALESCE(e.utm_source, e.referrer_host, '(direto)')", referrer: 'e.referrer_host',
+  origem: "COALESCE(e.utm_source, NULLIF(e.referrer_host, e.host), '(direto)')", referrer: 'e.referrer_host',
   utm_source: 'e.utm_source', utm_medium: 'e.utm_medium', utm_campaign: 'e.utm_campaign', utm_content: 'e.utm_content', utm_term: 'e.utm_term',
   aparelho: 'e.device', navegador: 'e.browser', sistema: 'e.os', pais: 'e.country', regiao: 'e.region', idioma: 'e.language', usuario: 'e.user_id',
 }
@@ -292,8 +292,12 @@ export async function relatorio(db: Db, nome: string, propertyId: string, de: Da
       WHERE ${base} AND e.event = '$pageview' AND e.path IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 20`, p)
     case 'entradas': return db.query(`SELECT path AS pagina, count(*)::int AS sessoes FROM (SELECT DISTINCT ON (e.session_id) e.session_id, e.path FROM analytics.events e
       WHERE ${base} AND e.event = '$pageview' AND e.session_id IS NOT NULL ORDER BY e.session_id, e."timestamp") s GROUP BY 1 ORDER BY 2 DESC LIMIT 20`, p)
-    case 'origens': return db.query(`SELECT COALESCE(e.utm_source, e.referrer_host, '(direto)') AS origem, count(DISTINCT e.person)::int AS visitantes, count(DISTINCT e.session_id)::int AS sessoes
-      FROM analytics.events_people e WHERE ${base} AND e.event = '$pageview' GROUP BY 1 ORDER BY 2 DESC LIMIT 20`, p)
+    // Cada sessão conta para a origem da primeira página (o próprio site como referência não é origem).
+    case 'origens': return db.query(`SELECT origem, count(DISTINCT person)::int AS visitantes, count(*)::int AS sessoes FROM (
+        SELECT DISTINCT ON (COALESCE(e.session_id, e.event_id::text)) e.person,
+          COALESCE(e.utm_source, CASE WHEN e.referrer_host IS DISTINCT FROM e.host THEN e.referrer_host END, '(direto)') AS origem
+        FROM analytics.events_people e WHERE ${base} AND e.event = '$pageview' ORDER BY COALESCE(e.session_id, e.event_id::text), e."timestamp") s
+      GROUP BY 1 ORDER BY 2 DESC, 3 DESC LIMIT 20`, p)
     case 'campanhas': return db.query(`SELECT e.utm_campaign AS campanha, COALESCE(e.utm_source, '—') AS origem, COALESCE(e.utm_medium, '—') AS meio, count(DISTINCT e.person)::int AS visitantes
       FROM analytics.events_people e WHERE ${base} AND e.utm_campaign IS NOT NULL GROUP BY 1, 2, 3 ORDER BY 4 DESC LIMIT 20`, p)
     case 'aparelhos': return db.query(`SELECT 'aparelho' AS tipo, COALESCE(e.device, 'outro') AS nome, count(DISTINCT e.person)::int AS visitantes FROM analytics.events_people e WHERE ${base} GROUP BY 2
