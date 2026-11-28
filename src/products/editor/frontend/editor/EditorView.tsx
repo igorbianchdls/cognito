@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Check, CloudCheck, Download, History, Plus, RectangleVertical } from 'lucide-react'
+import { Check, CloudCheck, Download, History, MessageSquare, Plus, RectangleVertical } from 'lucide-react'
 import type { PlayerRef } from '@remotion/player'
 import { Preview } from './preview/Preview'
 import { Timeline } from './timeline/Timeline'
@@ -13,7 +13,8 @@ import { clipesComFala, comLegendas, gerarLegendas } from './project/legendasAut
 import { blankProject, defaultBox, fullBox, media, type MediaItem } from './project/data'
 import { fromTemplate } from './project/templates'
 import { addClip, clipEnd, duplicateClip, groupClips, insertClip, isLocked, projectDuration, removeClips, rippleDelete, splitAt, toggleMarker, ungroupClips, withGroup } from './project/ops'
-import { linkExport, newProjectId, storeProjectNow, type Version } from './project/store'
+import { addComment, deleteComment, linkExport, listComments, listVersions, newProjectId, setCommentResolved, storeProjectNow, type Comentario, type Version } from './project/store'
+import { Comentarios } from './versions/Comentarios'
 import { useVersoes } from './versions/useVersoes'
 import { Historico } from './versions/Historico'
 import { useRouter } from 'next/navigation'
@@ -39,6 +40,24 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   const [exporting, setExporting] = useState(false)
   const playerRef = useRef<PlayerRef>(null)
   const versoes = useVersoes(project, carregado)
+  // Comentários no vídeo (revisão): a lista, o painel e as marcas na régua. Recarrega quando o assistente muda o
+  // projeto (ele resolve os comentários que seguiu).
+  const [comentarios, setComentarios] = useState<Comentario[] | null>(null)
+  const [comentariosAbertos, setComentariosAbertos] = useState(false)
+  const [rotulosVersao, setRotulosVersao] = useState<Record<string, string>>({})
+  const recarregarComentarios = useCallback(() => { void listComments(project.id).then(setComentarios) }, [project.id])
+  useEffect(() => { if (carregado) recarregarComentarios() }, [carregado, externalChanges, recarregarComentarios])
+  const abrirComentarios = (destaque?: string) => {
+    versoes.fechar(); setComentariosAbertos(true)
+    void listVersions(project.id).then(l => setRotulosVersao(Object.fromEntries(l.map(v => [v.id, v.label]))))
+    if (destaque) setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-comentario="${destaque}"]`)
+      el?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); el?.classList.add(e.comentarioDestaque); setTimeout(() => el?.classList.remove(e.comentarioDestaque), 1800)
+    }, 60)
+  }
+  const comentarAqui = () => { abrirComentarios(); setTimeout(() => document.querySelector<HTMLTextAreaElement>('[aria-label="Comentário"]')?.focus(), 50) }
+  const comentarAquiRef = useRef(comentarAqui)
+  useEffect(() => { comentarAquiRef.current = comentarAqui })
   const router = useRouter()
   const restaurar = (v: Version, p: Project) => {
     void (async () => {
@@ -194,12 +213,12 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
     setPensando(true)
     try {
       const resposta = await fetch('/api/editor/ia', { method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ pedido: text, projeto: resumoParaIa(project, frame, selected), historico }) })
+        body: JSON.stringify({ pedido: text, projeto: resumoParaIa(project, frame, selected, f => media(f)?.name), historico }) })
       const corpo = await resposta.json().catch(() => ({})) as { resposta?: string; acoes?: Acao[]; erro?: string }
       if (!resposta.ok) throw new Error(corpo.erro ?? 'ia')
       let pediuLegendas = false
       if (corpo.acoes?.length) await versoes.antes('Antes da edição da IA')
-      if (corpo.acoes?.length) apply(p => { const r = aplicarAcoes(p, corpo.acoes!, frame, selected); pediuLegendas = r.legendas; return r.project }, `ia:${Date.now()}`)
+      if (corpo.acoes?.length) apply(p => { const r = aplicarAcoes(p, corpo.acoes!, frame, selected, { ehMusica: f => media(f)?.role === 'musica' || (!!f?.startsWith('a-') && f !== 'a-narr') }); pediuLegendas = r.legendas; return r.project }, `ia:${Date.now()}`)
       setChat(c => [...c, { from: 'ia', text: corpo.resposta ?? 'Pronto.' }])
       if (pediuLegendas || corpo.acoes?.some(a => a.tipo === 'gerar_legendas')) {
         const clipes = clipesComFala(project, [])
@@ -229,6 +248,7 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       else if (mod && ev.key.toLowerCase() === 'a') { ev.preventDefault(); setSelection([...allIds]) }
       else if (!mod && ev.key.toLowerCase() === 's') split()
       else if (!mod && ev.key.toLowerCase() === 'm') apply(p => toggleMarker(p, frames.get()))
+      else if (!mod && ev.key.toLowerCase() === 'c') { ev.preventDefault(); comentarAquiRef.current() }
       else if (ev.key === 'Delete' || ev.key === 'Backspace') { if (ev.shiftKey) ripple(); else remove() }
       else if (ev.key === 'Escape') setSelection([])
       else if (mod && ev.key.toLowerCase() === 'g') { ev.preventDefault(); if (ev.shiftKey) ungroup(); else group() }
@@ -263,7 +283,9 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       <span className={e.grow} />
       <span className={e.format}>{project.format}</span>
       <div className={e.versionsWrap}>
-        <button className={e.versionsBtn} onClick={() => versoes.aberto ? versoes.fechar() : versoes.abrir()} aria-expanded={versoes.aberto}><History size={16} />Versões</button>
+        <button className={`${e.versionsBtn} ${e.botaoComentarios}`} onClick={() => comentariosAbertos ? setComentariosAbertos(false) : abrirComentarios()} aria-expanded={comentariosAbertos} aria-label="Comentários">
+          <MessageSquare size={16} />Comentários{comentarios?.some(c => !c.resolvidoEm) ? <i>{comentarios.filter(c => !c.resolvidoEm).length}</i> : null}</button>
+        <button className={e.versionsBtn} onClick={() => { setComentariosAbertos(false); if (versoes.aberto) versoes.fechar(); else versoes.abrir() }} aria-expanded={versoes.aberto}><History size={16} />Versões</button>
       </div>
       <button className={e.export} onClick={() => { playerRef.current?.pause(); setExporting(true) }}><Download size={16} />Exportar</button>
     </header>
@@ -283,7 +305,8 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
     </div>
     <Timeline project={project} frames={frames} duration={duration} selectedIds={selected} playing={playing} onSelect={select} onSelectMany={setSelection} insertMode={insertMode} setInsertMode={setInsertMode} loop={loop} onToggleLoop={toggleLoop} onFullscreen={fullscreen} rate={rate} seek={seek} toggle={toggle}
       apply={apply} transient={transient} commit={commit} onSplit={split} onDelete={remove} onRipple={ripple} undo={undo} redo={redo} canUndo={canUndo} canRedo={canRedo}
-      onDropMedia={(id, frame, trackId) => { const m = media(id); if (m) addMedia(m, frame, trackId) }} />
+      onDropMedia={(id, frame, trackId) => { const m = media(id); if (m) addMedia(m, frame, trackId) }}
+      comentarios={(comentarios ?? []).filter(c => !c.resolvidoEm)} onComentario={id => abrirComentarios(id)} />
     {toast && <div className={e.toast} role="status"><Check size={15} />{toast}</div>}
     {exporting && <ExportDialog project={project} onClose={() => setExporting(false)} onExported={fileId => {
       // Cada exportação vira uma versão (para sempre), ligada ao arquivo de vídeo gerado.
@@ -291,6 +314,11 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       const quando = `${String(agora.getDate()).padStart(2, '0')}/${String(agora.getMonth() + 1).padStart(2, '0')} às ${agora.toTimeString().slice(0, 5)}`
       void versoes.versionar('exportacao', `Exportado em ${quando}`).then(v => { if (fileId) void linkExport(project.id, v.id, fileId) }).catch(() => undefined)
     }} />}
+    {comentariosAbertos && <Comentarios lista={comentarios} frames={frames} pausar={() => playerRef.current?.pause()} irPara={s => seek(s * FPS)}
+      onFechar={() => setComentariosAbertos(false)} versaoDe={id => (id ? rotulosVersao[id] : undefined)}
+      onCriar={async (segundo, texto) => { const c = await addComment(project, segundo, texto, versoes.autor); setComentarios(l => [...(l ?? []), c].sort((a, b) => a.segundo - b.segundo)) }}
+      onResolver={(c, r) => { void setCommentResolved(project.id, c.id, r).then(recarregarComentarios) }}
+      onApagar={c => { void deleteComment(project.id, c.id).then(recarregarComentarios) }} />}
     {versoes.aberto && <Historico projectId={project.id} versoes={versoes.lista} onFechar={versoes.fechar} onRenomear={versoes.renomear}
       onSalvar={async nome => { await versoes.versionar('manual', nome, { nomeada: true }); setToast('Versão salva.') }}
       onRestaurar={restaurar} onDuplicar={duplicarVersao} />}

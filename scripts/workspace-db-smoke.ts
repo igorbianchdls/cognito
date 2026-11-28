@@ -286,6 +286,41 @@ async function main() {
   })
   await inboxPool.end()
 
+  await check('Vídeo: ler o projeto com os comentários, refazer seguindo-os (versão nova, comentários resolvidos) e permissões', async () => {
+    // Um projeto com um vídeo de 20 s e dois comentários de revisão, como a equipe deixa no editor.
+    const projetoId = crypto.randomUUID()
+    const dados = { id: projetoId, name: 'Reel loja', format: '9:16', background: '#000', updatedAt: '2026-11-28T10:00',
+      tracks: [{ id: 't1', kind: 'video', clips: [{ id: 'c1', start: 0, duration: 600, trimStart: 0, props: { fileId, box: { x: 0, y: 0, w: 100, h: 100 } } }] }] }
+    await admin.query("INSERT INTO editor.projects (id, workspace_id, name, format, data) VALUES ($1, 'org_A', 'Reel loja', '9:16', $2)", [projetoId, dados])
+    const { rows: [pausa] } = await admin.query("INSERT INTO editor.comentarios (project_id, workspace_id, segundo, texto, autor_nome) VALUES ($1, 'org_A', 5, 'corta essa pausa', 'Ana') RETURNING id", [projetoId])
+    const { rows: [zoom] } = await admin.query("INSERT INTO editor.comentarios (project_id, workspace_id, segundo, texto, autor_nome) VALUES ($1, 'org_A', 12, 'zoom lento aqui', 'Ana') RETURNING id", [projetoId])
+    const lista = (await ok('video_listar_projetos', {})).projetos
+    assert.equal(lista.find((x: { id: string }) => x.id === projetoId)?.comentarios_abertos, 2)
+    const lido = await ok('video_ler_projeto', { projeto_id: projetoId })
+    assert.deepEqual(lido.comentarios_abertos.map((c: { tempo: string; texto: string }) => `${c.tempo} ${c.texto}`), ['0:05 corta essa pausa', '0:12 zoom lento aqui'])
+    assert.equal(lido.projeto.duracao_s, 20)
+    // Quem só vê não edita; outra empresa não acha o projeto.
+    await fails('video_editar_projeto', { projeto_id: projetoId, acoes: [{ tipo: 'cortar_trecho', de: 4, ate: 6 }] }, 'ACCESS_DENIED', viewer)
+    await fails('video_ler_projeto', { projeto_id: projetoId }, 'ACCESS_DENIED', stranger)
+    await fails('video_editar_projeto', { projeto_id: projetoId, acoes: [{ tipo: 'zoom', clipe: 'nao-existe', escala: 1.3 }] }, 'INVALID_INPUT')
+    // Refaz seguindo os dois: zoom no trecho de 10 a 14 s e corte da pausa de 4 a 6 s (do fim para o começo).
+    const feito = await ok('video_editar_projeto', { projeto_id: projetoId, comentarios_resolvidos: [pausa.id, zoom.id],
+      acoes: [{ tipo: 'zoom', clipe: 'c1', escala: 1.3, de: 10, ate: 14 }, { tipo: 'cortar_trecho', de: 4, ate: 6 }] })
+    assert.equal(feito.versao, 'Seguindo 2 comentários'); assert.equal(feito.comentarios_resolvidos, 2); assert.deepEqual(feito.comentarios_abertos_restantes, [])
+    assert.equal(feito.projeto.duracao_s, 18)
+    const { rows: versoes } = await admin.query('SELECT label, tipo, nomeada, autor FROM editor.project_versions WHERE project_id = $1 ORDER BY created_at', [projetoId])
+    assert.deepEqual(versoes.map((v: { tipo: string; nomeada: boolean }) => [v.tipo, v.nomeada]), [['antes', false], ['manual', true]], 'guarda o antes e cria a versão nova')
+    assert.equal(versoes[1].label, 'Seguindo 2 comentários'); assert.equal(versoes[1].autor, 'ChatGPT')
+    const { rows: comentarios } = await admin.query('SELECT resolvido_em IS NOT NULL AS ok, resolvido_na_versao_id IS NOT NULL AS versao FROM editor.comentarios WHERE project_id = $1', [projetoId])
+    assert(comentarios.every((c: { ok: boolean; versao: boolean }) => c.ok && c.versao), 'comentários resolvidos na versão nova')
+    const { rows: [projeto] } = await admin.query('SELECT data FROM editor.projects WHERE id = $1', [projetoId])
+    const clipes = projeto.data.tracks[0].clips
+    assert.equal(clipes.length, 2, 'o corte divide o vídeo em dois')
+    assert(clipes.some((c: { props: { keyframes?: { scale: number }[] } }) => c.props.keyframes?.some(k => k.scale === 1.3)), 'zoom aplicado')
+    assert.notEqual(projeto.data.rev, undefined, 'revisão nova: o editor aberto recarrega')
+    const relido = await ok('video_ler_projeto', { projeto_id: projetoId })
+    assert.equal(relido.comentarios_resolvidos_recentes[0].resolvido_na_versao, 'Seguindo 2 comentários')
+  })
 
   await admin.end()
   console.log(JSON.stringify({ status: 'passed', checks: checks.length }))

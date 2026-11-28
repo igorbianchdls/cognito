@@ -28,6 +28,8 @@ type Props = {
   onDropMedia: (mediaId: string, frame: number, trackId?: string) => void
   insertMode: boolean; setInsertMode: (on: boolean) => void
   loop: { start: number; end: number } | null; onToggleLoop: () => void; onFullscreen: () => void; rate: number
+  /** Comentários abertos (marcas amarelas na régua; clicar leva ao momento e abre os comentários). */
+  comentarios?: { id: string; segundo: number; texto: string }[]; onComentario?: (id: string) => void
 }
 
 type CutMenu = { a: string; b: string; x: number; y: number; current?: TransitionType }
@@ -235,6 +237,8 @@ export function Timeline(props: Props) {
             {props.loop && <span className={e.loopRange} style={{ left: props.loop.start * ppf, width: (props.loop.end - props.loop.start) * ppf }} />}
             {(project.markers ?? []).map(m => <button key={m} className={e.marker} style={{ left: m * ppf }} title={`Marcador em ${timecode(m)} · clique duplo remove`}
               onPointerDown={ev => { ev.stopPropagation(); seek(m) }} onDoubleClick={() => apply(p => toggleMarker(p, m))}><Bookmark size={11} /></button>)}
+            {(props.comentarios ?? []).map(c => <button key={c.id} type="button" className={e.marcaComentario} style={{ left: c.segundo * FPS * ppf }} title={`${Math.floor(c.segundo / 60)}:${String(Math.floor(c.segundo % 60)).padStart(2, '0')} · ${c.texto}`}
+              aria-label={`Comentário: ${c.texto}`} onPointerDown={ev => { ev.stopPropagation(); seek(Math.round(c.segundo * FPS)); props.onComentario?.(c.id) }} />)}
           </div>
         </div>
         {project.tracks.map((t: Track, index) => {

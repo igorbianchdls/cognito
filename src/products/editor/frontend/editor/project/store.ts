@@ -259,3 +259,48 @@ export async function storeProjectNow(p: Project) {
   const c = ctx
   await persist(async () => { await writeProject(c, p) })
 }
+
+// ---------- comentários no vídeo ----------
+// Cada comentário fica preso a um momento do vídeo. Os abertos são o que o assistente (Claude/ChatGPT pelo conector do
+// Otto) segue para refazer o vídeo; ele marca como resolvidos na versão nova que cria.
+
+export type Comentario = { id: string; segundo: number; texto: string; autorNome?: string; at: string; resolvidoEm?: string; resolvidoNaVersaoId?: string }
+const COMENTARIOS_KEY = 'otto-editor-comentarios-v1'
+const lerComentarios = (): Record<string, Comentario[]> => { try { return JSON.parse(localStorage.getItem(COMENTARIOS_KEY) ?? '{}') } catch { return {} } }
+const guardarComentarios = (id: string, lista: Comentario[]) => { try { localStorage.setItem(COMENTARIOS_KEY, JSON.stringify({ ...lerComentarios(), [id]: lista })) } catch { /* cheio ou bloqueado */ } }
+type LinhaComentario = { id: string; segundo: number | string; texto: string; autor_nome: string | null; created_at: string; resolvido_em: string | null; resolvido_na_versao_id: string | null }
+const doBanco = (c: LinhaComentario): Comentario => ({ id: c.id, segundo: Number(c.segundo), texto: c.texto, autorNome: c.autor_nome ?? undefined, at: fromIso(c.created_at),
+  resolvidoEm: c.resolvido_em ? fromIso(c.resolvido_em) : undefined, resolvidoNaVersaoId: c.resolvido_na_versao_id ?? undefined })
+const porTempo = (a: Comentario, b: Comentario) => a.segundo - b.segundo || a.at.localeCompare(b.at)
+
+export async function listComments(projectId: string): Promise<Comentario[]> {
+  if (!remoteMode) return [...(lerComentarios()[projectId] ?? [])].sort(porTempo)
+  if (!uuidish(projectId)) return []
+  await connected
+  const { data } = await db().from('comentarios').select('id, segundo, texto, autor_nome, created_at, resolvido_em, resolvido_na_versao_id').eq('project_id', projectId).order('segundo').limit(500)
+  return ((data ?? []) as LinhaComentario[]).map(doBanco)
+}
+
+export async function addComment(p: Project, segundo: number, texto: string, autorNome?: string): Promise<Comentario> {
+  const c: Comentario = { id: remoteMode ? crypto.randomUUID() : `c${Date.now().toString(36)}`, segundo: Math.max(0, Math.round(segundo * 100) / 100), texto: texto.trim().slice(0, 2000), autorNome: autorNome?.slice(0, 120), at: localStamp() }
+  if (!remoteMode) { guardarComentarios(p.id, [...(lerComentarios()[p.id] ?? []), c]); return c }
+  if (!ctx || !uuidish(p.id)) return c
+  const w = ctx
+  // O projeto precisa existir no banco antes do comentário (um projeto novo pode estar esperando a primeira gravação).
+  clearTimeout(timers.get(p.id)); timers.delete(p.id)
+  await persist(async () => {
+    if (!revs.has(p.id)) await writeProject(w, p)
+    await must(db().from('comentarios').insert({ id: c.id, project_id: p.id, workspace_id: w.ws, segundo: c.segundo, texto: c.texto, autor_nome: c.autorNome ?? null }))
+  })
+  return c
+}
+
+export async function setCommentResolved(projectId: string, id: string, resolvido: boolean) {
+  if (!remoteMode) { guardarComentarios(projectId, (lerComentarios()[projectId] ?? []).map(c => c.id === id ? { ...c, resolvidoEm: resolvido ? localStamp() : undefined, resolvidoNaVersaoId: resolvido ? c.resolvidoNaVersaoId : undefined } : c)); return }
+  await persist(() => must(db().from('comentarios').update(resolvido ? { resolvido_em: new Date().toISOString() } : { resolvido_em: null, resolvido_na_versao_id: null }).eq('id', id)))
+}
+
+export async function deleteComment(projectId: string, id: string) {
+  if (!remoteMode) { guardarComentarios(projectId, (lerComentarios()[projectId] ?? []).filter(c => c.id !== id)); return }
+  await persist(() => must(db().from('comentarios').delete().eq('id', id)))
+}

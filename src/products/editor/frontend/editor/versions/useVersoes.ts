@@ -82,7 +82,7 @@ export function useVersoes(project: Project, carregado: boolean) {
   }, [])
 
   return {
-    lista, aberto, versionar, antes,
+    lista, aberto, versionar, antes, autor,
     abrir: () => { setAberto(true); setLista(null); void recarregar() },
     fechar: () => setAberto(false),
     renomear: async (v: Version, nome: string) => { await renameVersion(atual.current.id, v.id, nome); await recarregar() },

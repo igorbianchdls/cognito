@@ -189,6 +189,34 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
     await page.getByRole('button', { name: 'Fechar o histórico' }).click()
   })
 
+  test('comentários no vídeo: tecla C comenta no tempo da agulha, marca na régua, resolver e continua ao recarregar', async () => {
+    await page.locator('body').click({ position: { x: 1000, y: 450 } })
+    await page.keyboard.press('Home')
+    for (let i = 0; i < 2; i++) await page.keyboard.press('Shift+ArrowRight')
+    await page.keyboard.press('c')
+    const campo = page.getByRole('textbox', { name: 'Comentário' })
+    await campo.waitFor()
+    await page.keyboard.type('Corta essa pausa'); await page.keyboard.press('Enter')
+    await page.locator('[data-comentario]').filter({ hasText: 'Corta essa pausa' }).waitFor()
+    assert.match(await page.locator('[data-comentario]').filter({ hasText: 'Corta essa pausa' }).innerText(), /^0:02/)
+    for (let i = 0; i < 3; i++) { await campo.blur(); await page.keyboard.press('Shift+ArrowRight') }
+    await campo.click(); await page.keyboard.type('Zoom lento aqui'); await page.keyboard.press('Enter')
+    await page.locator('[data-comentario]').filter({ hasText: 'Zoom lento aqui' }).waitFor()
+    assert.equal(await page.locator('[class*=marcaComentario]').count(), 2, 'duas marcas na régua')
+    await foto('ed-04-comentarios')
+    const primeiro = page.locator('[data-comentario]').filter({ hasText: 'Corta essa pausa' })
+    await primeiro.hover(); await primeiro.getByRole('button', { name: 'Marcar como resolvido' }).click()
+    await page.waitForFunction(() => document.querySelectorAll('[class*=marcaComentario]').length === 1)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await clipe('vertical.mp4').first().waitFor({ timeout: 60000 })
+    await page.waitForFunction(() => document.querySelectorAll('[class*=marcaComentario]').length === 1)
+    // A marca leva ao momento do comentário e abre a lista com ele.
+    await page.locator('[class*=marcaComentario]').first().click()
+    await page.locator('[data-comentario]').filter({ hasText: 'Zoom lento aqui' }).waitFor()
+    assert.equal(await tempo(), '00:05.00')
+    await page.getByRole('button', { name: 'Fechar os comentários' }).click()
+  })
+
   test('exportar gera um MP4 vertical com som', async () => {
     await page.getByRole('button', { name: 'Exportar' }).first().click()
     const baixar = page.waitForEvent('download', { timeout: 240000 })

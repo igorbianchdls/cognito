@@ -489,3 +489,29 @@
 .modalFoot button { display: inline-flex; align-items: center; gap: 6px; }
 .exportOrigem { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 700px) { .historico { top: 0; position: fixed; width: 100%; } }
+
+/* Comentários no vídeo: marcas amarelas na régua, o tempo em destaque e a lista ao lado. */
+.marcaComentario { position: absolute; top: 5px; width: 11px; height: 11px; margin-left: -5.5px; padding: 0; border-radius: 50%; background: #facc15; box-shadow: 0 0 0 2px var(--panel); z-index: 3; cursor: pointer; }
+.marcaComentario:hover { transform: scale(1.25); }
+.tempoChip { flex-shrink: 0; height: 22px; padding: 0 7px; border-radius: 6px; background: rgb(250 204 21 / .16); color: #facc15; font-family: var(--font-num); font-size: 11.5px; font-weight: 700; display: inline-flex; align-items: center; }
+button.tempoChip:hover { background: rgb(250 204 21 / .28); }
+.comentarNovo { display: flex; align-items: flex-start; gap: 8px; margin: 12px 12px 0; padding: 8px 8px 8px 10px; border-radius: 12px; border: 1px solid var(--line-strong); background: var(--panel); }
+.comentarNovo:focus-within { border-color: #facc15; box-shadow: 0 0 0 3px rgb(250 204 21 / .15); }
+.comentarNovo .tempoChip { margin-top: 2px; }
+.comentarNovo textarea { flex: 1; min-width: 0; min-height: 26px; max-height: 140px; padding: 3px 0; border: 0; outline: none; resize: none; background: none; color: var(--ink); font: inherit; font-size: 13px; field-sizing: content; }
+.comentarEnviar { width: 26px; height: 26px; flex-shrink: 0; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--on-ink); }
+.comentarEnviar:disabled { opacity: .35; }
+.comentario { display: flex; align-items: flex-start; gap: 10px; padding: 9px 8px; border-radius: 10px; }
+.comentario:hover { background: var(--soft); }
+.comentario .tempoChip { margin-top: 1px; cursor: pointer; }
+.comentarioTexto { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.comentarioTexto small { color: var(--muted); font-size: 11.5px; white-space: normal; }
+.comentarioAcoes { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+.comentario:hover .comentarioAcoes, .comentario:focus-within .comentarioAcoes { opacity: 1; }
+.comentarioResolvido { opacity: .6; }
+.comentarioResolvido .comentarioTexto > span { text-decoration: line-through; text-decoration-color: var(--muted); }
+.comentarioDestaque { background: rgb(250 204 21 / .1); box-shadow: inset 2px 0 0 #facc15; }
+.contaComentarios { margin-left: 2px; padding: 0 6px; border-radius: 9px; background: #facc15; color: #111; font-style: normal; font-size: 11px; font-weight: 700; }
+.verResolvidos { margin: 10px 8px 4px; color: var(--muted); font-size: 12px; font-weight: 600; }
+.verResolvidos:hover { color: var(--ink); }
+.botaoComentarios i { margin-left: 2px; padding: 0 6px; border-radius: 9px; background: #facc15; color: #111; font-style: normal; font-size: 11px; font-weight: 700; }

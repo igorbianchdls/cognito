@@ -7,7 +7,7 @@ import { workspaceTools } from '../domains/workspace/executeTool'
 import type { ToolStyle } from '../hosts/shared/registerTools'
 
 export const WORKSPACE_INSTRUCTIONS = ' Ferramentas drive_ cuidam dos arquivos do Drive da empresa, analytics_ das visitas e eventos dos sites medidos pelo Otto '
-  + 'e inbox_ do atendimento de WhatsApp, Instagram e Messenger; notas_ cria e atualiza artefatos (páginas em HTML interativo, sem acesso à rede) nas Notas. '
+  + 'e inbox_ do atendimento de WhatsApp, Instagram e Messenger; notas_ cria e atualiza artefatos (páginas em HTML interativo, sem acesso à rede) nas Notas; video_ lê e edita projetos do Editor de vídeo seguindo os comentários de revisão (cada um preso a um segundo do vídeo). '
   + 'Use IDs vindos das consultas (drive_listar_drives, drive_buscar, analytics_listar_sites, inbox_listar_conversas); datas AAAA-MM-DD no horário de Brasília. Lixeira, esvaziar lixeira e exclusões exigem confirmação explícita (confirmado: true). '
   + 'inbox_responder envia de verdade ao cliente: mostre o texto exato, peça confirmação e respeite a janela de 24 h; após erro de rede, leia a conversa antes de repetir. '
   + 'O CRM do Inbox tem inbox_relatorio, negócios (inbox_listar_negocios, inbox_salvar_negocio), tarefas, segmentos, disparos, automações e base de conhecimento; inbox_sugerir_resposta só sugere: envie com inbox_responder depois da confirmação. '
