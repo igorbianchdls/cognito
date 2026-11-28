@@ -1,11 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { clipesComFala, comLegendas, gerarLegendas } from '../project/legendasAuto'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { ArrowLeftRight, ChevronLeft, ChevronRight, CloudUpload, Captions, Film, FileUp, FolderUp, HardDrive, Image as ImageIcon, LayoutTemplate, Link2, Loader2, Music, Package, Pause, Play, Plus, Search, Send, Shapes, Sparkles, SunMedium, Type, Wand2, X } from 'lucide-react'
 import { formatDuration } from '@/products/editor/frontend/lib/format'
 import { filterPresets, mediaLibrary, media as mediaById, shapePresets, stickerProps, stickers, textPresets, type MediaItem } from '../project/data'
-import { aiExamples } from '../ai/commands'
 import { MEDIA_MIME } from '../timeline/Timeline'
 import { fonts } from '../remotion/animate'
 import { templates } from '../project/templates'
@@ -28,7 +28,7 @@ type Props = {
   onAddMediaMany: (list: MediaItem[]) => void
   onAddPreset: (kind: TrackKind, props: ClipProps, seconds: number) => void
   onToast: (text: string) => void
-  chat: ChatMessage[]; onAsk: (text: string) => void
+  chat: ChatMessage[]; onAsk: (text: string) => void; pensando?: boolean
 }
 
 const tabs: { id: Tab; label: string; Icon: typeof Film }[] = [
@@ -73,7 +73,7 @@ export function LeftPanel(props: Props) {
   </>
 }
 
-function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia, onAddMediaMany, onAddPreset, onToast, chat, onAsk }: Props & { tab: Tab }) {
+function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia, onAddMediaMany, onAddPreset, onToast, chat, onAsk, pensando }: Props & { tab: Tab }) {
   switch (tab) {
     case 'midia': return <MediaTab onAddMedia={onAddMedia} onAddMediaMany={onAddMediaMany} onToast={onToast} />
     case 'modelos': return <div className={e.list}>
@@ -93,10 +93,10 @@ function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia
     </>
     case 'audio': return <AudioTab onAddMedia={onAddMedia} onToast={onToast} />
     case 'texto': return <TextPresets kinds="texto" onAddPreset={onAddPreset} />
-    case 'legendas': return <TextPresets kinds="legenda" onAddPreset={onAddPreset} />
+    case 'legendas': return <><AutoLegendas project={project} selectedIds={selectedIds} apply={apply} onToast={onToast} /><h4 className={e.groupTitle}>Ou escreva à mão</h4><TextPresets kinds="legenda" onAddPreset={onAddPreset} /></>
     case 'efeitos': return <ClipTab project={project} selectedIds={selectedIds} need="texto" empty="Selecione um texto ou legenda na linha do tempo para aplicar um efeito.">
       {ids => <div className={e.presets}>{anims.map(a => <button key={a.id} type="button" className={e.preset} onClick={() => applyAll(apply, ids, { anim: a.id }, 'anim')}>
-        <span className={e.presetSample} style={{ background: '#1f2937' }}>{a.label}</span><small>{a.hint}</small>
+        <span className={e.presetSample} style={{ background: '#1f2937' }}><span className={`${e.fxDemo} ${e[`fx_${a.id}`] ?? ''}`}>{a.label}</span></span><small>{a.hint}</small>
       </button>)}</div>}
     </ClipTab>
     case 'transicoes': return <ClipTab project={project} selectedIds={selectedIds} need="visual" empty="Selecione um clipe na linha do tempo para aplicar uma transição.">
@@ -104,7 +104,7 @@ function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia
         <p className={e.hint}>Clique para aplicar na entrada e na saída do clipe. Ajuste a duração em Propriedades.</p>
         <div className={e.presets}>
           {transitions.map(t => <button key={t.id} type="button" className={e.preset} onClick={() => applyAll(apply, ids, { transIn: { type: t.id, frames: 12 }, transOut: { type: t.id, frames: 12 } }, 'trans')}>
-            <span className={e.presetSample} style={{ background: '#1f2937' }}><ArrowLeftRight size={18} /></span><small>{t.label}</small>
+            <span className={`${e.presetSample} ${e.transDemo} ${e[`td_${t.id}`] ?? ''}`} aria-hidden><i>A</i><i>B</i></span><small>{t.label}</small>
           </button>)}
           <button type="button" className={e.preset} onClick={() => applyAll(apply, ids, { transIn: undefined, transOut: undefined }, 'trans')}>
             <span className={e.presetSample} style={{ background: 'var(--soft)', color: 'var(--muted)' }}><X size={18} /></span><small>Sem transição</small>
@@ -118,7 +118,7 @@ function TabBody({ tab, project, selectedIds, apply, onApplyTemplate, onAddMedia
         <small>{fp.label}</small>
       </button>)}</div>}
     </ClipTab>
-    case 'ia': return <AiChat chat={chat} onAsk={onAsk} />
+    case 'ia': return <AiChat chat={chat} onAsk={onAsk} pensando={!!pensando} />
   }
 }
 
@@ -137,8 +137,30 @@ function ClipTab({ project, selectedIds, need, empty, children }: { project: Pro
     const kind = findClip(project, id)?.track.kind
     return need === 'texto' ? kind === 'texto' || kind === 'legenda' : need === 'media' ? kind === 'video' || kind === 'imagem' : !!kind && kind !== 'audio'
   })
-  if (!ids.length) return <p className={e.hint}>{empty}</p>
+  // Sem nada selecionado, as opções aparecem (com a prévia animada) e o aviso diz o que selecionar.
+  if (!ids.length) return <><p className={e.hint}>{empty}</p><div className={e.semSelecao} aria-disabled>{children([])}</div></>
   return <>{ids.length > 1 && <p className={e.hint}>{ids.length} clipes selecionados.</p>}{children(ids)}</>
+}
+
+/** Gera as legendas a partir da fala dos clipes (o selecionado, ou todos os que têm som). */
+function AutoLegendas({ project, selectedIds, apply, onToast }: Pick<Props, 'project' | 'selectedIds' | 'apply' | 'onToast'>) {
+  const [ouvindo, setOuvindo] = useState<string | null>(null)
+  const clipes = clipesComFala(project, selectedIds)
+  const gerar = async () => {
+    if (!clipes.length) { onToast('Coloque um vídeo ou áudio com fala na linha do tempo.'); return }
+    setOuvindo('Preparando o áudio…')
+    try {
+      const legendas = await gerarLegendas(clipes, setOuvindo)
+      if (!legendas.length) { onToast('Não encontrei fala nesse áudio.'); return }
+      apply(p => comLegendas(p, legendas), `legendas:${Date.now()}`)
+      onToast(`${legendas.length} legenda${legendas.length > 1 ? 's' : ''} criada${legendas.length > 1 ? 's' : ''}. Ctrl+Z desfaz.`)
+    } catch (erro) { onToast((erro as Error).message || 'Não foi possível gerar as legendas.') } finally { setOuvindo(null) }
+  }
+  return <div className={e.autoLegendas}>
+    <b><Captions size={16} />Legendas automáticas</b>
+    <p>Ouve a fala {selectedIds.length && clipes.some(c => selectedIds.includes(c.id)) ? 'do clipe selecionado' : 'dos vídeos e áudios'} e escreve as legendas no tempo certo de cada palavra.</p>
+    <button type="button" className={e.export} disabled={!!ouvindo} onClick={() => void gerar()}>{ouvindo ? <><Loader2 size={16} className={e.spin} />{ouvindo}</> : 'Gerar legendas'}</button>
+  </div>
 }
 
 function TextPresets({ kinds, onAddPreset }: { kinds: 'texto' | 'legenda'; onAddPreset: Props['onAddPreset'] }) {
@@ -400,19 +422,24 @@ function SoundEffects({ onAddMedia, onToast }: { onAddMedia: Props['onAddMedia']
 
 // ---------- IA ----------
 
-function AiChat({ chat, onAsk }: { chat: ChatMessage[]; onAsk: (t: string) => void }) {
+const sugestoes = ['Gera as legendas', 'Corta os 2 primeiros segundos', 'Deixa o vídeo preto e branco', 'Coloca fade em tudo', 'Abaixa a música para 20%', 'Deixa com 15 segundos']
+function AiChat({ chat, onAsk, pensando }: { chat: ChatMessage[]; onAsk: (t: string) => void; pensando: boolean }) {
   const [text, setText] = useState('')
-  const send = (t: string) => { if (!t.trim()) return; onAsk(t); setText('') }
+  const fim = useRef<HTMLDivElement>(null)
+  useEffect(() => { fim.current?.scrollIntoView({ block: 'end', behavior: 'smooth' }) }, [chat.length, pensando])
+  const send = (t: string) => { if (!t.trim() || pensando) return; onAsk(t); setText('') }
   return <div className={e.chat}>
     <div className={e.messages}>
       {chat.length === 0 && <p className={e.hint}>Peça uma edição. A IA mexe na mesma linha do tempo, então tudo pode ser ajustado à mão ou desfeito com Ctrl+Z.</p>}
       {chat.map((m, i) => <p key={i} className={m.from === 'voce' ? e.msgMe : e.msgAi}>{m.text}</p>)}
+      {pensando && <p className={`${e.msgAi} ${e.pensando}`} aria-live="polite"><Loader2 size={14} className={e.spin} />Editando…</p>}
+      <div ref={fim} />
     </div>
-    <div className={e.chips}>{aiExamples.slice(0, 4).map(x => <button key={x} onClick={() => send(x)}>{x}</button>)}</div>
+    {!chat.length && <div className={e.chips}>{sugestoes.slice(0, 4).map(x => <button key={x} onClick={() => send(x)}>{x}</button>)}</div>}
     <form className={e.ask} onSubmit={ev => { ev.preventDefault(); send(text) }}>
-      <input value={text} onChange={ev => setText(ev.target.value)} placeholder="Ex.: corta os 2 primeiros segundos" aria-label="Pedido para a IA" />
-      <button aria-label="Enviar"><Send size={15} /></button>
+      <input value={text} onChange={ev => setText(ev.target.value)} placeholder="Peça uma edição: “tira as pausas do começo”…" aria-label="Pedido para a IA" disabled={pensando} />
+      <button aria-label="Enviar" disabled={pensando || !text.trim()}><Send size={15} /></button>
     </form>
-    <p className={e.note}>Demonstração com comandos simples. A IA de verdade entra na próxima fase.</p>
+    <p className={e.note}>A IA mexe na mesma linha do tempo: tudo pode ser ajustado à mão ou desfeito com Ctrl+Z.</p>
   </div>
 }

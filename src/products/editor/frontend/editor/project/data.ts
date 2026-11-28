@@ -20,7 +20,8 @@ let cache: { driveState: DriveState; list: MediaItem[] } | null = null
 export function mediaLibrary(driveState: DriveState = getDriveState()): MediaItem[] {
   if (cache?.driveState === driveState) return cache.list
   const list = [
-    ...liveFiles(driveState).filter(f => f.kind !== 'text').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'video' ? 'video' as const : f.kind === 'audio' ? 'audio' as const : 'imagem' as const, duration: f.duration, tone: f.tone, width: f.width, height: f.height, role: f.kind === 'audio' ? 'voz' as const : undefined })),
+    // O que a pessoa carregou vem primeiro, do mais novo para o mais antigo (os exemplos ficam no fim).
+    ...[...liveFiles(driveState)].sort((a, b) => Number(!a.uploaded) - Number(!b.uploaded) || (b.updatedAt ?? '').localeCompare(a.updatedAt ?? '')).filter(f => f.kind !== 'text').map(f => ({ id: f.id, name: f.name, kind: f.kind === 'video' ? 'video' as const : f.kind === 'audio' ? 'audio' as const : 'imagem' as const, duration: f.duration, tone: f.tone, width: f.width, height: f.height, role: f.kind === 'audio' ? 'voz' as const : undefined })),
     ...audioLibrary,
   ]
   cache = { driveState, list }

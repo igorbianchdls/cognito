@@ -24,10 +24,15 @@ let testeAtual = ''
 const foto = async nome => { if (FOTOS) await page.screenshot({ path: `${FOTOS}/${nome}.png` }) }
 
 /** Os clipes da linha do tempo: nome, posição e largura na tela. */
-const clipes = () => page.evaluate(() => [...document.querySelectorAll('[class*=clip]')]
+const clipes = () => page.evaluate(() => [...document.querySelectorAll('[data-clip-id]')]
   .filter(e => e.getBoundingClientRect().height > 20 && e.innerText.trim())
   .map(e => { const r = e.getBoundingClientRect(); return { nome: e.innerText.trim().split('\n')[0], x: Math.round(r.left), largura: Math.round(r.width) } }))
-const clipe = nome => page.locator('[class*=clip]').filter({ hasText: nome })
+/** Abre a aba da barra de ferramentas (clicar na aba já aberta fecha o painel). */
+const aba = async nome => {
+  const b = page.getByRole('button', { name: nome, exact: true }).first()
+  if (await b.getAttribute('aria-pressed') !== 'true') await b.click()
+}
+const clipe = nome => page.locator('[data-clip-id]').filter({ hasText: nome })
 const tempo = async () => (await page.locator('text=/^\\d\\d:\\d\\d\\.\\d\\d$/').first().innerText()).trim()
 
 describe('Editor de vídeo — telas de ponta a ponta', () => {
@@ -40,18 +45,26 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
     page.on('console', m => { if (m.type() === 'error') erros.push(`[${testeAtual}] console: ${m.text().slice(0, 300)}`) })
     await page.goto(`${BASE}/editor/${PROJETO}`, { waitUntil: 'domcontentloaded' })
     await page.getByRole('button', { name: 'Mídia' }).first().waitFor({ timeout: 120000 })
+    // Na primeira visita o servidor de desenvolvimento ainda compila partes da tela e pode recarregar a página:
+    // espera assentar e recarrega uma vez antes de começar.
+    await page.waitForTimeout(4000)
+    await page.reload({ waitUntil: 'domcontentloaded' })
+    await page.getByRole('button', { name: 'Mídia' }).first().waitFor({ timeout: 120000 })
+    await page.waitForTimeout(1500)
   })
   after(async () => { await browser?.close() })
   beforeEach(t => { testeAtual = t.name })
 
   test('carregar vídeos, foto e música e montar a linha do tempo', async () => {
-    await page.locator('input[type=file][accept]').first().setInputFiles(['vertical.mp4', 'paisagem.mp4', 'foto.png', 'musica.mp3'].map(n => join(MIDIA, n)))
-    await page.getByRole('button', { name: 'Adicionar vertical.mp4' }).waitFor({ timeout: 90000 })
+    const carregar = () => page.locator('input[type=file][accept]').first().setInputFiles(['vertical.mp4', 'paisagem.mp4', 'foto.png', 'musica.mp3'].map(n => join(MIDIA, n)))
+    await carregar()
+    try { await page.getByRole('button', { name: 'Adicionar vertical.mp4' }).waitFor({ timeout: 45000 }) }
+    catch { await carregar(); await page.getByRole('button', { name: 'Adicionar vertical.mp4' }).waitFor({ timeout: 60000 }) }
     await page.getByRole('button', { name: 'Adicionar vertical.mp4' }).click()
     await clipe('vertical.mp4').first().waitFor()
     await page.keyboard.press('End')
     await page.getByRole('button', { name: 'Adicionar foto.png' }).click()
-    await page.getByRole('button', { name: 'Áudio', exact: true }).first().click()
+    await aba('Áudio')
     await page.getByRole('button', { name: 'Meus áudios' }).click()
     await page.getByRole('button', { name: /musica\.mp3/ }).first().click()
     await clipe('musica.mp3').first().waitFor()
@@ -59,6 +72,14 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
     for (const n of ['vertical.mp4', 'foto.png', 'musica.mp3']) assert.ok(nomes.includes(n), `${n} na linha do tempo (${nomes})`)
     assert.ok(await page.locator('[class*=wave] , svg[class*=wave], canvas').count() >= 0)
     await foto('ed-01-linha-do-tempo')
+  })
+
+  test('os clipes mostram os quadros do vídeo; o + de Meus áudios aparece', async () => {
+    await page.waitForFunction(() => [...document.querySelectorAll('[class*=film] i')].some(i => getComputedStyle(i).backgroundImage.startsWith('url(')), null, { timeout: 30000 })
+    await aba('Áudio')
+    await page.getByRole('button', { name: 'Meus áudios' }).click()
+    const cor = await page.getByRole('button', { name: /Adicionar musica\.mp3/ }).first().evaluate(b => getComputedStyle(b).color)
+    assert.notEqual(cor, 'rgb(255, 255, 255)', 'o ícone + não some no fundo branco')
   })
 
   test('a prévia toca e a agulha anda', async () => {
@@ -74,7 +95,7 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
     await page.keyboard.press('Home')
     for (let i = 0; i < 4; i++) await page.keyboard.press('Shift+ArrowRight')
     await page.keyboard.press('s')
-    await page.waitForFunction(() => [...document.querySelectorAll('[class*=clip]')].filter(e => e.innerText.includes('vertical.mp4') && e.getBoundingClientRect().height > 20).length === 2)
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-clip-id]')].filter(e => e.innerText.includes('vertical.mp4') && e.getBoundingClientRect().height > 20).length === 2)
     const [a, b] = (await clipes()).filter(c => c.nome === 'vertical.mp4')
     assert.equal(a.largura, b.largura, 'as duas metades têm 4 s cada')
     // Arrastar a segunda metade para a direita.
@@ -94,18 +115,38 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
   })
 
   test('texto e legenda entram na linha do tempo; desfazer e refazer', async () => {
-    await page.getByRole('button', { name: 'Texto', exact: true }).first().click()
+    await aba('Texto')
     await page.locator('button').filter({ hasText: 'Título' }).filter({ hasText: 'Entra com pop' }).first().click()
     await page.getByText('Seu título aqui').first().waitFor()
-    await page.getByRole('button', { name: 'Legendas', exact: true }).first().click()
+    await aba('Legendas')
     await page.locator('button').filter({ hasText: 'Legenda' }).filter({ hasText: 'animada' }).first().click()
     await clipe('Escreva a frase da legenda').first().waitFor()
     await page.keyboard.press('Escape')
     await page.locator('body').click({ position: { x: 1300, y: 300 } })
     await page.keyboard.press('Control+z')
-    await page.waitForFunction(() => ![...document.querySelectorAll('[class*=clip]')].some(e => e.innerText.includes('Escreva a frase da legenda')))
+    await page.waitForFunction(() => ![...document.querySelectorAll('[data-clip-id]')].some(e => e.innerText.includes('Escreva a frase da legenda')))
     await page.keyboard.press('Control+Shift+z')
     await clipe('Escreva a frase da legenda').first().waitFor()
+  })
+
+  test('legendas automáticas: ouve o vídeo e cria as legendas no tempo das palavras', async () => {
+    const antes = (await clipes()).filter(c => !/vertical|paisagem|foto|musica|título|Escreva/i.test(c.nome)).length
+    await aba('Legendas')
+    await page.getByRole('button', { name: 'Gerar legendas' }).click()
+    await page.getByText(/\d+ legendas? criadas?/).waitFor({ timeout: 90000 })
+    const novas = (await clipes()).filter(c => /teste|legenda|automática|Otto|pessoal/i.test(c.nome) && !/Escreva/.test(c.nome))
+    assert.ok(novas.length >= 2 && novas.length > antes, `legendas criadas (${novas.map(c => c.nome)})`)
+    await page.keyboard.press('Control+z')
+    await page.waitForFunction(() => ![...document.querySelectorAll('[data-clip-id]')].some(e => /Olá pessoal/.test(e.textContent ?? '')))
+    await page.keyboard.press('Control+Shift+z')
+  })
+
+  test('IA: sem a IA no servidor, o leitor de comandos responde e edita', async () => {
+    await aba('IA')
+    await page.getByLabel('Pedido para a IA').fill('Coloca fade em tudo')
+    await page.keyboard.press('Enter')
+    await page.getByText(/Coloquei transição fade/).waitFor({ timeout: 30000 })
+    assert.equal(await page.getByText(/próxima fase/).count(), 0)
   })
 
   test('o projeto continua igual depois de recarregar', async () => {
@@ -129,6 +170,17 @@ describe('Editor de vídeo — telas de ponta a ponta', () => {
     assert.equal(`${video.width}x${video.height}`, '1080x1920')
     assert.ok(audio, 'o vídeo exportado tem som')
     assert.ok(Number(info.format.duration) > 8, `duração ${info.format.duration}s`)
+  })
+
+  test('celular: a prévia e a linha do tempo aparecem na primeira tela', async () => {
+    // Mesma janela do navegador (o projeto está guardado nela), só que com a largura de um celular.
+    const cel = await page.context().newPage()
+    await cel.setViewportSize({ width: 390, height: 844 })
+    await cel.goto(`${BASE}/editor/${PROJETO}`, { waitUntil: 'domcontentloaded' })
+    await cel.locator('[data-clip-id]').first().waitFor({ timeout: 60000 })
+    const r = await cel.locator('[data-clip-id]').first().boundingBox()
+    assert.ok(r && r.y + r.height < 844, `linha do tempo visível sem rolar (y=${r?.y})`)
+    await cel.close()
   })
 
   test('sem erros de página', () => {

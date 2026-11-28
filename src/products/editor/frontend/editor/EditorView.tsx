@@ -9,6 +9,8 @@ import { Timeline } from './timeline/Timeline'
 import { LeftPanel, uploadToEditor, type ChatMessage } from './panels/LeftPanel'
 import { Properties } from './panels/Properties'
 import { runCommand } from './ai/commands'
+import { aplicarAcoes, resumoParaIa, type Acao } from './ai/acoes'
+import { clipesComFala, comLegendas, gerarLegendas } from './project/legendasAuto'
 import { blankProject, defaultBox, fullBox, media, type MediaItem } from './project/data'
 import { fromTemplate } from './project/templates'
 import { addClip, clipEnd, duplicateClip, groupClips, insertClip, isLocked, projectDuration, removeClips, rippleDelete, splitAt, toggleMarker, ungroupClips, withGroup } from './project/ops'
@@ -162,10 +164,31 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
   const group = useCallback(() => { if (editable.length > 1) { apply(p => groupClips(p, editable)); setToast('Clipes agrupados. Ctrl+Shift+G desagrupa.') } }, [apply, editable])
   const ungroup = useCallback(() => { if (selected.length) apply(p => ungroupClips(p, selected)) }, [apply, selected])
 
-  const ask = (text: string) => {
-    const r = runCommand(project, text, frames.get())
-    if (r.project) { const next = r.project; apply(() => next) }
-    setChat(c => [...c, { from: 'voce', text }, { from: 'ia', text: r.reply }])
+  // IA do editor: o servidor (Claude) escolhe as ações da linha do tempo; elas entram numa mudança só (um Ctrl+Z
+  // desfaz). Sem a IA no servidor (ou se ela falhar), o leitor de comandos simples responde no lugar.
+  const [pensando, setPensando] = useState(false)
+  const ask = async (text: string) => {
+    const frame = frames.get(), historico = chat.map(m => ({ de: m.from, texto: m.text }))
+    setChat(c => [...c, { from: 'voce', text }])
+    setPensando(true)
+    try {
+      const resposta = await fetch('/api/editor/ia', { method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ pedido: text, projeto: resumoParaIa(project, frame, selected), historico }) })
+      const corpo = await resposta.json().catch(() => ({})) as { resposta?: string; acoes?: Acao[]; erro?: string }
+      if (!resposta.ok) throw new Error(corpo.erro ?? 'ia')
+      let pediuLegendas = false
+      if (corpo.acoes?.length) apply(p => { const r = aplicarAcoes(p, corpo.acoes!, frame, selected); pediuLegendas = r.legendas; return r.project }, `ia:${Date.now()}`)
+      setChat(c => [...c, { from: 'ia', text: corpo.resposta ?? 'Pronto.' }])
+      if (pediuLegendas || corpo.acoes?.some(a => a.tipo === 'gerar_legendas')) {
+        const clipes = clipesComFala(project, [])
+        const legendas = clipes.length ? await gerarLegendas(clipes, () => {}) : []
+        if (legendas.length) { apply(p => comLegendas(p, legendas), `legendas:${Date.now()}`); setChat(c => [...c, { from: 'ia', text: `${legendas.length} legendas criadas a partir da fala.` }]) }
+      }
+    } catch {
+      const r = runCommand(project, text, frame)
+      if (r.project) { const next = r.project; apply(() => next) }
+      setChat(c => [...c, { from: 'ia', text: r.reply }])
+    } finally { setPensando(false) }
   }
 
   useEffect(() => {
@@ -230,7 +253,7 @@ export function EditorView({ initial, fileIds }: { initial: Project; fileIds?: s
       </div>
       <button className={e.export} onClick={() => { playerRef.current?.pause(); setExporting(true) }}><Download size={16} />Exportar</button>
     </header>
-    <LeftPanel project={project} selectedIds={selected} apply={apply} onApplyTemplate={applyTemplate} onAddMedia={m => addMedia(m)} onAddMediaMany={addMediaMany} onAddPreset={addPreset} onToast={setToast} chat={chat} onAsk={ask} />
+    <LeftPanel project={project} selectedIds={selected} apply={apply} onApplyTemplate={applyTemplate} onAddMedia={m => addMedia(m)} onAddMediaMany={addMediaMany} onAddPreset={addPreset} onToast={setToast} chat={chat} onAsk={t => void ask(t)} pensando={pensando} />
     <div className={`${e.body} ${showProps ? e.withProps : ''} ${pane === 'propriedades' ? e.showProps : e.showTools}`}>
       <div className={e.paneSwitch}><button className={pane === 'ferramentas' ? e.segOn : ''} onClick={() => setPane('ferramentas')}>Ferramentas</button><button className={pane === 'propriedades' ? e.segOn : ''} onClick={() => setPane('propriedades')}>Propriedades</button></div>
       <div className={e.stage}>

@@ -1,4 +1,4 @@
-// Demonstration of the AI editing the project. Phase 2 swaps this parser for a model that calls the same operations.
+// Reserva da IA do editor: quando o servidor não responde, este leitor entende pedidos simples com as mesmas ações.
 import { defaultBox, filterPresets } from '../project/presets'
 import { addClip, cutHead, limitTo, mapClip, projectDuration, removeClip, setSpeed, updateProps } from '../project/ops'
 import { FPS, visualKinds, type CaptionStyle, type Project, type TransitionType } from '../project/types'
@@ -93,5 +93,5 @@ export function runCommand(p: Project, input: string, frame: number): AiResult {
     return { project: { ...p, ducking: { on: true, level: 0.3 } }, reply: 'Pronto: a trilha cai para 30% sempre que tiver narração.' }
   }
 
-  return { reply: 'Nesta demonstração eu entendo pedidos como: ' + aiExamples.map(x => `“${x}”`).join(', ') + '. Na próxima fase a IA de verdade entra aqui, usando as mesmas ações da linha do tempo.' }
+  return { reply: 'A IA está fora do ar agora; enquanto isso eu entendo pedidos simples como: ' + aiExamples.slice(0, 5).map(x => `“${x}”`).join(', ') + '.' }
 }

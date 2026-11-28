@@ -113,7 +113,7 @@ function ClipPanel({ frames, apply, seek, onDuplicate, onSplit, onDelete, onRipp
 
     {visual && <MotionSection clipId={clip.id} start={clip.start} duration={clip.duration} frame={frame} keyframes={p.keyframes} apply={apply} seek={seek} text={track.kind === 'texto' ? { color: p.color ?? '#ffffff', fontSize: p.fontSize ?? 64 } : undefined} />}
 
-    {p.box && <Section title="Posição e tamanho (%)" extra={<span className={e.alignRow}>{aligns.map(a => <button key={a.label} onClick={() => set({ box: a.fn(p.box!) }, 'align')} title={a.label} aria-label={a.label}><a.Icon size={14} /></button>)}</span>}><div className={e.four}>{(['x', 'y', 'w', 'h'] as const).map(k => <label key={k}><span>{k === 'w' ? 'L' : k === 'h' ? 'A' : k.toUpperCase()}</span><input type="number" step={1} value={p.box![k]} onChange={ev => set({ box: { ...p.box!, [k]: +ev.target.value } as Box }, `box${k}`)} /></label>)}</div></Section>}
+    {p.box && <Section title="Posição e tamanho (%)" extra={<span className={e.alignRow}>{aligns.map(a => <button key={a.label} onClick={() => set({ box: a.fn(p.box!) }, 'align')} title={a.label} aria-label={a.label}><a.Icon size={14} /></button>)}</span>}><div className={e.four}>{(['x', 'y', 'w', 'h'] as const).map(k => <label key={k}><span>{k === 'w' ? 'Largura' : k === 'h' ? 'Altura' : k.toUpperCase()}</span><input type="number" step={1} value={p.box![k]} onChange={ev => set({ box: { ...p.box!, [k]: +ev.target.value } as Box }, `box${k}`)} /></label>)}</div></Section>}
 
     <div className={e.actions}>
       <button className={e.action} onClick={onSplit}><Scissors size={15} />Dividir</button>
@@ -126,14 +126,14 @@ function ClipPanel({ frames, apply, seek, onDuplicate, onSplit, onDelete, onRipp
   </aside>
 }
 
-const fits: { id: Fit; label: string }[] = [{ id: 'preencher', label: 'Preencher' }, { id: 'ajustar', label: 'Ajustar' }, { id: 'desfoque', label: 'Fundo desfocado' }]
+const fits: { id: Fit; label: string }[] = [{ id: 'preencher', label: 'Preencher' }, { id: 'ajustar', label: 'Ajustar' }, { id: 'desfoque', label: 'Desfocado' }]
 const noCrop: Crop = { t: 0, r: 0, b: 0, l: 0 }
 
 function FrameSection({ fit, crop, flipX, flipY, onChange }: { fit?: Fit; crop?: Crop; flipX?: boolean; flipY?: boolean; onChange: (patch: Partial<ClipProps>, key: string) => void }) {
   const c = crop ?? noCrop
   return <Section title="Enquadramento">
     <Field label="Encaixe"><div className={e.seg}>{fits.map(f => <button key={f.id} className={(fit ?? 'preencher') === f.id ? e.segOn : ''} onClick={() => onChange({ fit: f.id }, 'fit')}>{f.label}</button>)}</div></Field>
-    <Field label="Recortar (%)"><div className={e.four}>{(['t', 'r', 'b', 'l'] as const).map(k => <label key={k}><span>{{ t: '↑', r: '→', b: '↓', l: '←' }[k]}</span><input type="number" min={0} max={45} step={1} value={c[k]} onChange={ev => onChange({ crop: { ...c, [k]: Math.max(0, Math.min(45, +ev.target.value)) } }, `crop${k}`)} /></label>)}</div></Field>
+    <Field label="Recortar (%)"><div className={e.four}>{(['t', 'r', 'b', 'l'] as const).map(k => <label key={k}><span>{{ t: 'Cima', r: 'Direita', b: 'Baixo', l: 'Esquerda' }[k]}</span><input type="number" min={0} max={45} step={1} value={c[k]} onChange={ev => onChange({ crop: { ...c, [k]: Math.max(0, Math.min(45, +ev.target.value)) } }, `crop${k}`)} /></label>)}</div></Field>
     <div className={e.two}>
       <button className={`${e.toggleBtn} ${flipX ? e.toggleOn : ''}`} onClick={() => onChange({ flipX: !flipX }, 'flipx')} aria-pressed={!!flipX}><FlipHorizontal2 size={15} />Espelhar</button>
       <button className={`${e.toggleBtn} ${flipY ? e.toggleOn : ''}`} onClick={() => onChange({ flipY: !flipY }, 'flipy')} aria-pressed={!!flipY}><FlipVertical2 size={15} />Virar</button>

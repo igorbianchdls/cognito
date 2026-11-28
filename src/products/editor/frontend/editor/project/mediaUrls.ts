@@ -47,3 +47,9 @@ export function useMediaUrl(fileId: string | undefined) {
   if (fileId && !urls.has(fileId)) load(fileId)
   return url
 }
+
+/** URL of a file's content once loaded (waits for it), or null when there is none. */
+export async function mediaUrl(fileId: string): Promise<string | null> {
+  await preloadMediaUrls([fileId])
+  return urls.get(fileId) ?? null
+}

@@ -3,7 +3,9 @@
 import { Captions, Film, Image as ImageIcon, Link2, Music, Shapes, Type } from 'lucide-react'
 import { media } from '../project/data'
 import { volumeAt } from '../project/audio'
-import type { Clip, Project, TrackKind } from '../project/types'
+import { FPS, type Clip, type Project, type TrackKind } from '../project/types'
+import { useMediaUrl } from '../project/mediaUrls'
+import { useFilmstrip } from './filmstrip'
 import e from '../editor.module.css'
 
 export const kindIcon: Record<TrackKind, typeof Film> = { texto: Type, legenda: Captions, forma: Shapes, imagem: ImageIcon, video: Film, audio: Music }
@@ -31,6 +33,20 @@ function Waveform({ clip, ppf, width }: { clip: Clip; ppf: number; width: number
   </svg>
 }
 
+/** Frames of the video along the clip (follow the trim, the speed and the zoom), or the image repeated. */
+function Filmstrip({ clip, kind, ppf, width }: { clip: Clip; kind: TrackKind; ppf: number; width: number }) {
+  const m = media(clip.props.fileId)
+  const url = useMediaUrl(clip.props.fileId)
+  const aspecto = m?.width && m?.height ? m.width / m.height : 9 / 16
+  const largura = Math.max(22, Math.min(72, Math.round(40 * aspecto)))
+  const n = kind === 'video' ? Math.min(200, Math.ceil(width / largura)) : 0
+  const segundos = Array.from({ length: n }, (_, i) => Math.floor((clip.trimStart + i * largura / ppf * (clip.speed ?? 1)) / FPS))
+  const quadros = useFilmstrip(kind === 'video' ? clip.props.fileId : undefined, url, segundos)
+  if (kind === 'imagem') return url ? <span className={e.film} style={{ backgroundImage: `url("${url}")`, backgroundSize: `${largura}px 100%` }} aria-hidden /> : null
+  if (!quadros.some(Boolean)) return null
+  return <span className={e.film} aria-hidden>{quadros.map((q, i) => <i key={i} style={{ left: i * largura, width: largura, backgroundImage: q ? `url(${q})` : undefined }} />)}</span>
+}
+
 /** Volume line over the clip: fades and ducking show as dips. */
 function Envelope({ clip, ppf, width, project, voices }: { clip: Clip; ppf: number; width: number; project: Project; voices: [number, number][] }) {
   const pts: string[] = []
@@ -49,6 +65,7 @@ export function ClipView({ clip, kind, ppf, on, onDrag, onSeek, project, voices 
   return <div className={`${e.clip} ${e[`clip_${kind}`]} ${kind === 'video' || kind === 'imagem' ? e[`tone_${m?.tone ?? 'blue'}`] : ''} ${on ? e.clipOn : ''}`}
     style={{ left: clip.start * ppf, width }} onPointerDown={ev => onDrag(ev, clip, 'move')} title={label} data-clip-id={clip.id}>
     {kind === 'audio' && <Waveform clip={clip} ppf={ppf} width={width} />}
+    {(kind === 'video' || kind === 'imagem') && <Filmstrip clip={clip} kind={kind} ppf={ppf} width={width} />}
     {(kind === 'audio' || (kind === 'video' && (clip.props.fadeIn || clip.props.fadeOut))) && <Envelope clip={clip} ppf={ppf} width={width} project={project} voices={voices} />}
     {transIn && <span className={`${e.trans} ${e.transIn}`} style={{ width: Math.min(width / 2, transIn.frames * ppf) }} title={`Entrada: ${transIn.type}`} />}
     {transOut && <span className={`${e.trans} ${e.transOut}`} style={{ width: Math.min(width / 2, transOut.frames * ppf) }} title={`Saída: ${transOut.type}`} />}
