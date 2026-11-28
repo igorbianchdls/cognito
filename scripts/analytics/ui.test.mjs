@@ -1,6 +1,7 @@
 // Analytics de ponta a ponta: uma loja de teste (em outra porta) com o otto.js de verdade manda páginas, cliques,
 // rolagem, identify, flags e a gravação da sessão; depois cada tela do Analytics mostra o que chegou.
-// Uso: npm run analytics:ui (sobe o Next em modo de teste e o banco local).
+// Uso: npm run analytics:ui (sobe o Next em modo de teste e o banco local). O navegador usa um user agent comum: o
+// "HeadlessChrome" padrão é descartado como robô, como deve ser.
 import { after, before, describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createServer } from 'node:http'
@@ -44,7 +45,7 @@ describe('Analytics na tela', () => {
   after(async () => { await navegador?.close(); servidor?.close() })
 
   test('a loja manda páginas, cliques, rolagem, identify, flag e gravação', async () => {
-    for (const [i, aparelho] of [[0, { viewport: { width: 1280, height: 800 } }], [1, { viewport: { width: 390, height: 844 }, isMobile: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1' }]]) {
+    for (const [i, aparelho] of [[0, { viewport: { width: 1280, height: 800 }, userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36' }], [1, { viewport: { width: 390, height: 844 }, isMobile: true, userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148 Safari/604.1' }]]) {
       const ctx = await navegador.newContext(aparelho)
       const p = await ctx.newPage()
       await p.goto(`${LOJA}/?utm_source=${i ? 'instagram' : 'google'}&utm_campaign=natal`)
