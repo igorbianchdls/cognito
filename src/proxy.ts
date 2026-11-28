@@ -4,6 +4,10 @@ import { NextResponse, type NextFetchEvent, type NextRequest } from 'next/server
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/api/analytics/eventos',
+  // Também do otto.js nos sites: flags e gravações (a leitura das gravações confere a sessão no handler).
+  '/api/analytics/decidir',
+  '/api/analytics/gravacoes',
+  '/otto-replay.js',
   '/api/inbox/webhook/(.*)',
   '/api/inbox/vendas/(.*)',
   '/api/inbox/sair',
@@ -58,13 +62,13 @@ export default async function proxy(request: NextRequest, event: NextFetchEvent)
   // MCP verifies OAuth; internal jobs verify CRON_SECRET in their own handlers.
   if (['/api/mcp', '/.well-known/oauth-protected-resource', '/.well-known/oauth-protected-resource/api/mcp',
     '/api/claude/mcp', '/.well-known/oauth-protected-resource/api/claude/mcp',
-    '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes', '/api/inbox/internal/tick', '/api/notas/internal/tarefas']
+    '/api/clerk/reconcile', '/api/chatgptplugin/internal/maintenance', '/api/erp/internal/automacoes', '/api/inbox/internal/tick', '/api/notas/internal/tarefas', '/api/analytics/internal/limpeza']
     .includes(request.nextUrl.pathname)) return NextResponse.next()
   // Link temporário do DANFSe/XML: o token assinado é a credencial (validado no handler).
   if (request.nextUrl.pathname.startsWith('/api/public/nfse/') || request.nextUrl.pathname.startsWith('/api/public/documentos-comerciais/')) return NextResponse.next()
   // Testes de tela (npm run notas:ui, editor:ui): só fora de produção e com NOTAS_TESTE_USUARIO definido.
   if (process.env.NODE_ENV !== 'production' && process.env.NOTAS_TESTE_USUARIO
-    && (request.nextUrl.pathname.startsWith('/api/notas/') || request.nextUrl.pathname.startsWith('/api/editor/') || /^\/(notas|artefatos|editor|drive)(\/|$)/.test(request.nextUrl.pathname))) return NextResponse.next()
+    && (request.nextUrl.pathname.startsWith('/api/notas/') || request.nextUrl.pathname.startsWith('/api/editor/') || request.nextUrl.pathname.startsWith('/api/analytics/') || /^\/(notas|artefatos|editor|drive|analytics)(\/|$)/.test(request.nextUrl.pathname))) return NextResponse.next()
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isPublicRoute(request)) {
     return NextResponse.next()
   }

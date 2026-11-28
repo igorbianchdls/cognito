@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sobe um Postgres local (porta 54329) só para os testes de integração das Notas e dos Vídeos e aplica as migrações.
+# Sobe um Postgres local (porta 54329) só para os testes de integração das Notas, dos Vídeos e do Analytics e aplica as migrações.
 # Uso: scripts/notas/banco-local.sh  → imprime a URL para NOTAS_TEST_DB_URL. Precisa do Postgres 16 instalado.
 set -euo pipefail
 raiz="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -14,5 +14,5 @@ como "$bin/pg_ctl -D $dados -o '-p $porta -k /tmp' -l $dados/log.txt start" >/de
 url="postgresql://postgres@localhost:$porta/postgres"
 psql -q -v ON_ERROR_STOP=1 "$url" -f "$raiz/scripts/notas/supabase-local.sql" >/dev/null
 psql -q "$url" -c "CREATE SCHEMA marketing; GRANT USAGE ON SCHEMA marketing TO authenticated, service_role;" >/dev/null
-for m in "$raiz"/supabase/migrations/*marketing_videos*.sql "$raiz"/supabase/migrations/*notas*.sql; do psql -q -v ON_ERROR_STOP=1 "$url" -f "$m" >/dev/null; done
+for m in "$raiz"/supabase/migrations/*marketing_videos*.sql "$raiz"/supabase/migrations/*notas*.sql "$raiz"/supabase/migrations/*_analytics_*.sql; do psql -q -v ON_ERROR_STOP=1 "$url" -f "$m" >/dev/null; done
 echo "$url"

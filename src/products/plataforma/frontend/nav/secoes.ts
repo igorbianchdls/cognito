@@ -1,5 +1,6 @@
 // The sections of the Otto menu and the shortcuts of "Novo". Each ERP item shows only to profiles with its capability.
 import {
+  IconBulbFilled, IconFlagFilled, IconFlameFilled, IconLayoutDashboardFilled, IconPlayerPlayFilled, IconUsers, IconUsersGroup,
   IconArchiveFilled, IconArrowsExchange, IconArticleFilled, IconBasketFilled, IconBookFilled, IconBriefcaseFilled,
   IconCalendarFilled, IconCashBanknoteFilled, IconClockFilled, IconStarFilled, IconTrashFilled, IconChartAreaLineFilled, IconBoltFilled, IconSpeakerphone, IconFilterFilled, IconChartAreaFilled, IconWorldFilled, IconAdjustmentsFilled, IconMessageCircleFilled, IconClipboardListFilled, IconCoinFilled,
   IconAppWindowFilled, IconCreditCardFilled, IconFileTextFilled, IconFolderFilled,
@@ -42,7 +43,14 @@ export const sections: Section[] = [
   },
   {
     id: "analytics", title: "Analytics", items: [
-      { title: "Painéis", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
+      { title: "Visão geral", url: "/analytics", icon: IconChartAreaLineFilled, exactActive: true },
+      { title: "Insights", url: "/analytics/insights", icon: IconBulbFilled },
+      { title: "Painéis", url: "/analytics/paineis", icon: IconLayoutDashboardFilled },
+      { title: "Pessoas", url: "/analytics/pessoas", icon: IconUsers },
+      { title: "Coortes", url: "/analytics/coortes", icon: IconUsersGroup },
+      { title: "Mapa de calor", url: "/analytics/mapa", icon: IconFlameFilled },
+      { title: "Gravações", url: "/analytics/gravacoes", icon: IconPlayerPlayFilled },
+      { title: "Flags e testes", url: "/analytics/flags", icon: IconFlagFilled },
       { title: "Eventos", url: "/analytics/eventos", icon: IconBoltFilled },
       { title: "Sites e apps", url: "/analytics/sites", icon: IconWorldFilled },
     ],

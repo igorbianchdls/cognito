@@ -18,6 +18,10 @@
     {
       "path": "/api/notas/internal/tarefas",
       "schedule": "5 9 * * *"
+    },
+    {
+      "path": "/api/analytics/internal/limpeza",
+      "schedule": "50 5 * * *"
     }
   ]
 }

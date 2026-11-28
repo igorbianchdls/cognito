@@ -1,9 +1,9 @@
-// BigQuery SQL for the Analytics tools. The assistant never writes SQL: it picks from fixed dimensions, measures and
+// Postgres SQL for the Analytics tools (eventos em analytics.events_people; a pessoa já junta visitante e usuário). The assistant never writes SQL: it picks from fixed dimensions, measures and
 // operators, values always go as query parameters, and property keys are checked against a strict pattern.
 import { PluginError } from '../../../shared/contracts'
 
 export const TZ = 'America/Sao_Paulo'
-export const SCOPE = 'property_id = @p AND timestamp >= @de AND timestamp < @ate'
+export const SCOPE = 'property_id = @p::uuid AND "timestamp" >= @de::timestamptz AND "timestamp" < @ate::timestamptz'
 
 export const DIMENSIONS = {
   pagina: 'path', host: 'host', origem: "COALESCE(utm_source, referrer_host, '(direto)')", site_de_origem: "COALESCE(referrer_host, '(direto)')",
@@ -19,12 +19,12 @@ const PROP = /^propriedade:([A-Za-z0-9_]{1,64})$/
 export function dimensionSql(name: string) {
   if (name in DIMENSIONS) return DIMENSIONS[name as Dimension]
   const m = PROP.exec(name)
-  if (m) return `COALESCE(JSON_VALUE(properties, '$.${m[1]}'), '(vazio)')`
+  if (m) return `COALESCE(properties ->> '${m[1]}', '(vazio)')`
   throw new PluginError('INVALID_INPUT', `Campo desconhecido: ${name}. Use ${DIMENSION_NAMES.join(', ')} ou propriedade:<nome>.`, 422)
 }
 export const numericProperty = (key: string) => {
   if (!/^[A-Za-z0-9_]{1,64}$/.test(key)) throw new PluginError('INVALID_INPUT', 'Nome de propriedade inválido.', 422)
-  return `SAFE_CAST(JSON_VALUE(properties, '$.${key}') AS FLOAT64)`
+  return `(CASE WHEN properties ->> '${key}' ~ '^-?[0-9]+(\\.[0-9]+)?$' THEN (properties ->> '${key}')::float8 END)`
 }
 
 export type Param = { name: string; type: 'STRING' | 'INT64' | 'TIMESTAMP'; value: string | number }
@@ -37,28 +37,39 @@ export function filtersSql(filters: Filter[] = []) {
     const expr = dimensionSql(f.campo), name = `f${i}`
     if (f.operador === 'existe') return `${expr} NOT IN ('(vazio)', '(nenhum)', '(nenhuma)', '(direto)', '(sem campanha)', '—')`
     params.push({ name, type: 'STRING', value: f.valor ?? '' })
-    return f.operador === 'igual' ? `${expr} = @${name}` : f.operador === 'diferente' ? `${expr} != @${name}`
-      : f.operador === 'contem' ? `STRPOS(LOWER(${expr}), LOWER(@${name})) > 0` : `STRPOS(LOWER(${expr}), LOWER(@${name})) = 0`
+    return f.operador === 'igual' ? `${expr} = @${name}` : f.operador === 'diferente' ? `${expr} IS DISTINCT FROM @${name}`
+      : f.operador === 'contem' ? `strpos(lower(${expr}), lower(@${name})) > 0` : `strpos(lower(COALESCE(${expr}, '')), lower(@${name})) = 0`
   }).map(s => ` AND ${s}`).join('')
   return { sql, params }
 }
 
 export const BUCKETS = {
-  hora: `FORMAT_TIMESTAMP('%Y-%m-%d %H:00', timestamp, '${TZ}')`,
-  dia: `FORMAT_DATE('%Y-%m-%d', DATE(timestamp, '${TZ}'))`,
-  semana: `FORMAT_DATE('%Y-%m-%d', DATE_TRUNC(DATE(timestamp, '${TZ}'), WEEK(MONDAY)))`,
-  mes: `FORMAT_DATE('%Y-%m', DATE(timestamp, '${TZ}'))`,
+  hora: `to_char("timestamp" AT TIME ZONE '${TZ}', 'YYYY-MM-DD HH24:00')`,
+  dia: `to_char("timestamp" AT TIME ZONE '${TZ}', 'YYYY-MM-DD')`,
+  semana: `to_char(date_trunc('week', "timestamp" AT TIME ZONE '${TZ}'), 'YYYY-MM-DD')`,
+  mes: `to_char("timestamp" AT TIME ZONE '${TZ}', 'YYYY-MM')`,
 } as const
+/** ISO em UTC. */
+export const iso = (expr: string) => `to_char((${expr}) AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')`
+
+type Db = { query<R = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<R[]> }
+/** Roda SQL com parâmetros nomeados (@nome) no Postgres, trocando por $1, $2… */
+export async function run<R = Record<string, unknown>>(db: Db, sql: string, params: Param[]): Promise<R[]> {
+  const order: string[] = []
+  const text = sql.replace(/@([a-z][a-z0-9]*)\b/g, (_m, name: string) => { let i = order.indexOf(name); if (i < 0) { order.push(name); i = order.length - 1 } return `$${i + 1}` })
+  const values = order.map(name => { const p = params.find(x => x.name === name); if (!p) throw new Error(`Parâmetro ausente: ${name}`); return p.value })
+  return db.query<R>(text, values)
+}
 
 export function measureSql(medida: string, propriedade?: string) {
   switch (medida) {
-    case 'total': return 'COUNT(*)'
-    case 'visitantes': return 'COUNT(DISTINCT distinct_id)'
-    case 'sessoes': return 'COUNT(DISTINCT session_id)'
-    case 'usuarios': return 'COUNT(DISTINCT user_id)'
+    case 'total': return 'COUNT(*)::int'
+    case 'visitantes': return 'COUNT(DISTINCT person)::int'
+    case 'sessoes': return 'COUNT(DISTINCT session_id)::int'
+    case 'usuarios': return 'COUNT(DISTINCT user_id)::int'
     case 'soma': case 'media':
       if (!propriedade) throw new PluginError('INVALID_INPUT', 'Para soma ou média, informe propriedade (ex.: valor).', 422)
-      return `${medida === 'soma' ? 'SUM' : 'AVG'}(${numericProperty(propriedade)})`
+      return `round((${medida === 'soma' ? 'SUM' : 'AVG'}(${numericProperty(propriedade)}))::numeric, 2)::float8`
     default: throw new PluginError('INVALID_INPUT', 'Medida inválida.', 422)
   }
 }

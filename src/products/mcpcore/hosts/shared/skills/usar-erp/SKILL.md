@@ -113,7 +113,7 @@ Arquivos da empresa (vídeos, imagens, áudios), organizados em drives e pastas.
 
 ## Analytics
 
-Visitas e eventos dos sites que a empresa mede. Comece por `analytics_listar_sites`. Para "como foi", use `analytics_resumo` ou `analytics_comparar`; para perguntas específicas, `analytics_tendencia` (evento, medida, intervalo, divisão e filtros) e `analytics_ranking`; campanhas com `analytics_campanhas` (com uma meta de `analytics_criar_meta`, mostra a conversão). Antes de dividir ou filtrar por propriedade, veja os nomes com `analytics_propriedades_evento`. Para instalar: `analytics_criar_site` devolve o código; `analytics_verificar_instalacao` confere; `analytics_gerar_codigo_eventos` e `analytics_criar_link_campanha` geram código e links com UTM. Se o BigQuery não estiver conectado, diga que ainda não há números, sem estimar.
+Visitas e eventos dos sites que a empresa mede. Comece por `analytics_listar_sites`. Para "como foi", use `analytics_resumo` ou `analytics_comparar`; para perguntas específicas, `analytics_tendencia` (evento, medida, intervalo, divisão e filtros) e `analytics_ranking`; campanhas com `analytics_campanhas` (com uma meta de `analytics_criar_meta`, mostra a conversão). Antes de dividir ou filtrar por propriedade, veja os nomes com `analytics_propriedades_evento`. Para instalar: `analytics_criar_site` devolve o código; `analytics_verificar_instalacao` confere; `analytics_gerar_codigo_eventos` e `analytics_criar_link_campanha` geram código e links com UTM. Para conversão em passos use `analytics_funil` (passos em ordem, janela em dias, quebra opcional); os gráficos e funis montados na tela ficam em `analytics_insights` (sem id lista; com id roda). Site sem eventos: diga que ainda não há números, sem estimar.
 
 ## Inbox
 

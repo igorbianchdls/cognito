@@ -142,7 +142,7 @@ async function main() {
     assert.match(c.codigo, /^<script async src="https:\/\/app\.example\.com\/otto\.js" data-key="otto_[0-9a-f]{32}" data-consent="required"><\/script>$/)
     const e = await ok('analytics_editar_site', { site_id: siteId, dominios: ['minhaloja.com.br'], pedir_consentimento: false })
     assert.deepEqual(e.site.dominios, ['minhaloja.com.br']); assert(!e.codigo.includes('data-consent'))
-    const v = await ok('analytics_verificar_instalacao', { site_id: siteId }); assert.equal(v.funcionando, false); assert(v.proximos_passos.length >= 3)
+    const v0 = await ok('analytics_verificar_instalacao', { site_id: siteId }); assert.equal(v0.funcionando, false); assert(v0.proximos_passos.length >= 3)
     const meta = (await ok('analytics_criar_meta', { site_id: siteId, nome: 'Contato', evento: '$pageview', pagina: '/obrigado' })).meta
     await fails('analytics_criar_meta', { site_id: siteId, nome: 'x', evento: '$pageview' }, 'INVALID_INPUT')
     assert.equal((await ok('analytics_editar_meta', { site_id: siteId })).metas.length, 1)
@@ -158,38 +158,45 @@ async function main() {
     await fails('analytics_criar_site', { nome: 'x' }, 'ACCESS_DENIED', viewer)
   })
 
-  await check('Analytics: consultas vão ao BigQuery só da propriedade, com parâmetros', async () => {
-    sqls.length = 0
-    const sites = await ok('analytics_listar_sites', {}); assert.equal(sites.sites[0].eventos_7_dias, 120); assert.equal(sites.bigquery_conectado, true)
-    const r = await ok('analytics_resumo', { site_id: siteId, de: '2026-11-01', ate: '2026-11-22' }); assert.equal(r.totais.visitantes, 50); assert.equal(r.por_dia.length, 2)
-    assert.deepEqual(r.periodo, { de: '2026-11-01', ate: '2026-11-22' })
-    const t = await ok('analytics_tendencia', { site_id: siteId, evento: 'assinou', medida: 'soma', propriedade: 'valor', dividir_por: 'origem', filtros: [{ campo: 'pais', operador: 'igual', valor: "BR' OR 1=1" }] })
-    assert.equal(t.serie[0].grupo, 'instagram')
-    const tq = sqls.at(-1)!
-    assert(tq.sql.includes("SUM(SAFE_CAST(JSON_VALUE(properties, '$.valor') AS FLOAT64))") && tq.sql.includes('= @f0') && !tq.sql.includes('OR 1=1'))
-    assert.equal(tq.params.f0, "BR' OR 1=1"); assert.equal(tq.params.p, siteId)
+  await check('Analytics: consultas no Postgres, só da propriedade e com parâmetros', async () => {
+    // Eventos de verdade: 2 dias, instagram/google, um assinou com valor, páginas /precos → /assinar.
+    const ev = (d: string, s: string, e: string, path: string, t: string, extra: { utm?: string; p?: object; u?: string } = {}) => admin.query(`INSERT INTO analytics.events
+      (event_id, property_id, workspace_id, event, "timestamp", distinct_id, user_id, session_id, url, host, path, utm_source, utm_campaign, device, country, properties)
+      VALUES (gen_random_uuid(), $1, (SELECT workspace_id FROM analytics.properties WHERE id = $1), $2, $3, $4, $5, $6, $7, 'minhaloja.com.br', $8, $9, $10, 'mobile', 'BR', $11)`,
+      [siteId, e, t, d, extra.u ?? null, s, `https://minhaloja.com.br${path}`, path, extra.utm ?? null, extra.utm ? 'natal' : null, extra.p ? JSON.stringify(extra.p) : null])
+    const dia = (n: number, h = 12) => new Date(Date.now() - n * 86400000 - (60 - h) * 60000).toISOString()
+    await ev('v1', 's1', '$pageview', '/precos', dia(1, 12), { utm: 'instagram' }); await ev('v1', 's1', '$pageview', '/assinar', dia(1, 13))
+    await ev('v1', 's1', 'assinou', '/assinar', dia(1, 14), { p: { plano: 'pro', valor: 99 } })
+    await ev('v2', 's2', '$pageview', '/precos', dia(0, 12), { utm: 'google' }); await ev('v2', 's2', 'assinou', '/obrigado', dia(0, 13), { p: { plano: 'basico', valor: 49 } })
+    await ev('v3', 's3', '$pageview', '/obrigado', dia(0, 14))
+    const sites = await ok('analytics_listar_sites', {}); assert.equal(sites.sites[0].eventos_7_dias, 6)
+    const r = await ok('analytics_resumo', { site_id: siteId }); assert.equal(r.totais.visitantes, 3); assert.equal(r.totais.paginas_vistas, 4); assert.equal(r.por_dia.length, 2)
+    const t = await ok('analytics_tendencia', { site_id: siteId, evento: 'assinou', medida: 'soma', propriedade: 'valor', dividir_por: 'propriedade:plano', filtros: [{ campo: 'pais', operador: 'igual', valor: "BR' OR 1=1" }] })
+    assert.equal(t.serie.length, 0, 'o valor do filtro é parâmetro, não SQL')
+    const t2 = await ok('analytics_tendencia', { site_id: siteId, evento: 'assinou', medida: 'soma', propriedade: 'valor', dividir_por: 'propriedade:plano', filtros: [{ campo: 'pais', operador: 'igual', valor: 'BR' }] })
+    assert.deepEqual(t2.serie.map((x: { grupo: string; valor: number }) => [x.grupo, x.valor]).sort(), [['basico', 49], ['pro', 99]])
     await fails('analytics_tendencia', { site_id: siteId, dividir_por: "propriedade:x') OR 1=1 --" }, 'INVALID_INPUT')
     await fails('analytics_tendencia', { site_id: siteId, medida: 'soma' }, 'INVALID_INPUT')
-    const cmp = await ok('analytics_comparar', { site_id: siteId, evento: 'assinou' }); assert.equal(cmp.metricas.at(-1).metrica, 'assinou')
-    const rk = await ok('analytics_ranking', { site_id: siteId, campo: 'evento' }); assert.equal(rk.itens[0].nome, 'Assinatura paga')
+    const cmp = await ok('analytics_comparar', { site_id: siteId, evento: 'assinou' }); assert.equal(cmp.metricas.at(-1).atual, 2)
+    const rk = await ok('analytics_ranking', { site_id: siteId, campo: 'evento' }); assert.equal(rk.itens.find((i: { valor: string }) => i.valor === 'assinou').nome, 'Assinatura paga')
     const metaId = (await admin.query('SELECT id FROM analytics.goals LIMIT 1')).rows[0].id
-    const camp = await ok('analytics_campanhas', { site_id: siteId, meta_id: metaId }); assert.equal(camp.campanhas[0].taxa_conversao_pct, 10)
-    assert.equal(sqls.at(-1)!.params.gp, '/obrigado')
-    assert.equal((await ok('analytics_paginas', { site_id: siteId })).paginas[0].taxa_saida_pct, 30)
-    assert.deepEqual((await ok('analytics_caminhos', { site_id: siteId, ponto: '/precos' })).caminhos[0], { sequencia: ['/precos', '/assinar'], vezes: 7 })
-    assert.deepEqual((await ok('analytics_retencao', { site_id: siteId })).coortes[0].semanas, [100, 40])
+    const camp = await ok('analytics_campanhas', { site_id: siteId, meta_id: metaId })
+    assert.deepEqual(camp.campanhas.map((c: { fonte: string; conversoes: number }) => [c.fonte, c.conversoes]).sort(), [['(direto)', 1], ['google', 0], ['instagram', 0]])
+    const pgs = await ok('analytics_paginas', { site_id: siteId }); assert.equal(pgs.paginas[0].pagina, '/precos'); assert.equal(pgs.paginas[0].visualizacoes, 2)
+    assert.deepEqual((await ok('analytics_paginas', { site_id: siteId, pagina: '/precos' })).vai_para[0], { pagina: '(saiu do site)', vezes: 1 })
+    assert.deepEqual((await ok('analytics_caminhos', { site_id: siteId, ponto: '/precos' })).caminhos.find((c: { sequencia: string[] }) => c.sequencia[0] === '/assinar'), { sequencia: ['/assinar', 'assinou'], vezes: 1 })
+    assert.equal((await ok('analytics_retencao', { site_id: siteId })).coortes.reduce((n: number, c: { pessoas: number }) => n + c.pessoas, 0), 3)
     const props = await ok('analytics_propriedades_evento', { site_id: siteId, evento: 'assinou' })
-    assert.deepEqual(props.propriedades.map((p: { nome: string }) => p.nome), ['plano', 'valor']); assert.equal(props.nome, 'Assinatura paga')
-    await ok('analytics_eventos_recentes', { site_id: siteId, evento: '$pageview' })
+    assert.deepEqual(props.propriedades.map((p: { nome: string }) => p.nome).sort(), ['plano', 'valor']); assert.equal(props.nome, 'Assinatura paga')
+    assert.equal((await ok('analytics_eventos_recentes', { site_id: siteId, evento: '$pageview', horas: 72 })).eventos.length, 4)
+    const vis = await ok('analytics_visitante', { site_id: siteId, visitante_id: 'v1' }); assert.equal(vis.resumo.eventos, 3); assert.equal(vis.resumo.primeira_origem, 'instagram')
     await fails('analytics_visitante', { site_id: siteId }, 'INVALID_INPUT')
-    assert(sqls.every(s => s.sql.includes('property_id = @p') && s.params.p === siteId), 'toda consulta filtra a propriedade')
-    assert(sqls.every(s => s.sql.includes('`proj.analytics.events`')))
+    const v = await ok('analytics_verificar_instalacao', { site_id: siteId }); assert.equal(v.funcionando, true); assert.equal(v.eventos_24h >= 2, true)
+    const f = await ok('analytics_funil', { site_id: siteId, passos: [{ evento: '$pageview', pagina: '/precos' }, { evento: 'assinou' }] })
+    assert.deepEqual(f.passos.map((x: { pessoas: number }) => x.pessoas), [2, 2])
   })
 
-  await check('Analytics: sem BigQuery, avisa sem inventar; outra empresa não vê o site', async () => {
-    const noBq = { ...deps, bigquery: { env: {} } }
-    await fails('analytics_resumo', { site_id: siteId }, 'ANALYTICS_UNAVAILABLE', owner, noBq)
-    assert.equal((await ok('analytics_listar_sites', {}, owner, noBq)).bigquery_conectado, false)
+  await check('Analytics: outra empresa não vê o site', async () => {
     await fails('analytics_resumo', { site_id: siteId }, 'ACCESS_DENIED', stranger)
     assert.equal((await ok('analytics_listar_sites', {}, viewer)).sites.length, 1)
     await fails('analytics_editar_site', { site_id: siteId, nome: 'x' }, 'ACCESS_DENIED', viewer)

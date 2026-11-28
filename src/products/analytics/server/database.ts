@@ -10,13 +10,14 @@ function getPool() {
   return pool
 }
 
-const cache = new Map<string, { property: Property | null; until: number }>()
+const cache = new Map<string, { property: PublicProperty | null; until: number }>()
 /** The property of a public key, cached for a minute (the script sends often). */
-export async function propertyByKey(key: string): Promise<Property | null> {
+export type PublicProperty = Property & { autocapture: boolean; replay_sample: number; replay_mask_text: boolean }
+export async function propertyByKey(key: string): Promise<PublicProperty | null> {
   const hit = cache.get(key)
   if (hit && hit.until > Date.now()) return hit.property
-  const { rows } = await getPool().query('SELECT id, workspace_id, domains FROM analytics.properties WHERE public_key = $1', [key])
-  const property = (rows[0] as Property | undefined) ?? null
+  const { rows } = await getPool().query('SELECT id, workspace_id, domains, autocapture, replay_sample, replay_mask_text FROM analytics.properties WHERE public_key = $1', [key])
+  const property = (rows[0] as PublicProperty | undefined) ?? null
   if (cache.size > 1000) cache.clear()
   cache.set(key, { property, until: Date.now() + 60000 })
   return property

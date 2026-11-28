@@ -1,6 +1,6 @@
 import { after } from 'next/server'
 import { batchSchema, isBot, MAX_BODY, originAllowed, toRows } from '@/products/analytics/server/capture'
-import { bigQueryConfig, insertEvents } from '@/products/analytics/server/bigquery'
+import { gravarEventos } from '@/products/analytics/server/coleta'
 import { propertyByKey } from '@/products/analytics/server/database'
 
 export const runtime = 'nodejs'
@@ -45,12 +45,10 @@ export async function POST(request: Request) {
   if (!property) return answer(404, origin, { erro: 'Chave desconhecida.' })
   if (!originAllowed(property, origin)) return answer(403, origin, { erro: 'Este site não está nos domínios da propriedade.' })
 
-  const config = bigQueryConfig()
-  if (!config) return answer(202, origin, { gravado: false, motivo: 'BigQuery ainda não configurado.' })
   const rows = toRows(property, parsed.data, { ua, country: request.headers.get('x-vercel-ip-country'), region: request.headers.get('x-vercel-ip-country-region') })
-  // The browser doesn't wait for BigQuery.
+  // The browser doesn't wait for the database.
   after(async () => {
-    try { await insertEvents(config, rows) } catch (error) {
+    try { await gravarEventos(rows) } catch (error) {
       console.error(JSON.stringify({ scope: 'analytics', code: 'CAPTURE_FAILED', rows: rows.length, message: (error as Error).message }))
     }
   })
