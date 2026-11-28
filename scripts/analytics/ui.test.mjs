@@ -149,7 +149,7 @@ describe('Analytics na tela', () => {
 
   test('mapa de calor: cliques por cima da página, rolagem e elementos', async () => {
     const { p, ctx, erros, foto } = await tela('/analytics/mapa')
-    await p.getByLabel('Página').selectOption('/precos')
+    await p.getByLabel('Página', { exact: true }).selectOption('/precos')
     await p.locator('[data-mapa] canvas').waitFor()
     await p.locator('[data-elementos]').getByText('Assinar').waitFor()
     await p.getByRole('button', { name: 'Celular' }).click()

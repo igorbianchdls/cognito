@@ -21,13 +21,14 @@ export function GraficoTendencia({ r, intervalo, visual, altura = 280 }: { r: Re
     ...(r.anterior ? Object.fromEntries(r.anterior.series.map((s, k) => [`a${k}`, s.valores[i] ?? null])) : {}),
   }))
   const comum = { data: dados, margin: { top: 8, right: 8, bottom: 0, left: -8 } }
-  const eixos = <>
-    <CartesianGrid vertical={false} stroke="#f0f0f0" />
-    <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} minTickGap={20} />
-    <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} width={44} />
-    <Tooltip {...tooltip} formatter={(v, n) => [fmt(Number(v)), String(n)]} />
-    {r.series.length > 1 || r.anterior ? <Legend wrapperStyle={{ fontSize: 12 }} /> : null}
-  </>
+  // Uma lista (não um fragmento): o recharts só enxerga filhos diretos do gráfico.
+  const eixos = [
+    <CartesianGrid key="g" vertical={false} stroke="#f0f0f0" />,
+    <XAxis key="x" dataKey="rotulo" tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} minTickGap={20} />,
+    <YAxis key="y" allowDecimals={false} tick={{ fontSize: 11, fill: '#888' }} axisLine={false} tickLine={false} width={44} />,
+    <Tooltip key="t" {...tooltip} formatter={(v, n) => [fmt(Number(v)), String(n)]} />,
+    ...(r.series.length > 1 || r.anterior ? [<Legend key="l" wrapperStyle={{ fontSize: 12 }} />] : []),
+  ]
   return <div style={{ height: altura }} role="img" aria-label={`Gráfico: ${r.series.map(s => s.nome).join(', ')}`}>
     <ResponsiveContainer width="100%" height="100%">
       {visual === 'barras'
